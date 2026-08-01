@@ -1,0 +1,38 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+
+# Database and Environment
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+.env
+.env.local
+.env.*.local
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+server/.admin_secret
+server/stats.json
+server/storico.sqlite*
+server/storico_csv/
+server/anagrafica_impianti_attivi.csv
