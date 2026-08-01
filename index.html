@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="it" id="html-root">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-site-verification" content="iYkI8Kl6D4WkozYOQV898P9s63uzjXnJFdHBgc_wnQI" />
+    <link rel="preconnect" href="https://a.tile.openstreetmap.org">
+    <link rel="preconnect" href="https://b.tile.openstreetmap.org">
+    <link rel="preconnect" href="https://c.tile.openstreetmap.org">
+    <title>FuelFinder - Prezzi Benzina e Diesel</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Trova i distributori di benzina, diesel, GPL, metano, HVO e GNL più economici vicino a te in Italia. Mappa interattiva con prezzi del carburante sempre aggiornati.">
+    <meta name="keywords" content="prezzo benzina, distributori benzina, diesel, carburante economico, mappa distributori, prezzi carburante italia, hvo, biodiesel, gnl">
+    
+    <!-- Open Graph (Facebook, WhatsApp, LinkedIn) -->
+    <meta property="og:title" content="FuelFinder - Prezzi Benzina e Diesel">
+    <meta property="og:description" content="Trova i distributori di benzina, diesel, GPL, metano, HVO e GNL più economici vicino a te in Italia. Mappa interattiva con prezzi aggiornati.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://fuelfinder-msn8.onrender.com/assets/img/icon-512.png">
+
+    <link rel="icon" href="/assets/img/icon-192.png">
+    
+    <!-- PWA Settings -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Leaflet CSS Deferred -->
+    <link rel="preload" href="/leaflet.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/leaflet.css"></noscript>
+</head>
+
+<body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+</body>
+
+</html>
