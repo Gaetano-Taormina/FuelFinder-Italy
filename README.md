@@ -1,0 +1,110 @@
+# ⛽ FuelFinder Italia
+
+[![Live Demo](https://img.shields.io/badge/🌍_Live_Demo-Click_Here-blue?style=for-the-badge)](https://fuelfinder-msn8.onrender.com)
+
+🌍 **Choose your language / Scegli la tua lingua:**
+
+- [🇬🇧 English Version](#-english-version)
+- [🇮🇹 Versione Italiana](#-versione-italiana)
+
+---
+
+## 🇬🇧 English Version
+
+FuelFinder Italy is a modern full-stack Progressive Web App (PWA) that allows users to find the most convenient fuel stations in Italy.
+The data shown is real and based on official Open Data from the Italian Ministry.
+
+### 🌟 Key Features
+
+- **Geolocated Search:** Search for stations by entering a city/zip code or using the device's GPS.
+- **Smart Autocomplete:** Instant location suggestions while typing, powered by OpenStreetMap Nominatim.
+- **Route Calculation:** Integrated OSRM (Open Source Routing Machine) to automatically trace the optimal route on the map, calculating distance and travel time from the user to the selected station.
+- **Advanced Filters:** Filter by radius (3, 5, 10, 20 km), fuel type (Gasoline, Diesel, LPG, Methane, HVO, LNG), and service type (Self-Service or Served).
+- **Interactive Map:** Clear map visualization (powered by Leaflet) with dynamic point-of-interest clustering.
+- **PWA Support:** The app can be installed directly on a mobile Home screen, hiding the browser UI for a native, full-screen standalone experience.
+- **Multi-language:** Native support for both English and Italian.
+- **Dark/Light Theme:** Modern UI (React + TailwindCSS) that adapts to user preferences.
+- **Automated Cron Jobs:** Built-in daily synchronization with ministerial data running on an internal Node.js scheduler.
+- **Privacy-Friendly Analytics:** Native backend counter utilizing irreversible IP hashing (SHA-256) to track daily visits without requiring GDPR cookie banners.
+- **Security Hardened:** Integrated Rate Limiting against DDoS/Scraping attacks and protective HTTP Security Headers (Anti-XSS, Clickjacking).
+- **Advanced SEO:** Highly optimized for search engines featuring JSON-LD Structured Data, `sitemap.xml`, dynamic Meta Tags, and `robots.txt`.
+- **Admin Dashboard:** Secure passkey-protected panel at `/admin-stats` for visualizing site traffic and usage stats.
+- **Lighthouse Optimized:** Next-gen image formats (WebP) and optimized React chunks for maximum speed.
+
+### 🏗️ Architecture and Structure
+
+The project features a high-performance **Full-Stack** architecture with a modern, premium user interface.
+
+- **Frontend (Client):** Developed in React (via Vite) with TailwindCSS for a fast, fluid, and 100% Mobile-responsive design.
+- **Backend (API):** Managed by a Node.js server with the Express 5 framework.
+- **Database:** The massive amount of data on stations and prices is stored in an internal **SQLite** database. This allows the application to perform geometric calculations and filtering in fractions of a second without overloading the client.
+
+### 🔄 Data Flow (Synchronization)
+
+The application relies on information released daily by the Ministry (Open Data). A background automated process handles:
+
+1. Downloading massive files containing registry and prices.
+2. *Streaming* this information (line by line), an essential technique to avoid saturating the server's RAM.
+3. Cross-referencing and saving the updated data into the SQLite database.
+
+*(Note: For security and integrity reasons, extraction occurs entirely on the backend and direct data sources are neither exposed nor manipulable from the client side).*
+
+### 🚀 Hosting and Deployment
+
+The entire project (Frontend + Backend Server) is hosted as a single Web Service on **Render**.
+Thanks to continuous integration (CI/CD), every new change (commit) on GitHub automatically triggers:
+
+1. Dependency installation.
+2. Optimized build of the React client.
+3. Launch of the Express server.
+
+---
+
+## 🇮🇹 Versione Italiana
+
+FuelFinder Italia è un'applicazione web full-stack moderna (Progressive Web App) che permette agli utenti di trovare i distributori di carburante più convenienti in Italia.
+I dati mostrati sono reali e basati sugli Open Data ufficiali del Ministero.
+
+### 🌟 Caratteristiche Principali
+
+- **Ricerca Georeferenziata:** Cerca distributori inserendo una città/CAP o utilizzando il GPS del dispositivo.
+- **Completamento Automatico:** Suggerimenti intelligenti in tempo reale durante la digitazione delle località.
+- **Calcolo del Percorso:** Integrazione con OSRM (Open Source Routing Machine) per tracciare automaticamente il tragitto ottimale sulla mappa, calcolando distanza e tempi di percorrenza dall'utente al distributore.
+- **Filtri Avanzati:** Filtra per raggio di distanza (3, 5, 10, 20 km), tipo di carburante (Benzina, Gasolio, GPL, Metano, HVO, GNL) e tipologia di servizio (Self-Service o Servito).
+- **Mappa Interattiva:** Visualizzazione chiara sulla mappa (grazie a Leaflet) con raggruppamento dinamico (clustering) dei punti di interesse.
+- **Supporto PWA:** L'app può essere installata direttamente sulla schermata Home del cellulare, nascondendo l'interfaccia del browser per un'esperienza nativa (Standalone) a schermo intero.
+- **Multilingua:** Supporto nativo per Italiano e Inglese.
+- **Tema Scuro/Chiaro:** Interfaccia utente moderna (React + TailwindCSS) che si adatta alle preferenze visive dell'utente.
+- **Sincronizzazione Automatica:** Cron job interno in Node.js che esegue un aggiornamento quotidiano dei prezzi in background.
+- **Statistiche GDPR-Friendly:** Contatore visite nativo lato server basato su crittografia (hash irreversibile) per garantire il 100% dell'anonimato senza richiedere fastidiosi banner sui cookie.
+- **Sicurezza Avanzata:** Rate Limiting integrato contro attacchi DDoS o Scraping e intestazioni HTTP protettive (Anti-XSS e Anti-Clickjacking).
+- **SEO Strutturata:** Ottimizzazione profonda per Google tramite Dati Strutturati (JSON-LD), mappa `sitemap.xml`, tag `noscript` di fallback e Open Graph per la condivisione social.
+- **Dashboard Admin:** Pannello protetto da passkey sicura alla rotta `/admin-stats` per monitorare il traffico e l'utilizzo del sito.
+- **Ottimizzazione Lighthouse:** Immagini in formato WebP e caricamenti separati per massimizzare le prestazioni del browser.
+
+### 🏗️ Architettura e Struttura
+
+Il progetto è sviluppato su una solida architettura **Full-Stack** ad alte prestazioni, arricchita da un'interfaccia utente premium e curata nei dettagli.
+
+- **Frontend (Client):** Sviluppato in React (tramite Vite) con TailwindCSS per un design rapido, fluido e responsivo al 100% su Mobile.
+- **Backend (API):** Gestito da un server Node.js con framework Express 5.
+- **Database:** La massiccia mole di dati sui distributori e sui prezzi viene conservata in un database **SQLite** interno. Questo permette all'applicazione di eseguire calcoli geometrici e filtri in frazioni di secondo senza sovraccaricare il client.
+
+### 🔄 Flusso dei Dati (Sincronizzazione)
+
+L'applicazione si basa sulle informazioni rilasciate giornalmente dal Ministero (Open Data). Un processo automatico in background si occupa di:
+
+1. Scaricare i file enormi contenenti anagrafiche e prezzi.
+2. Elaborare in *streaming* queste informazioni (riga per riga), tecnica essenziale per non saturare la memoria RAM del server.
+3. Incrociare e salvare i dati aggiornati nel database SQLite.
+
+*(Nota: Per motivi di sicurezza e correttezza, l'estrazione avviene interamente sul backend e le fonti dirette dei dati non sono esposte o manipolabili dal lato client).*
+
+### 🚀 Hosting e Deploy
+
+L'intero progetto (Frontend + Server Backend) è ospitato come Web Service unico su **Render**.
+Grazie all'integrazione continua (CI/CD), ogni nuova modifica (commit) su GitHub innesca automaticamente:
+
+1. L'installazione delle dipendenze.
+2. La build ottimizzata del client React.
+3. Il lancio del server Express.
