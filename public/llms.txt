@@ -1,0 +1,13 @@
+# Fuel Finder
+Questa applicazione web permette agli utenti di trovare i distributori di carburante in Italia.
+Puoi visitare la nostra [Home Page](https://fuelfinder-msn8.onrender.com/). L'app è disponibile in due lingue: Italiano (`/it`) e Inglese (`/en`).
+
+## Dati Forniti
+Mostriamo i prezzi di benzina, diesel, GPL, metano, HVO (Bio-Diesel) e GNL (per camion). I dati sono approssimativi e forniti dal ministero.
+
+## Tecnologie usate
+L'app è costruita in [React](https://react.dev) con [Vite](https://vitejs.dev) e utilizza Tailwind CSS.
+
+## Funzionalità Aggiuntive
+- **Statistiche Admin:** Gli amministratori possono visualizzare il traffico alla pagina `/admin-stats` usando una passkey sicura.
+- **Supporto PWA:** L'app può essere installata su smartphone e desktop.
