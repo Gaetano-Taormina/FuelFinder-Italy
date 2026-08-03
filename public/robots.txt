@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin-stats
+
+Sitemap: https://fuelfinder-msn8.onrender.com/sitemap.xml
