@@ -1,10 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 import { parse } from 'csv-parse';
-import Database from 'better-sqlite3';
+import { createClient } from '@libsql/client';
 
 const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'server');
-const DB_PATH = path.join(DATA_DIR, 'storico.sqlite');
+const DB_URL = process.env.TURSO_DATABASE_URL || 'file:' + path.join(DATA_DIR, 'storico.sqlite');
+const DB_TOKEN = process.env.TURSO_AUTH_TOKEN;
 const ANAGRAFICA_PATH = path.join(DATA_DIR, 'anagrafica_impianti_attivi.csv');
 
 // Mappa Province -> Regioni
@@ -47,11 +48,8 @@ const getParseOptions = (delimiter) => ({
     from_line: 3
 });
 
-function initDb(db) {
-    db.pragma('journal_mode = WAL');
-    
-    // Aggiornato schema per includere 'region' nella Primary Key
-    db.exec(`
+async function initDb(db) {
+    await db.execute(`
         CREATE TABLE IF NOT EXISTS daily_stats (
             date TEXT,
             fuel_type TEXT,
@@ -124,15 +122,10 @@ async function processHistoricalFile(filePath, db, dateStr) {
                 const id = parseInt(record[0]);
                 const fuel = record[1];
                 const price = parseFloat(record[2]);
-                const isSelf = parseInt(record[3]); // Solitamente le statistiche si fanno sul self (1 o 0)
                 
-                // Opzionale: filtrare solo il self-service (di solito isSelf == 1)
-                // Nel db live MIMIT isSelf flag è 1 o 0. Ma teniamo tutto e facciamo media, 
-                // oppure per precisione statistica prendiamo solo prezzi validi > 0
                 if (isNaN(price) || price < 0.3 || price > 5) continue; 
                 
                 const region = stationRegions.get(id) || 'Sconosciuta';
-                
                 const regionsToUpdate = [region, 'Italia'];
                 
                 for (const r of regionsToUpdate) {
@@ -162,53 +155,47 @@ async function processHistoricalFile(filePath, db, dateStr) {
             reject(err);
         });
 
-        parser.on('end', function() {
+        parser.on('end', async function() {
             console.log(`✅ Lette righe valide per diverse regioni.`);
             
-            const insertStmt = db.prepare(`
+            const sqlTemplate = `
                 INSERT OR REPLACE INTO daily_stats 
                 (date, fuel_type, region, avg_price, min_price, max_price, min_station_id, max_station_id, sample_count)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `);
-            
-            const insertMany = db.transaction((entries) => {
-                for (const entry of entries) {
-                    insertStmt.run(
-                        dateStr, 
-                        entry.fuel, 
-                        entry.region,
-                        entry.avg_price, 
-                        entry.min, 
-                        entry.max, 
-                        entry.min_id, 
-                        entry.max_id, 
-                        entry.count
-                    );
-                }
-            });
+            `;
 
-            const rowsToInsert = [];
-            let totalFuels = 0;
+            const batchQueue = [];
             
             for (const [region, fuels] of Object.entries(stats)) {
                 for (const [fuel, data] of Object.entries(fuels)) {
-                    rowsToInsert.push({
-                        region,
-                        fuel,
-                        avg_price: Number((data.sum / data.count).toFixed(3)),
-                        min: data.min,
-                        max: data.max,
-                        min_id: data.min_id,
-                        max_id: data.max_id,
-                        count: data.count
+                    batchQueue.push({
+                        sql: sqlTemplate,
+                        args: [
+                            dateStr, 
+                            fuel, 
+                            region,
+                            Number((data.sum / data.count).toFixed(3)),
+                            data.min, 
+                            data.max, 
+                            data.min_id, 
+                            data.max_id, 
+                            data.count
+                        ]
                     });
-                    if (region === 'Italia') totalFuels++;
                 }
             }
 
-            insertMany(rowsToInsert);
-            console.log(`💾 Salvate le medie nel database per ${rowsToInsert.length} record (Regioni + Italia).`);
-            resolve();
+            try {
+                // Esegui in batch su Turso (chunk di 500)
+                for (let i = 0; i < batchQueue.length; i += 500) {
+                    const chunk = batchQueue.slice(i, i + 500);
+                    await db.batch(chunk, "write");
+                }
+                console.log(`💾 Salvate le medie nel database per ${batchQueue.length} record (Regioni + Italia).`);
+                resolve();
+            } catch(e) {
+                reject(e);
+            }
         });
 
         stream.pipe(parser);
@@ -223,23 +210,24 @@ if (isMain) {
         process.exit(1);
     }
     
-    const db = new Database(DB_PATH);
-    initDb(db);
+    const db = createClient({
+        url: DB_URL,
+        authToken: DB_TOKEN
+    });
     
-    // Carica anagrafica in memoria se non è già stata caricata
+    await initDb(db);
+    
     if (stationRegions.size === 0) loadAnagrafica();
     
     processHistoricalFile(args[0], db, args[1])
         .then(() => {
             console.log('\n🎉 Operazione completata! Database aggiornato.');
-            db.close();
             process.exit(0);
         })
         .catch(err => {
             console.error('\n❌ Errore critico:', err);
-            db.close();
             process.exit(1);
         });
 }
 
-export { processHistoricalFile, initDb, loadAnagrafica, DB_PATH, stationRegions };
+export { processHistoricalFile, initDb, loadAnagrafica, stationRegions };
