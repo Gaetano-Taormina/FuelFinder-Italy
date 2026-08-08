@@ -3,7 +3,7 @@ export class StationRepository {
         this.db = db;
     }
 
-    findStationsInBoundingBox(minLat, maxLat, minLng, maxLng, fuelType, serviceType) {
+    async findStationsInBoundingBox(minLat, maxLat, minLng, maxLng, fuelType, serviceType) {
         let serviceCondition = '';
         if (serviceType === '1') serviceCondition = 'AND p.is_self = 1';
         else if (serviceType === '0') serviceCondition = 'AND p.is_self = 0';
@@ -20,7 +20,11 @@ export class StationRepository {
               ${serviceCondition}
         `;
 
-        const stmt = this.db.prepare(sql);
-        return stmt.all(minLat, maxLat, minLng, maxLng, fuelType);
+        const result = await this.db.execute({
+            sql,
+            args: [minLat, maxLat, minLng, maxLng, fuelType]
+        });
+        
+        return result.rows;
     }
 }

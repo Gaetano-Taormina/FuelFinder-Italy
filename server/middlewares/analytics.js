@@ -1,22 +1,43 @@
-import fs from 'fs';
-import path from 'path';
 import crypto from 'crypto';
 
-const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'server');
-const STATS_PATH = path.join(DATA_DIR, 'stats.json');
 let dailyStats = {};
+let dbClient = null;
 
-if (fs.existsSync(STATS_PATH)) {
-    try {
-        dailyStats = JSON.parse(fs.readFileSync(STATS_PATH, 'utf8'));
-    } catch(e) { console.error("Errore lettura stats.json", e); }
-}
+export const setAnalyticsDb = async (db) => {
+    dbClient = db;
+    // Crea la tabella se non esiste
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS app_analytics (
+            date TEXT PRIMARY KEY,
+            visits INTEGER DEFAULT 0,
+            searches INTEGER DEFAULT 0,
+            uniqueIps TEXT DEFAULT '[]'
+        );
+    `);
+    
+    // Carica dal DB
+    const res = await db.execute('SELECT * FROM app_analytics');
+    for (const row of res.rows) {
+        dailyStats[row.date] = {
+            visits: row.visits,
+            searches: row.searches,
+            uniqueIps: JSON.parse(row.uniqueIps || '[]')
+        };
+    }
+};
 
-export function saveStats() {
+export const saveStatsAsync = async (today) => {
+    if (!dbClient || !dailyStats[today]) return;
+    const s = dailyStats[today];
     try {
-        fs.writeFileSync(STATS_PATH, JSON.stringify(dailyStats, null, 2));
-    } catch(e) { console.error("Errore scrittura stats.json", e); }
-}
+        await dbClient.execute({
+            sql: `INSERT OR REPLACE INTO app_analytics (date, visits, searches, uniqueIps) VALUES (?, ?, ?, ?)`,
+            args: [today, s.visits, s.searches, JSON.stringify(s.uniqueIps)]
+        });
+    } catch(e) {
+        console.error("Errore salvataggio stats su DB:", e);
+    }
+};
 
 export const analyticsMiddleware = (req, res, next) => {
     const d = new Date();
@@ -34,12 +55,12 @@ export const analyticsMiddleware = (req, res, next) => {
         if (clientIp && !dailyStats[today].uniqueIps.includes(clientIp)) {
             dailyStats[today].uniqueIps.push(clientIp);
         }
-        saveStats();
+        saveStatsAsync(today);
         return res.json({ status: 'ok' });
     }
     else if (req.path === '/api/stations') {
         dailyStats[today].searches++;
-        saveStats();
+        saveStatsAsync(today);
     }
     
     next();
@@ -60,6 +81,6 @@ export const trackStaticVisit = (req) => {
     if (!dailyStats[today].uniqueIps.includes(anonHash)) {
         dailyStats[today].uniqueIps.push(anonHash);
         dailyStats[today].visits++;
-        saveStats();
+        saveStatsAsync(today);
     }
 };
