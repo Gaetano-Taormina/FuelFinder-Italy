@@ -4,7 +4,8 @@ import { parse } from 'csv-parse';
 import { Readable } from 'stream';
 import Database from 'better-sqlite3';
 
-const TEMP_DB_PATH = path.join(process.cwd(), 'server', 'database_temp.sqlite');
+const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'server');
+const TEMP_DB_PATH = path.join(DATA_DIR, 'database_temp.sqlite');
 const URL_ANAGRAFICA = 'https://www.mimit.gov.it/images/exportCSV/anagrafica_impianti_attivi.csv';
 const URL_PREZZI = 'https://www.mimit.gov.it/images/exportCSV/prezzo_alle_8.csv';
 
