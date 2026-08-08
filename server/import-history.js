@@ -3,8 +3,9 @@ import path from 'path';
 import { parse } from 'csv-parse';
 import Database from 'better-sqlite3';
 
-const DB_PATH = path.join(process.cwd(), 'server', 'storico.sqlite');
-const ANAGRAFICA_PATH = path.join(process.cwd(), 'server', 'anagrafica_impianti_attivi.csv');
+const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'server');
+const DB_PATH = path.join(DATA_DIR, 'storico.sqlite');
+const ANAGRAFICA_PATH = path.join(DATA_DIR, 'anagrafica_impianti_attivi.csv');
 
 // Mappa Province -> Regioni
 const provinceToRegion = {

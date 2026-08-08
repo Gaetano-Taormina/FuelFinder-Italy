@@ -28,8 +28,9 @@ app.use(rateLimiter);
 app.use(analyticsMiddleware);
 
 // --- DATABASE INIZIALIZZAZIONE ---
-const DB_PATH = path.join(process.cwd(), 'server', 'database.sqlite');
-const TEMP_DB_PATH = path.join(process.cwd(), 'server', 'database_temp.sqlite');
+const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'server');
+const DB_PATH = path.join(DATA_DIR, 'database.sqlite');
+const TEMP_DB_PATH = path.join(DATA_DIR, 'database_temp.sqlite');
 let db;
 
 async function performSyncAndSwap() {

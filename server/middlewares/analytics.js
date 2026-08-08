@@ -2,7 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 
-const STATS_PATH = path.join(process.cwd(), 'server', 'stats.json');
+const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'server');
+const STATS_PATH = path.join(DATA_DIR, 'stats.json');
 let dailyStats = {};
 
 if (fs.existsSync(STATS_PATH)) {
