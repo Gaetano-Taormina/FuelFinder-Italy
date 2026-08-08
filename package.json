@@ -17,7 +17,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "better-sqlite3": "^13.0.2",
+    "@libsql/client": "^0.17.4",
     "compression": "^1.8.1",
     "cors": "^2.8.6",
     "csv-parse": "^7.0.1",
