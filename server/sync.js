@@ -1,42 +1,32 @@
-import path from 'path';
-import fs from 'fs';
 import { parse } from 'csv-parse';
 import { Readable } from 'stream';
-import Database from 'better-sqlite3';
 
-const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'server');
-const TEMP_DB_PATH = path.join(DATA_DIR, 'database_temp.sqlite');
 const URL_ANAGRAFICA = 'https://www.mimit.gov.it/images/exportCSV/anagrafica_impianti_attivi.csv';
 const URL_PREZZI = 'https://www.mimit.gov.it/images/exportCSV/prezzo_alle_8.csv';
+const BATCH_SIZE = 500; // Limite sicuro per Turso e la RAM di Render
 
-export async function sync(retries = 3) {
+export async function sync(dbClient, retries = 3) {
     try {
-        await doSync();
+        await doSync(dbClient);
     } catch (error) {
         console.error(`[Sync] Errore durante la sincronizzazione:`, error.message);
         if (retries > 0) {
             console.log(`[Sync] Ritento tra 5 minuti... (Tentativi rimasti: ${retries})`);
             await new Promise(res => setTimeout(res, 5 * 60 * 1000));
-            return sync(retries - 1);
+            return sync(dbClient, retries - 1);
         }
         throw error;
     }
 }
 
-async function doSync() {
-    console.log('Avvio sincronizzazione dati dal MIMIT...');
+async function doSync(db) {
+    console.log('Avvio sincronizzazione dati dal MIMIT su Turso...');
 
-    // Elimina eventuale file temporaneo precedente rimasto appeso
-    if (fs.existsSync(TEMP_DB_PATH)) {
-        fs.unlinkSync(TEMP_DB_PATH);
-    }
-
-    const db = new Database(TEMP_DB_PATH);
-    db.pragma('journal_mode = WAL');
-
-    console.log('Creazione tabelle nel database temporaneo...');
-    db.exec(`
-        CREATE TABLE stations (
+    console.log('Creazione tabelle temporanee...');
+    await db.batch([
+        `DROP TABLE IF EXISTS stations_temp;`,
+        `DROP TABLE IF EXISTS prices_temp;`,
+        `CREATE TABLE stations_temp (
             id INTEGER PRIMARY KEY,
             gestore TEXT,
             bandiera TEXT,
@@ -47,16 +37,15 @@ async function doSync() {
             provincia TEXT,
             latitudine REAL,
             longitudine REAL
-        );
-
-        CREATE TABLE prices (
+        );`,
+        `CREATE TABLE prices_temp (
             id_impianto INTEGER,
             desc_carburante TEXT,
             prezzo REAL,
             is_self INTEGER,
             dt_comunicazione TEXT
-        );
-    `);
+        );`
+    ], "write");
 
     const parseOptions = {
         columns: false,
@@ -68,8 +57,7 @@ async function doSync() {
         from_line: 3
     };
 
-    // Helper function to process stream
-    const processStream = (url, insertStmt, rowProcessor) => {
+    const processStream = (url, sqlTemplate, rowMapper) => {
         return new Promise(async (resolve, reject) => {
             try {
                 const response = await fetch(url);
@@ -79,23 +67,36 @@ async function doSync() {
                 const stream = Readable.fromWeb(response.body);
                 
                 let count = 0;
-                parser.on('readable', () => {
+                let batchQueue = [];
+                
+                parser.on('readable', async () => {
                     let record;
-                    db.exec('BEGIN TRANSACTION');
                     try {
                         while ((record = parser.read()) !== null) {
-                            rowProcessor(insertStmt, record);
-                            count++;
+                            const args = rowMapper(record);
+                            if (args) {
+                                batchQueue.push({ sql: sqlTemplate, args });
+                                count++;
+                            }
+                            
+                            if (batchQueue.length >= BATCH_SIZE) {
+                                parser.pause();
+                                const currentBatch = [...batchQueue];
+                                batchQueue = [];
+                                await db.batch(currentBatch, "write");
+                                parser.resume();
+                            }
                         }
-                        db.exec('COMMIT');
                     } catch (e) {
-                        db.exec('ROLLBACK');
                         reject(e);
                     }
                 });
 
                 parser.on('error', reject);
-                parser.on('end', () => {
+                parser.on('end', async () => {
+                    if (batchQueue.length > 0) {
+                        await db.batch(batchQueue, "write");
+                    }
                     console.log(`Inserite ${count} righe da ${url}`);
                     resolve();
                 });
@@ -107,46 +108,41 @@ async function doSync() {
         });
     };
 
-    const insertStation = db.prepare(`
-        INSERT INTO stations (id, gestore, bandiera, tipo_impianto, nome_impianto, indirizzo, comune, provincia, latitudine, longitudine)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    const insertPrice = db.prepare(`
-        INSERT INTO prices (id_impianto, desc_carburante, prezzo, is_self, dt_comunicazione)
-        VALUES (?, ?, ?, ?, ?)
-    `);
-
     console.log(`Download e inserimento anagrafica da ${URL_ANAGRAFICA}...`);
-    await processStream(URL_ANAGRAFICA, insertStation, (stmt, r) => {
-        if(r.length < 10) return;
-        try {
-            stmt.run(
-                parseInt(r[0]), r[1], r[2], r[3], r[4], r[5], r[6], r[7],
-                parseFloat(r[r.length-2]), parseFloat(r[r.length-1])
-            );
-        } catch(e) {}
-    });
+    await processStream(
+        URL_ANAGRAFICA,
+        `INSERT INTO stations_temp (id, gestore, bandiera, tipo_impianto, nome_impianto, indirizzo, comune, provincia, latitudine, longitudine) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (r) => {
+            if(r.length < 10) return null;
+            return [
+                parseInt(r[0]) || 0, r[1], r[2], r[3], r[4], r[5], r[6], r[7],
+                parseFloat(r[r.length-2]) || 0, parseFloat(r[r.length-1]) || 0
+            ];
+        }
+    );
 
     console.log(`Download e inserimento prezzi da ${URL_PREZZI}...`);
-    await processStream(URL_PREZZI, insertPrice, (stmt, r) => {
-        if(r.length < 5) return;
-        try {
-            stmt.run(
-                parseInt(r[0]), r[1], parseFloat(r[2]), parseInt(r[3]), r[4]
-            );
-        } catch(e) {}
-    });
+    await processStream(
+        URL_PREZZI,
+        `INSERT INTO prices_temp (id_impianto, desc_carburante, prezzo, is_self, dt_comunicazione) VALUES (?, ?, ?, ?, ?)`,
+        (r) => {
+            if(r.length < 5) return null;
+            return [
+                parseInt(r[0]) || 0, r[1], parseFloat(r[2]) || 0, parseInt(r[3]) || 0, r[4]
+            ];
+        }
+    );
 
-    console.log('Creazione indici...');
-    db.exec(`
-        BEGIN TRANSACTION;
-        CREATE INDEX idx_stations_lat_lng ON stations(latitudine, longitudine);
-        CREATE INDEX idx_prices_impianto ON prices(id_impianto);
-        CREATE INDEX idx_prices_carburante ON prices(desc_carburante);
-        COMMIT;
-    `);
+    console.log('Sostituzione tabelle (Swap) e creazione indici...');
+    await db.batch([
+        `DROP TABLE IF EXISTS stations;`,
+        `DROP TABLE IF EXISTS prices;`,
+        `ALTER TABLE stations_temp RENAME TO stations;`,
+        `ALTER TABLE prices_temp RENAME TO prices;`,
+        `CREATE INDEX IF NOT EXISTS idx_stations_lat_lng ON stations(latitudine, longitudine);`,
+        `CREATE INDEX IF NOT EXISTS idx_prices_impianto ON prices(id_impianto);`,
+        `CREATE INDEX IF NOT EXISTS idx_prices_carburante ON prices(desc_carburante);`
+    ], "write");
 
-    db.close();
-    console.log('Sincronizzazione DB temporaneo completata con successo!');
+    console.log('Sincronizzazione DB completata con successo!');
 }
