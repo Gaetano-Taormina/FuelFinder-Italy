@@ -61,8 +61,8 @@ async function initializeDB() {
         `);
         const rowCount = await db.execute('SELECT COUNT(*) as c FROM stations');
         if (rowCount.rows[0].c === 0) {
-            console.log("Database vuoto. Eseguo sincronizzazione iniziale...");
-            await sync(db);
+            console.log("Database vuoto. Eseguo sincronizzazione iniziale in background...");
+            sync(db).catch(e => console.error("Errore sync iniziale in background:", e));
         }
     } catch (e) {
         console.error("Errore durante sync iniziale:", e);

@@ -1,11 +1,21 @@
 import { parse } from 'csv-parse';
 import { Readable } from 'stream';
+import { createClient } from '@libsql/client';
+import path from 'path';
+import fs from 'fs';
+import 'dotenv/config';
 
 const URL_ANAGRAFICA = 'https://www.mimit.gov.it/images/exportCSV/anagrafica_impianti_attivi.csv';
 const URL_PREZZI = 'https://www.mimit.gov.it/images/exportCSV/prezzo_alle_8.csv';
 const BATCH_SIZE = 500; // Limite sicuro per Turso e la RAM di Render
 
 export async function sync(dbClient, retries = 3) {
+    if (!dbClient) {
+        const DB_URL = process.env.TURSO_DATABASE_URL || 'file:' + path.join(process.env.DATA_DIR || path.join(process.cwd(), 'server'), 'database.sqlite');
+        const DB_TOKEN = process.env.TURSO_AUTH_TOKEN;
+        dbClient = createClient({ url: DB_URL, authToken: DB_TOKEN });
+    }
+    
     try {
         await doSync(dbClient);
     } catch (error) {
