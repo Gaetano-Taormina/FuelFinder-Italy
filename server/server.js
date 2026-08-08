@@ -1,7 +1,7 @@
 import express from 'express';
 import compression from 'compression';
 import cors from 'cors';
-import Database from 'better-sqlite3';
+import { createClient } from '@libsql/client';
 import path from 'path';
 import fs from 'fs';
 import 'dotenv/config';
@@ -9,7 +9,7 @@ import 'dotenv/config';
 import { sync } from './sync.js';
 import { cities } from './cities.js';
 import { securityHeaders, rateLimiter } from './middlewares/security.js';
-import { analyticsMiddleware, trackStaticVisit } from './middlewares/analytics.js';
+import { analyticsMiddleware, trackStaticVisit, setAnalyticsDb } from './middlewares/analytics.js';
 import { globalErrorHandler } from './middlewares/errorHandler.js';
 import { timeoutMiddleware } from './middlewares/timeout.js';
 import { setupApiRoutes } from './routes/api.js';
@@ -28,49 +28,49 @@ app.use(rateLimiter);
 app.use(analyticsMiddleware);
 
 // --- DATABASE INIZIALIZZAZIONE ---
-const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'server');
-const DB_PATH = path.join(DATA_DIR, 'database.sqlite');
-const TEMP_DB_PATH = path.join(DATA_DIR, 'database_temp.sqlite');
-let db;
+const DB_URL = process.env.TURSO_DATABASE_URL || 'file:' + path.join(process.env.DATA_DIR || path.join(process.cwd(), 'server'), 'database.sqlite');
+const DB_TOKEN = process.env.TURSO_AUTH_TOKEN;
 
-async function performSyncAndSwap() {
-    await sync();
-    
-    // Inizia la sostituzione bloccante (Blue-Green DB Swap)
-    if (db) db.close();
-    
-    if (fs.existsSync(DB_PATH)) {
-        try {
-            fs.unlinkSync(DB_PATH);
-        } catch (e) {
-            console.warn("Attenzione: impossibile eliminare il vecchio DB prima del rename.", e.message);
-        }
-    }
-    
-    fs.renameSync(TEMP_DB_PATH, DB_PATH);
-    
-    db = new Database(DB_PATH, { readonly: true });
-    db.pragma('cache_size = -32000'); 
-    db.pragma('mmap_size = 536870912');
+let db;
+try {
+    db = createClient({
+        url: DB_URL,
+        authToken: DB_TOKEN
+    });
+} catch (err) {
+    console.error("ERRORE FATALE durante l'inizializzazione di Turso:", err);
+    process.exit(1);
 }
 
-if (!fs.existsSync(DB_PATH)) {
-    console.log("Database non trovato. Eseguo sincronizzazione iniziale...");
+// Ensure tables exist if local or empty remote
+async function initializeDB() {
     try {
-        await performSyncAndSwap(); 
+        await db.execute(`
+            CREATE TABLE IF NOT EXISTS stations (
+                id INTEGER PRIMARY KEY,
+                gestore TEXT,
+                bandiera TEXT,
+                tipo_impianto TEXT,
+                nome_impianto TEXT,
+                indirizzo TEXT,
+                comune TEXT,
+                provincia TEXT,
+                latitudine REAL,
+                longitudine REAL
+            );
+        `);
+        const rowCount = await db.execute('SELECT COUNT(*) as c FROM stations');
+        if (rowCount.rows[0].c === 0) {
+            console.log("Database vuoto. Eseguo sincronizzazione iniziale...");
+            await sync(db);
+        }
     } catch (e) {
         console.error("Errore durante sync iniziale:", e);
     }
-} else {
-    try {
-        db = new Database(DB_PATH, { readonly: true });
-        db.pragma('cache_size = -32000'); 
-        db.pragma('mmap_size = 536870912'); 
-    } catch (err) {
-        console.error("ERRORE FATALE durante l'apertura del database:", err);
-        process.exit(1);
-    }
 }
+
+await initializeDB();
+await setAnalyticsDb(db);
 
 // --- API ROUTES ---
 setupApiRoutes(app, db);
@@ -190,7 +190,7 @@ function scheduleDailySync() {
     setTimeout(async () => {
         console.log(`[Cron] Esecuzione aggiornamento programmato dei prezzi...`);
         try {
-            await performSyncAndSwap();
+            await sync(db);
             console.log("[Cron] Aggiornamento completato con successo.");
         } catch (e) {
             console.error("[Cron] Errore durante l'aggiornamento programmato:", e);
