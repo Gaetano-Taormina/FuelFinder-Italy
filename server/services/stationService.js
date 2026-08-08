@@ -5,7 +5,7 @@ export class StationService {
         this.repository = new StationRepository(db);
     }
 
-    getStationsNearby({ lat, lng, radius, fuelType, serviceType }) {
+    async getStationsNearby({ lat, lng, radius, fuelType, serviceType }) {
         const radiusInKm = radius + 2; // Margine di tolleranza
         const latMargin = radiusInKm / 111.0;
         const lngMargin = radiusInKm / 80.0;
@@ -14,7 +14,7 @@ export class StationService {
         const minLng = lng - lngMargin;
         const maxLng = lng + lngMargin;
 
-        const rows = this.repository.findStationsInBoundingBox(minLat, maxLat, minLng, maxLng, fuelType, serviceType);
+        const rows = await this.repository.findStationsInBoundingBox(minLat, maxLat, minLng, maxLng, fuelType, serviceType);
 
         const getDistance = (lat1, lon1, lat2, lon2) => {
             const R = 6371; // Raggio terrestre in km
