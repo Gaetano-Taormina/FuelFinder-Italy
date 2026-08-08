@@ -103,6 +103,7 @@ async function doSync(db) {
                 });
 
                 parser.on('error', reject);
+                stream.on('error', reject);
                 parser.on('end', async () => {
                     if (batchQueue.length > 0) {
                         await db.batch(batchQueue, "write");
