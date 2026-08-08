@@ -47,7 +47,7 @@ export class ApiController {
         }
     }
 
-    getStations = (req, res, next) => {
+    getStations = async (req, res, next) => {
         try {
             const validatedInput = validateStationsInput(req.query);
             const cacheKey = JSON.stringify(validatedInput);
@@ -61,7 +61,7 @@ export class ApiController {
                 }
             }
 
-            const results = this.stationService.getStationsNearby(validatedInput);
+            const results = await this.stationService.getStationsNearby(validatedInput);
             
             if (apiCache.size >= MAX_CACHE_SIZE) {
                 // Svuota mezza cache se è troppo grande
