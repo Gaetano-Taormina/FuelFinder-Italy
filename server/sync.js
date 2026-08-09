@@ -2,7 +2,6 @@ import { parse } from 'csv-parse';
 import { Readable } from 'stream';
 import { createClient } from '@libsql/client';
 import path from 'path';
-import fs from 'fs';
 import 'dotenv/config';
 
 const URL_ANAGRAFICA = 'https://www.mimit.gov.it/images/exportCSV/anagrafica_impianti_attivi.csv';
