@@ -1,12 +1,8 @@
 import path from 'path';
-import { fileURLToPath } from 'url';
 import readline from 'readline';
 import crypto from 'crypto';
 import 'dotenv/config';
 import { createClient } from '@libsql/client';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const ADMIN_PASSKEY = process.env.ADMIN_PASSKEY;
 
