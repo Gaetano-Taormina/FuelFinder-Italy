@@ -37,15 +37,15 @@ The project features a high-performance **Full-Stack** architecture with a moder
 
 - **Frontend (Client):** Developed in React (via Vite) with TailwindCSS for a fast, fluid, and 100% Mobile-responsive design.
 - **Backend (API):** Managed by a Node.js server with the Express 5 framework.
-- **Database:** The massive amount of data on stations and prices is stored in an internal **SQLite** database. This allows the application to perform geometric calculations and filtering in fractions of a second without overloading the client.
+- **Database:** The massive amount of data on stations and prices is stored in a **Turso (libSQL)** database. This allows the application to perform geometric calculations and filtering in fractions of a second without overloading the client.
 
 ### 🔄 Data Flow (Synchronization)
 
 The application relies on information released daily by the Ministry (Open Data). A background automated process handles:
 
-1. Downloading massive files containing registry and prices.
-2. *Streaming* this information (line by line), an essential technique to avoid saturating the server's RAM.
-3. Cross-referencing and saving the updated data into the SQLite database.
+1. Downloading the files containing registry and prices entirely into the server's RAM. This prevents the fragile MIMIT network from dropping connections during database transactions.
+2. Parsing the data in memory and chunking it into safe batches.
+3. Cross-referencing and saving the updated data into the Turso database, with an automated 8-retry fallback system for maximum stability.
 
 *(Note: For security and integrity reasons, extraction occurs entirely on the backend and direct data sources are neither exposed nor manipulable from the client side).*
 
@@ -88,15 +88,15 @@ Il progetto è sviluppato su una solida architettura **Full-Stack** ad alte pres
 
 - **Frontend (Client):** Sviluppato in React (tramite Vite) con TailwindCSS per un design rapido, fluido e responsivo al 100% su Mobile.
 - **Backend (API):** Gestito da un server Node.js con framework Express 5.
-- **Database:** La massiccia mole di dati sui distributori e sui prezzi viene conservata in un database **SQLite** interno. Questo permette all'applicazione di eseguire calcoli geometrici e filtri in frazioni di secondo senza sovraccaricare il client.
+- **Database:** La massiccia mole di dati sui distributori e sui prezzi viene conservata in un database **Turso (libSQL)**. Questo permette all'applicazione di eseguire calcoli geometrici e filtri in frazioni di secondo senza sovraccaricare il client.
 
 ### 🔄 Flusso dei Dati (Sincronizzazione)
 
 L'applicazione si basa sulle informazioni rilasciate giornalmente dal Ministero (Open Data). Un processo automatico in background si occupa di:
 
-1. Scaricare i file enormi contenenti anagrafiche e prezzi.
-2. Elaborare in *streaming* queste informazioni (riga per riga), tecnica essenziale per non saturare la memoria RAM del server.
-3. Incrociare e salvare i dati aggiornati nel database SQLite.
+1. Scaricare per intero i file contenenti anagrafiche e prezzi direttamente nella RAM del server. Questo disaccoppia la rete dal database, evitando blocchi causati dall'instabilità dei server ministeriali.
+2. Fare il parsing dei dati in memoria, dividendoli in chunk sicuri.
+3. Incrociare e salvare i dati aggiornati nel database Turso, supportato da un sistema di retry automatico (fino a 8 tentativi) per garantire la massima operatività.
 
 *(Nota: Per motivi di sicurezza e correttezza, l'estrazione avviene interamente sul backend e le fonti dirette dei dati non sono esposte o manipolabili dal lato client).*
 
