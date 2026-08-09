@@ -131,23 +131,55 @@ app.use(async (req, res) => {
                 ? `Trova i distributori di benzina, diesel, GPL e metano più economici a ${cityCap}. Mappa interattiva con prezzi sempre aggiornati.`
                 : `Find the cheapest petrol, diesel, LPG and CNG stations in ${cityCap}. Interactive map with real-time fuel prices.`;
 
+            const currentUrl = `https://${req.get('host')}${req.originalUrl}`;
+            
             html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
+            html = html.replace(/<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${currentUrl}">`);
             html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${desc}">`);
             html = html.replace(/<meta property="og:title" content="[^"]*">/, `<meta property="og:title" content="${title}">`);
             html = html.replace(/<meta property="og:description" content="[^"]*">/, `<meta property="og:description" content="${desc}">`);
-            html = html.replace(/<meta property="og:type" content="[^"]*">/, `<meta property="og:type" content="website">\n    <meta property="og:image" content="https://${req.get('host')}/assets/img/icon-512.png">`);
+            html = html.replace(/<meta property="og:type" content="[^"]*">/, `<meta property="og:type" content="website">\n    <meta property="og:image" content="https://${req.get('host')}/assets/img/icon-512.png">\n    <meta property="og:url" content="${currentUrl}">`);
             
-            const jsonLd = {
-                "@context": "https://schema.org",
-                "@type": "Service",
-                "name": title,
-                "description": desc,
-                "url": `https://${req.get('host')}${req.originalUrl}`,
-                "areaServed": {
-                    "@type": "City",
-                    "name": cityCap
+            // Inietta contenuto HTML per i crawler (risolve "Scansionata, ma attualmente non indicizzata")
+            const staticHtml = `<div style="display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; padding: 20px; text-align: center; background-color: #f9fafb;">
+                <h1 style="font-size: 1.8rem; font-weight: bold; color: #111827; margin-bottom: 10px;">${title}</h1>
+                <p style="font-size: 1rem; color: #4b5563; max-width: 600px; line-height: 1.5;">${desc}</p>
+            </div>`;
+            html = html.replace('<div id="root"></div>', `<div id="root">${staticHtml}</div>`);
+            
+            const jsonLd = [
+                {
+                    "@context": "https://schema.org",
+                    "@type": "WebPage",
+                    "name": title,
+                    "description": desc,
+                    "url": currentUrl
+                },
+                {
+                    "@context": "https://schema.org",
+                    "@type": "BreadcrumbList",
+                    "itemListElement": [
+                        {
+                            "@type": "ListItem",
+                            "position": 1,
+                            "name": "Home",
+                            "item": "https://fuelfinder-msn8.onrender.com/"
+                        },
+                        {
+                            "@type": "ListItem",
+                            "position": 2,
+                            "name": "Italia",
+                            "item": "https://fuelfinder-msn8.onrender.com/it"
+                        },
+                        {
+                            "@type": "ListItem",
+                            "position": 3,
+                            "name": cityCap,
+                            "item": currentUrl
+                        }
+                    ]
                 }
-            };
+            ];
             const jsonLdScript = `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>`;
             html = html.replace('</head>', `${jsonLdScript}\n</head>`);
             
