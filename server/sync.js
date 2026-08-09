@@ -9,7 +9,7 @@ const URL_ANAGRAFICA = 'https://www.mimit.gov.it/images/exportCSV/anagrafica_imp
 const URL_PREZZI = 'https://www.mimit.gov.it/images/exportCSV/prezzo_alle_8.csv';
 const BATCH_SIZE = 500; // Limite sicuro per Turso e la RAM di Render
 
-export async function sync(dbClient, retries = 3) {
+export async function sync(dbClient, retries = 8) {
     if (!dbClient) {
         const DB_URL = process.env.TURSO_DATABASE_URL || 'file:' + path.join(process.env.DATA_DIR || path.join(process.cwd(), 'server'), 'database.sqlite');
         const DB_TOKEN = process.env.TURSO_AUTH_TOKEN;
@@ -32,6 +32,29 @@ export async function sync(dbClient, retries = 3) {
 async function doSync(db) {
     console.log('Avvio sincronizzazione dati dal MIMIT su Turso...');
 
+    // 1. Controllo Header If-Modified-Since
+    console.log('Controllo aggiornamenti sul server ministeriale...');
+    await db.execute(`CREATE TABLE IF NOT EXISTS sync_meta (key TEXT PRIMARY KEY, value TEXT);`);
+    const lastSync = await db.execute(`SELECT value FROM sync_meta WHERE key = 'URL_PREZZI'`);
+    const lastModifiedHeader = lastSync.rows.length > 0 ? lastSync.rows[0].value : null;
+
+    const headers = {};
+    if (lastModifiedHeader) {
+        headers['If-Modified-Since'] = lastModifiedHeader;
+    }
+
+    const headResponse = await fetch(URL_PREZZI, { method: 'HEAD', headers });
+    if (headResponse.status === 304) {
+        console.log(`HTTP 304 (Not Modified): I dati del Ministero non sono cambiati dall'ultimo sync (${lastModifiedHeader}). Aggiornamento saltato con successo (Risorse risparmiate).`);
+        return;
+    }
+    if (!headResponse.ok) {
+        throw new Error(`Errore Server MIMIT - HTTP ${headResponse.status} ${headResponse.statusText}. Riprovo più tardi.`);
+    }
+
+    const newLastModified = headResponse.headers.get('last-modified');
+
+    // 2. Creazione Tabelle
     console.log('Creazione tabelle temporanee...');
     await db.batch([
         `DROP TABLE IF EXISTS stations_temp;`,
@@ -71,10 +94,15 @@ async function doSync(db) {
         return new Promise(async (resolve, reject) => {
             try {
                 const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                if (!response.ok) {
+                    throw new Error(`Errore Server MIMIT - HTTP ${response.status} ${response.statusText} durante il download di ${url}`);
+                }
+                
+                console.log(`Scaricamento completato in memoria per ${url}. Avvio parsing...`);
+                const textData = await response.text();
                 
                 const parser = parse(parseOptions);
-                const stream = Readable.fromWeb(response.body);
+                const stream = Readable.from([textData]);
                 
                 let count = 0;
                 let batchQueue = [];
@@ -154,6 +182,13 @@ async function doSync(db) {
         `CREATE INDEX IF NOT EXISTS idx_prices_impianto ON prices(id_impianto);`,
         `CREATE INDEX IF NOT EXISTS idx_prices_carburante ON prices(desc_carburante);`
     ], "write");
+
+    if (newLastModified) {
+        await db.execute({
+            sql: `INSERT OR REPLACE INTO sync_meta (key, value) VALUES (?, ?)`,
+            args: ['URL_PREZZI', newLastModified]
+        });
+    }
 
     console.log('Sincronizzazione DB completata con successo!');
 }
