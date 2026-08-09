@@ -1,14 +1,13 @@
-import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import readline from 'readline';
 import crypto from 'crypto';
 import 'dotenv/config';
+import { createClient } from '@libsql/client';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const STATS_PATH = path.join(__dirname, 'stats.json');
 const ADMIN_PASSKEY = process.env.ADMIN_PASSKEY;
 
 if (!ADMIN_PASSKEY) {
@@ -21,7 +20,7 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
-rl.question('Inserisci la Passkey Admin: ', (inputKey) => {
+rl.question('Inserisci la Passkey Admin: ', async (inputKey) => {
     rl.close();
     const cleanKey = inputKey.trim();
 
@@ -45,33 +44,31 @@ rl.question('Inserisci la Passkey Admin: ', (inputKey) => {
     console.log('   📊 DASHBOARD STATISTICHE - CARBURANTE 📊');
     console.log('=============================================\n');
 
-    if (!fs.existsSync(STATS_PATH)) {
-        console.log('Nessuna statistica registrata finora. Il file stats.json non esiste.');
-        process.exit(0);
-    }
-
+    const DB_URL = process.env.TURSO_DATABASE_URL || 'file:' + path.join(process.cwd(), 'server', 'database.sqlite');
+    const DB_TOKEN = process.env.TURSO_AUTH_TOKEN;
+    
     try {
-        const rawData = fs.readFileSync(STATS_PATH, 'utf8');
-        const stats = JSON.parse(rawData);
-        const dates = Object.keys(stats).sort((a, b) => b.localeCompare(a)); // Più recenti prima
+        const db = createClient({ url: DB_URL, authToken: DB_TOKEN });
+        const res = await db.execute('SELECT * FROM app_analytics ORDER BY date DESC');
 
-        if (dates.length === 0) {
-            console.log('Il file delle statistiche è vuoto.');
+        if (res.rows.length === 0) {
+            console.log('Il database delle statistiche è vuoto.');
             process.exit(0);
         }
 
-        dates.forEach(date => {
-            const data = stats[date];
-            const uniqueUsers = data.uniqueIps ? data.uniqueIps.length : 0;
+        res.rows.forEach(row => {
+            const uniqueUsers = row.uniqueIps ? JSON.parse(row.uniqueIps).length : 0;
             
-            console.log(`📅 Data: ${date}`);
-            console.log(`   👁️  Visite Totali:    ${data.visits || 0}`);
+            console.log(`📅 Data: ${row.date}`);
+            console.log(`   👁️  Visite Totali:    ${row.visits || 0}`);
             console.log(`   👥  Visitatori Unici: ${uniqueUsers}`);
-            console.log(`   🔍  Ricerche Fatte:   ${data.searches || 0}`);
+            console.log(`   🔍  Ricerche Fatte:   ${row.searches || 0}`);
             console.log('---------------------------------------------');
         });
 
     } catch (e) {
-        console.error('Errore durante la lettura del file stats.json:', e.message);
+        console.error('Errore durante la lettura del DB (forse tabella inesistente?):', e.message);
     }
+    
+    process.exit(0);
 });
