@@ -23,10 +23,11 @@ The data shown is real and based on official Open Data from the Italian Ministry
 - **Interactive Map:** Clear map visualization (powered by Leaflet) with dynamic point-of-interest clustering.
 - **PWA Support:** The app can be installed directly on a mobile Home screen, hiding the browser UI for a native, full-screen standalone experience.
 - **Multi-language:** Native support for both English and Italian.
+- **Modern UX:** Features Optimistic UI rendering, Skeleton Loaders, CSS-only Tooltips, and SWR caching for a fluid, app-like feel.
 - **Dark/Light Theme:** Modern UI (React + TailwindCSS) that adapts to user preferences.
 - **Automated Cron Jobs:** Built-in daily synchronization with ministerial data running on an internal Node.js scheduler.
 - **Privacy-Friendly Analytics:** Native backend counter utilizing irreversible IP hashing (SHA-256) to track daily visits without requiring GDPR cookie banners.
-- **Security Hardened:** Integrated Rate Limiting against DDoS/Scraping attacks and protective HTTP Security Headers (Anti-XSS, Clickjacking).
+- **Security Hardened:** Integrated Rate Limiting against DDoS/Scraping attacks, React Error Boundaries for crash prevention, and protective HTTP Security Headers.
 - **Advanced SEO:** Highly optimized for search engines featuring JSON-LD Structured Data, `sitemap.xml`, dynamic Meta Tags, and `robots.txt`.
 - **Admin Dashboard:** Secure passkey-protected panel at `/admin-stats` for visualizing site traffic and usage stats.
 - **Lighthouse Optimized:** Next-gen image formats (WebP) and optimized React chunks for maximum speed.
@@ -74,11 +75,12 @@ I dati mostrati sono reali e basati sugli Open Data ufficiali del Ministero.
 - **Mappa Interattiva:** Visualizzazione chiara sulla mappa (grazie a Leaflet) con raggruppamento dinamico (clustering) dei punti di interesse.
 - **Supporto PWA:** L'app può essere installata direttamente sulla schermata Home del cellulare, nascondendo l'interfaccia del browser per un'esperienza nativa (Standalone) a schermo intero.
 - **Multilingua:** Supporto nativo per Italiano e Inglese.
+- **UX Moderna:** Implementa rendering Optimistic UI, Skeleton Loaders, Tooltips in puro CSS e Caching SWR per eliminare i caricamenti a scatti.
 - **Tema Scuro/Chiaro:** Interfaccia utente moderna (React + TailwindCSS) che si adatta alle preferenze visive dell'utente.
 - **Sincronizzazione Automatica:** Cron job interno in Node.js che esegue un aggiornamento quotidiano dei prezzi in background.
 - **Statistiche GDPR-Friendly:** Contatore visite nativo lato server basato su crittografia (hash irreversibile) per garantire il 100% dell'anonimato senza richiedere fastidiosi banner sui cookie.
-- **Sicurezza Avanzata:** Rate Limiting integrato contro attacchi DDoS o Scraping e intestazioni HTTP protettive (Anti-XSS e Anti-Clickjacking).
-- **SEO Strutturata:** Ottimizzazione profonda per Google tramite Dati Strutturati (JSON-LD), mappa `sitemap.xml`, tag `noscript` di fallback e Open Graph per la condivisione social.
+- **Sicurezza e Affidabilità:** Rate Limiting integrato contro attacchi DDoS, Error Boundaries in React per prevenire crash totali, e intestazioni HTTP protettive.
+- **SEO Strutturata:** Ottimizzazione profonda per Google tramite Dati Strutturati (JSON-LD), mappa `sitemap.xml`, `robots.txt`, tag `noscript` di fallback e Open Graph per i social.
 - **Dashboard Admin:** Pannello protetto da passkey sicura alla rotta `/admin-stats` per monitorare il traffico e l'utilizzo del sito.
 - **Ottimizzazione Lighthouse:** Immagini in formato WebP e caricamenti separati per massimizzare le prestazioni del browser.
 
