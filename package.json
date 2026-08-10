@@ -3,6 +3,16 @@
   "private": true,
   "version": "1.0.0",
   "description": "Trova i distributori di carburante più economici in Italia",
+  "keywords": [
+    "carburante",
+    "prezzi",
+    "mappa",
+    "italia",
+    "benzina",
+    "diesel",
+    "fuel",
+    "italy"
+  ],
   "author": "FuelFinder",
   "type": "module",
   "scripts": {
@@ -20,7 +30,7 @@
     "@libsql/client": "^0.17.4",
     "compression": "^1.8.1",
     "cors": "^2.8.6",
-    "csv-parse": "^7.0.1",
+    "csv-parse": "^7.0.2",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "i18next": "^26.3.6",
@@ -30,20 +40,21 @@
     "react-dom": "^19.2.8",
     "react-i18next": "^17.0.11",
     "react-leaflet": "^5.0.0",
+    "react-leaflet-cluster": "^4.1.3",
     "react-router-dom": "^7.18.2",
+    "swr": "^2.5.1",
     "tar": "^7.5.22"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
-    "@types/leaflet": "^1.9.21",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.4",
-    "autoprefixer": "^10.5.4",
+    "@types/leaflet": "^1.9.22",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.0.5",
     "concurrently": "^10.0.4",
-    "oxlint": "^1.75.0",
-    "postcss": "^8.5.25",
+    "oxlint": "^1.78.0",
     "tailwindcss": "^4.3.3",
-    "vite": "^8.2.0"
+    "vite": "^8.2.1",
+    "vite-plugin-compression2": "^2.5.3"
   }
 }
