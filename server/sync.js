@@ -6,7 +6,7 @@ import 'dotenv/config';
 
 const URL_ANAGRAFICA = 'https://www.mimit.gov.it/images/exportCSV/anagrafica_impianti_attivi.csv';
 const URL_PREZZI = 'https://www.mimit.gov.it/images/exportCSV/prezzo_alle_8.csv';
-const BATCH_SIZE = 500; // Limite sicuro per Turso e la RAM di Render
+const BATCH_SIZE = 2000; // Ottimizzato per ridurre i roundtrip verso il database
 
 export async function sync(dbClient, retries = 8) {
     if (!dbClient) {
@@ -173,13 +173,74 @@ async function doSync(db) {
 
     console.log('Sostituzione tabelle (Swap) e creazione indici...');
     await db.batch([
-        `DROP TABLE IF EXISTS stations;`,
-        `DROP TABLE IF EXISTS prices;`,
-        `ALTER TABLE stations_temp RENAME TO stations;`,
-        `ALTER TABLE prices_temp RENAME TO prices;`,
+        // 1. Assicurati che le tabelle principali esistano con vincoli appropriati
+        `CREATE TABLE IF NOT EXISTS stations (
+            id INTEGER PRIMARY KEY,
+            gestore TEXT,
+            bandiera TEXT,
+            tipo_impianto TEXT,
+            nome_impianto TEXT,
+            indirizzo TEXT,
+            comune TEXT,
+            provincia TEXT,
+            latitudine REAL,
+            longitudine REAL
+        );`,
+        `CREATE TABLE IF NOT EXISTS prices (
+            id_impianto INTEGER,
+            desc_carburante TEXT,
+            prezzo REAL,
+            is_self INTEGER,
+            dt_comunicazione TEXT,
+            UNIQUE(id_impianto, desc_carburante, is_self)
+        );`,
+
+        // 2. Indici principali
         `CREATE INDEX IF NOT EXISTS idx_stations_lat_lng ON stations(latitudine, longitudine);`,
         `CREATE INDEX IF NOT EXISTS idx_prices_impianto ON prices(id_impianto);`,
-        `CREATE INDEX IF NOT EXISTS idx_prices_carburante ON prices(desc_carburante);`
+        `CREATE INDEX IF NOT EXISTS idx_prices_carburante ON prices(desc_carburante);`,
+
+        // 3. Upsert Stations: inserisci o aggiorna solo se modificato
+        `INSERT INTO stations (id, gestore, bandiera, tipo_impianto, nome_impianto, indirizzo, comune, provincia, latitudine, longitudine)
+         SELECT id, gestore, bandiera, tipo_impianto, nome_impianto, indirizzo, comune, provincia, latitudine, longitudine FROM stations_temp
+         WHERE true 
+         ON CONFLICT(id) DO UPDATE SET
+            gestore = excluded.gestore,
+            bandiera = excluded.bandiera,
+            tipo_impianto = excluded.tipo_impianto,
+            nome_impianto = excluded.nome_impianto,
+            indirizzo = excluded.indirizzo,
+            comune = excluded.comune,
+            provincia = excluded.provincia,
+            latitudine = excluded.latitudine,
+            longitudine = excluded.longitudine
+         WHERE stations.gestore != excluded.gestore 
+            OR stations.bandiera != excluded.bandiera 
+            OR stations.tipo_impianto != excluded.tipo_impianto 
+            OR stations.nome_impianto != excluded.nome_impianto 
+            OR stations.indirizzo != excluded.indirizzo 
+            OR stations.comune != excluded.comune 
+            OR stations.provincia != excluded.provincia 
+            OR stations.latitudine != excluded.latitudine 
+            OR stations.longitudine != excluded.longitudine;`,
+
+        // 4. Upsert Prices: inserisci o aggiorna solo se modificato
+        `INSERT INTO prices (id_impianto, desc_carburante, prezzo, is_self, dt_comunicazione)
+         SELECT id_impianto, desc_carburante, prezzo, is_self, dt_comunicazione FROM prices_temp
+         WHERE true
+         ON CONFLICT(id_impianto, desc_carburante, is_self) DO UPDATE SET
+            prezzo = excluded.prezzo,
+            dt_comunicazione = excluded.dt_comunicazione
+         WHERE prices.prezzo != excluded.prezzo 
+            OR prices.dt_comunicazione != excluded.dt_comunicazione;`,
+
+        // 5. Rimuovi stazioni e prezzi non più presenti (opzionale, ma mantiene DB pulito)
+        `DELETE FROM prices WHERE id_impianto NOT IN (SELECT id FROM stations_temp);`,
+        `DELETE FROM stations WHERE id NOT IN (SELECT id FROM stations_temp);`,
+
+        // 6. Elimina tabelle temporanee
+        `DROP TABLE IF EXISTS stations_temp;`,
+        `DROP TABLE IF EXISTS prices_temp;`
     ], "write");
 
     if (newLastModified) {
