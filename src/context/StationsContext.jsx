@@ -1,15 +1,17 @@
 import { createContext, useState, useEffect, useContext } from 'react';
+import useSWR from 'swr';
 
 const StationsContext = createContext();
 
 export const useStations = () => useContext(StationsContext);
 
-export const StationsProvider = ({ children }) => {
-  const [stations, setStations] = useState([]);
-  const [totalStations, setTotalStations] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+const fetcher = async (url) => {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Network response was not ok');
+  return res.json();
+};
 
+export const StationsProvider = ({ children }) => {
   // Filters State
   const [locationStr, setLocationStr] = useState('');
   const [radius, setRadius] = useState(5);
@@ -22,6 +24,25 @@ export const StationsProvider = ({ children }) => {
   // Selected Station State
   const [selectedStation, setSelectedStation] = useState(null);
   const [routeData, setRouteData] = useState(null);
+
+  // SWR Fetch for Stations (Caching & Optimistic UI)
+  const stationsUrl = userPos 
+    ? `/api/stations?lat=${userPos.lat}&lng=${userPos.lng}&radius=${radius}&fuelType=${encodeURIComponent(fuelType)}&serviceType=${serviceType}` 
+    : null;
+
+  const { data: stationsData, error, isLoading, isValidating } = useSWR(stationsUrl, fetcher, {
+    keepPreviousData: true, // Abilita Optimistic UI (mostra i vecchi dati mentre carica i nuovi)
+    revalidateOnFocus: false, // Evita chiamate inutili tornando alla tab
+    dedupingInterval: 10000 // Cache le richieste identiche per 10 secondi
+  });
+
+  const stations = stationsData?.stations || (Array.isArray(stationsData) ? stationsData : []);
+  const totalStations = stationsData?.totalCount || stations.length || 0;
+  
+  // Usiamo isValidating per capire se SWR sta facendo un fetch in background,
+  // così possiamo mostrare uno skeleton o dimming senza far sparire la tabella.
+  const loading = isLoading;
+  const isFetchingBackground = isValidating && !isLoading;
 
   // Fetch route when a station is selected
   useEffect(() => {
@@ -48,46 +69,11 @@ export const StationsProvider = ({ children }) => {
     };
     fetchRoute();
   }, [selectedStation, userPos]);
-  
-  useEffect(() => {
-    if (!userPos) {
-      setStations([]);
-      setTotalStations(0);
-      setLoading(false);
-      return;
-    }
-    const loadData = async () => {
-      setLoading(true);
-      try {
-        const url = `/api/stations?lat=${userPos.lat}&lng=${userPos.lng}&radius=${radius}&fuelType=${encodeURIComponent(fuelType)}&serviceType=${serviceType}`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Network response was not ok');
-        const data = await response.json();
-        
-        if (data && data.stations) {
-            setStations(data.stations);
-            setTotalStations(data.totalCount || data.stations.length);
-        } else if (Array.isArray(data)) {
-            setStations(data);
-            setTotalStations(data.length);
-        } else {
-            setStations([]);
-            setTotalStations(0);
-        }
-      } catch (err) {
-        console.error(err);
-        setError(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
-  }, [userPos, radius, fuelType, serviceType]);
 
   return (
     <StationsContext.Provider value={{
-      stations, setStations, totalStations,
-      loading, error,
+      stations, totalStations,
+      loading, isFetchingBackground, error,
       locationStr, setLocationStr,
       radius, setRadius,
       fuelType, setFuelType,
