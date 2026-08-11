@@ -8,8 +8,10 @@ export class ValidationError extends Error {
 }
 
 export const validateStationsInput = (query) => {
-    const lat = parseFloat(query.lat);
-    const lng = parseFloat(query.lng);
+    // Arrotonda a 3 decimali (circa 111 metri) per massimizzare le hit della cache 
+    // quando l'utente si sposta leggermente sulla mappa
+    const lat = Math.round(parseFloat(query.lat) * 1000) / 1000;
+    const lng = Math.round(parseFloat(query.lng) * 1000) / 1000;
     const radius = parseFloat(query.radius) || 5;
     const fuelType = typeof query.fuelType === 'string' ? query.fuelType.trim() : 'Benzina';
     const serviceType = typeof query.serviceType === 'string' ? query.serviceType.trim() : '1';
