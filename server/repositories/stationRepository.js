@@ -13,11 +13,12 @@ export class StationRepository {
                    s.comune, s.provincia, s.latitudine as lat, s.longitudine as lng,
                    p.prezzo as currentPrice, p.is_self as isSelf
             FROM stations s
-            CROSS JOIN prices p ON s.id = p.id_impianto
+            INNER JOIN prices p ON s.id = p.id_impianto
             WHERE s.latitudine BETWEEN ? AND ? 
               AND s.longitudine BETWEEN ? AND ?
               AND p.desc_carburante = ?
               ${serviceCondition}
+            LIMIT 300
         `;
 
         const result = await this.db.execute({
