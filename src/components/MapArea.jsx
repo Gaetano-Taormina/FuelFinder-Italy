@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useStations } from '../context/StationsContext';
 import { useDistanceLogic } from '../hooks/useDistance';
 import CapitalMarkers from './CapitalMarkers';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 
 // Fix default icon issue with Leaflet and Webpack/Vite
 delete L.Icon.Default.prototype._getIconUrl;
@@ -83,6 +84,7 @@ function StationMarkers({ stations }) {
     
     return L.divIcon({
       className: 'custom-price-marker',
+      isBestPrice: isBest,
       html: `
         <div class="relative flex flex-col items-center hover:scale-125 transition-transform origin-bottom w-15">
           <div class="${colorClass} ${textColor} font-bold text-xs px-2 py-1 rounded-lg shadow-md border-2 whitespace-nowrap">
@@ -125,7 +127,7 @@ export default function MapArea() {
   return (
     <div className="w-full h-[55vh] md:h-150 rounded-[30px] shadow-lg overflow-hidden border-4 border-slate-300 dark:border-slate-600 relative z-0 mb-8 md:mb-0">
       {loading && (
-        <div className="absolute inset-0 z-[1000] flex items-center justify-center bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm animate-pulse">
+        <div className="absolute inset-0 z-1000 flex items-center justify-center bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm animate-pulse">
           <div className="flex flex-col items-center gap-4">
                <svg className="w-16 h-16 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
@@ -152,7 +154,29 @@ export default function MapArea() {
         <LocationMarker />
         <CapitalMarkers />
         {userPos && <Circle center={[userPos.lat, userPos.lng]} radius={radius * 1000} color="#3b82f6" fillColor="#3b82f6" fillOpacity={0.1} />}
-        <StationMarkers stations={filteredStations} />
+        <MarkerClusterGroup
+          chunkedLoading
+          maxClusterRadius={50}
+          iconCreateFunction={(cluster) => {
+            const hasBestPrice = cluster.getAllChildMarkers().some(m => m.options.icon.options.isBestPrice);
+            
+            const outerColor = hasBestPrice ? 'bg-amber-500/90 shadow-[0_0_15px_rgba(245,158,11,0.5)]' : 'bg-blue-600/90 shadow-[0_0_15px_rgba(37,99,235,0.5)]';
+            const innerColor = hasBestPrice ? 'bg-amber-900/80 border-amber-300/50' : 'bg-slate-900/80 border-blue-300/50';
+            const textColor = hasBestPrice ? 'text-amber-100' : 'text-white';
+
+            return L.divIcon({
+              html: `<div class="relative flex items-center justify-center w-12 h-12 ${outerColor} backdrop-blur-md rounded-full border-4 border-white/80 z-50 transition-transform hover:scale-110">
+                       <div class="flex items-center justify-center w-8 h-8 ${innerColor} rounded-full border-2 shadow-inner">
+                         <span class="${textColor} font-black text-sm drop-shadow-md">${cluster.getChildCount()}</span>
+                       </div>
+                     </div>`,
+              className: 'custom-cluster-icon',
+              iconSize: L.point(48, 48, true),
+            });
+          }}
+        >
+          <StationMarkers stations={filteredStations} />
+        </MarkerClusterGroup>
         {routeData && (
           <GeoJSON 
             key={JSON.stringify(routeData.geometry)}
