@@ -66,5 +66,22 @@
   "admin_th_searches": "Ricerche Effettuate",
   "fuel_hvo": "HVO (Bio-Diesel)",
   "fuel_gnl": "GNL (Camion)",
-  "loading_app": "Loading..."
+  "loading_app": "Loading...",
+  "sidebar_location": "Luogo Attuale",
+  "sidebar_nav": "Navigazione",
+  "sidebar_home": "Home (Mappa)",
+  "sidebar_stats": "Andamento Prezzi",
+  "sidebar_explore": "Esplora Città (Directory)",
+  "cities": {
+    "roma": "Roma",
+    "milano": "Milano",
+    "napoli": "Napoli",
+    "venezia": "Venezia",
+    "firenze": "Firenze",
+    "torino": "Torino",
+    "genova": "Genova",
+    "padova": "Padova",
+    "siracusa": "Siracusa",
+    "mantova": "Mantova"
+  }
 }

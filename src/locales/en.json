@@ -66,5 +66,22 @@
   "admin_th_searches": "Total Searches",
   "fuel_hvo": "HVO (Bio-Diesel)",
   "fuel_gnl": "LNG (Trucks)",
-  "loading_app": "Loading..."
+  "loading_app": "Loading...",
+  "sidebar_location": "Current Location",
+  "sidebar_nav": "Navigation",
+  "sidebar_home": "Home (Map)",
+  "sidebar_stats": "Price Trends",
+  "sidebar_explore": "Explore Cities (Directory)",
+  "cities": {
+    "roma": "Rome",
+    "milano": "Milan",
+    "napoli": "Naples",
+    "venezia": "Venice",
+    "firenze": "Florence",
+    "torino": "Turin",
+    "genova": "Genoa",
+    "padova": "Padua",
+    "siracusa": "Syracuse",
+    "mantova": "Mantua"
+  }
 }
