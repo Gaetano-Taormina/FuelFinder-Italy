@@ -5,18 +5,29 @@ import './index.css'
 import i18n from './utils/i18n'
 import App from './App.jsx'
 
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard.jsx'))
+import { ErrorBoundary } from './components/ErrorBoundary.jsx'
+
+const ExplorePage = lazy(() => import('./pages/ExplorePage.jsx'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'))
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <Suspense fallback={<div style={{display:'flex',justifyContent:'center',alignItems:'center',height:'100vh',fontFamily:'sans-serif'}}>{i18n.t('loading_app')}</div>}>
-        <Routes>
-          <Route path="/admin-stats" element={<AdminDashboard />} />
-          <Route path="/:lang/citta/:city" element={<App />} />
-          <Route path="/:lang?" element={<App />} />
-        </Routes>
-      </Suspense>
+      <ErrorBoundary>
+        <Suspense fallback={<div style={{display:'flex',justifyContent:'center',alignItems:'center',height:'100vh',fontFamily:'sans-serif'}}>{i18n.t('loading_app')}</div>}>
+          <Routes>
+            <Route path="/it/esplora" element={<ExplorePage />} />
+            <Route path="/en/explore" element={<ExplorePage />} />
+            <Route path="/esplora" element={<ExplorePage />} />
+            <Route path="/explore" element={<ExplorePage />} />
+            <Route path="/it/citta/:city" element={<App />} />
+            <Route path="/en/city/:city" element={<App />} />
+            <Route path="/:lang" element={<App />} />
+            <Route path="/" element={<App />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
     </BrowserRouter>
   </StrictMode>,
 )
