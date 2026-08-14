@@ -6,6 +6,16 @@ import path from 'path';
 import fs from 'fs';
 import 'dotenv/config';
 
+const slugify = (text) => {
+    return text.toString().toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/['\s_]+/g, '-')
+        .replace(/[^\w\-]+/g, '')
+        .replace(/\-\-+/g, '-')
+        .replace(/^-+/, '')
+        .replace(/-+$/, '');
+};
+
 import { sync } from './sync.js';
 import { cities } from './cities.js';
 import { securityHeaders, rateLimiter } from './middlewares/security.js';
@@ -122,8 +132,9 @@ app.get('/sitemap.xml', (req, res) => {
     // Cities
     for (const city of cities) {
         const lowerCity = city.toLowerCase();
-        const citySegmentIt = encodeURIComponent(lowerCity);
-        const citySegmentEn = encodeURIComponent(itToEnCities[lowerCity] || lowerCity);
+        const citySegmentIt = slugify(lowerCity);
+        const enName = itToEnCities[lowerCity] || lowerCity;
+        const citySegmentEn = slugify(enName);
         addUrl(`/citta/${citySegmentIt}`, `/city/${citySegmentEn}`, 'daily', '0.8');
     }
     
@@ -176,12 +187,14 @@ app.use(async (req, res) => {
         let cacheKey = '';
         let cityCap = '';
         if (cityMatch) {
-            let cityRaw = decodeURIComponent(cityMatch[3]).toLowerCase();
+            let citySlug = cityMatch[3].toLowerCase();
             if (lang === 'en') {
-                cityRaw = enToItCities[cityRaw] || cityRaw; // Convert back to Italian base if it was translated
+                citySlug = enToItCities[citySlug] || citySlug; 
             }
-            cityCap = cityRaw.charAt(0).toUpperCase() + cityRaw.slice(1).toLowerCase();
-            cacheKey = `${lang}_${cityCap}`;
+            const realCity = cities.find(c => slugify(c) === citySlug);
+            cityCap = realCity || (citySlug.charAt(0).toUpperCase() + citySlug.slice(1).toLowerCase());
+
+            cacheKey = `${lang}_${slugify(cityCap)}`;
         } else if (exploreMatch) {
             cacheKey = `${lang}_esplora`;
         }
@@ -215,6 +228,28 @@ app.use(async (req, res) => {
 
             const currentUrl = `https://${req.get('host')}${req.originalUrl}`;
             
+            let aggregateData = null;
+            if (cityMatch && db) {
+                try {
+                    const aggResult = await db.execute({
+                        sql: `SELECT MIN(p.prezzo) as minPrice, MAX(p.prezzo) as maxPrice, COUNT(DISTINCT s.id) as stationCount
+                              FROM stations s
+                              INNER JOIN prices p ON s.id = p.id_impianto
+                              WHERE s.comune = ? COLLATE NOCASE AND p.desc_carburante = 'Benzina'`,
+                        args: [cityCap]
+                    });
+                    if (aggResult.rows && aggResult.rows.length > 0 && aggResult.rows[0].minPrice) {
+                        aggregateData = {
+                            minPrice: aggResult.rows[0].minPrice,
+                            maxPrice: aggResult.rows[0].maxPrice,
+                            stationCount: aggResult.rows[0].stationCount
+                        };
+                    }
+                } catch (e) {
+                    console.error("Errore query aggregateOffer per SEO:", e);
+                }
+            }
+            
             html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
             html = html.replace(/<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${currentUrl}">`);
             html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${desc}">`);
@@ -230,6 +265,19 @@ app.use(async (req, res) => {
             html = html.replace('<div id="root"></div>', `<div id="root">${staticHtml}</div>`);
             
             const jsonLd = [
+                {
+                    "@context": "https://schema.org",
+                    "@type": "SoftwareApplication",
+                    "name": "FuelFinder Italy",
+                    "operatingSystem": "Web",
+                    "applicationCategory": "UtilitiesApplication",
+                    "description": "App gratuita per confrontare i prezzi dei distributori di carburante in Italia.",
+                    "offers": {
+                        "@type": "Offer",
+                        "price": "0",
+                        "priceCurrency": "EUR"
+                    }
+                },
                 {
                     "@context": "https://schema.org",
                     "@type": "WebPage",
@@ -281,6 +329,36 @@ app.use(async (req, res) => {
                     ]
                 }
             ];
+
+            if (cityMatch) {
+                jsonLd.push({
+                    "@context": "https://schema.org",
+                    "@type": "Dataset",
+                    "name": `Prezzi Carburante a ${cityCap}`,
+                    "description": `Dataset dei prezzi di benzina, diesel, GPL e metano nei distributori di ${cityCap}.`,
+                    "url": currentUrl,
+                    "provider": {
+                        "@type": "Organization",
+                        "name": "FuelFinder"
+                    }
+                });
+
+                if (aggregateData) {
+                    jsonLd.push({
+                        "@context": "https://schema.org",
+                        "@type": "AggregateOffer",
+                        "itemOffered": {
+                            "@type": "Product",
+                            "name": `Benzina a ${cityCap}`
+                        },
+                        "priceCurrency": "EUR",
+                        "lowPrice": aggregateData.minPrice,
+                        "highPrice": aggregateData.maxPrice,
+                        "offerCount": aggregateData.stationCount
+                    });
+                }
+            }
+
             const jsonLdScript = `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>`;
             html = html.replace('</head>', `${jsonLdScript}\n</head>`);
             

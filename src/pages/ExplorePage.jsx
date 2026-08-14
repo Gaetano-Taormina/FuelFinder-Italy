@@ -4,6 +4,16 @@ import { useTranslation } from 'react-i18next';
 import { cities } from '../utils/cityData';
 import Header from '../components/Header';
 
+const slugify = (text) => {
+    return text.toString().toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/['\s_]+/g, '-')
+        .replace(/[^\w\-]+/g, '')
+        .replace(/\-\-+/g, '-')
+        .replace(/^-+/, '')
+        .replace(/-+$/, '');
+};
+
 export default function ExplorePage() {
     const { t, i18n } = useTranslation();
     const { lang } = useParams();
@@ -138,7 +148,7 @@ export default function ExplorePage() {
                                 {groupedCities[key].map(city => (
                                         <Link 
                                             key={`${city.name}-${city.province}`} 
-                                            to={`/${currentLang}/${currentLang === 'it' ? 'citta' : 'city'}/${encodeURIComponent(city.urlCityName.toLowerCase())}`}
+                                            to={`/${currentLang}/${currentLang === 'it' ? 'citta' : 'city'}/${slugify(city.urlCityName)}`}
                                             className={getCityStyle(city)}
                                             title={`${city.displayName} (${city.province})`}
                                         >

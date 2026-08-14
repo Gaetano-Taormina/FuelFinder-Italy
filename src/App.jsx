@@ -9,6 +9,32 @@ import StationTable from './components/StationTable';
 import Loader from './components/Loader';
 import Tooltip from './components/Tooltip';
 import { Suspense, lazy } from 'react';
+import { cities } from './utils/cities';
+
+const slugify = (text) => {
+    return text.toString().toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/['\s_]+/g, '-')
+        .replace(/[^\w\-]+/g, '')
+        .replace(/\-\-+/g, '-')
+        .replace(/^-+/, '')
+        .replace(/-+$/, '');
+};
+
+const enToItCities = {
+    'rome': 'roma', 'milan': 'milano', 'naples': 'napoli', 'venice': 'venezia',
+    'florence': 'firenze', 'turin': 'torino', 'genoa': 'genova', 'padua': 'padova',
+    'syracuse': 'siracusa', 'mantua': 'mantova'
+};
+
+const getRealCityName = (slug, lang) => {
+    let searchSlug = slug.toLowerCase();
+    if (lang === 'en' && enToItCities[searchSlug]) {
+        searchSlug = enToItCities[searchSlug];
+    }
+    const real = cities.find(c => slugify(c) === searchSlug);
+    return real || (slug.charAt(0).toUpperCase() + slug.slice(1).toLowerCase());
+};
 
 const MapArea = lazy(() => import('./components/MapArea'));
 
@@ -33,7 +59,7 @@ function LayoutContent() {
 
     useEffect(() => {
         if (city) {
-            const cityName = city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
+            const cityName = getRealCityName(city, currLang);
             document.title = currLang === 'it' 
                 ? `Prezzi Benzina e Diesel a ${cityName} - FuelFinder` 
                 : `Petrol and Diesel Prices in ${cityName} - FuelFinder`;
@@ -52,7 +78,7 @@ function LayoutContent() {
     // Auto-search for city from URL
     useEffect(() => {
         if (city) {
-            const cityName = city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
+            const cityName = getRealCityName(city, currLang);
             setLocationStr(cityName);
             
             // Geocode the city
