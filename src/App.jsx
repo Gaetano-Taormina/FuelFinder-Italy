@@ -4,11 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { StationsProvider, useStations } from './context/StationsContext';
 import Header from './components/Header';
 import SearchPanel from './components/SearchPanel';
-import RoutePanel from './components/RoutePanel';
-import StationTable from './components/StationTable';
 import Loader from './components/Loader';
 import Tooltip from './components/Tooltip';
 import { Suspense, lazy } from 'react';
+
+const RoutePanel = lazy(() => import('./components/RoutePanel'));
+const StationTable = lazy(() => import('./components/StationTable'));
 import { cities } from './utils/cities';
 
 const slugify = (text) => {
@@ -163,13 +164,17 @@ function LayoutContent() {
                     <Suspense fallback={<div className="w-full h-[55vh] md:h-150 flex items-center justify-center bg-slate-100 dark:bg-slate-800 animate-pulse rounded-[30px] mb-8 md:mb-0 border-4 border-slate-200 dark:border-slate-700 shadow-lg">Caricamento mappa...</div>}>
                         <MapArea />
                     </Suspense>
-                    <RoutePanel />
+                    <Suspense fallback={null}>
+                        <RoutePanel />
+                    </Suspense>
                 </main>
             )}
             
             {(viewMode === 'list' || viewMode === 'both') && (
                 <div className="max-w-7xl mx-auto w-full grow p-0 sm:p-4 mt-4">
-                    <StationTable />
+                    <Suspense fallback={<div className="h-100 w-full bg-slate-100 dark:bg-slate-800 animate-pulse rounded-[30px] border-2 border-slate-200 dark:border-slate-700"></div>}>
+                        <StationTable />
+                    </Suspense>
                 </div>
             )}
 
