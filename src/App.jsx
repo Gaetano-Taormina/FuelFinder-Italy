@@ -108,8 +108,8 @@ function LayoutContent() {
                 {/* Left: Theme (justify-self-start) */}
                 <div className="justify-self-start">
                     <Tooltip content={t('title_theme')}>
-                        <button onClick={toggleTheme} className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white dark:bg-slate-800 shadow-md border-2 border-slate-300 dark:border-slate-500 text-slate-700 dark:text-slate-300 hover:scale-105 hover:shadow-lg transition-transform flex items-center justify-center">
-                            <span className="text-xl sm:text-2xl leading-none">{theme === 'dark' ? '🌙' : '☀️'}</span>
+                        <button onClick={toggleTheme} aria-label="Cambia Tema" className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white dark:bg-slate-800 shadow-md border-2 border-slate-300 dark:border-slate-500 text-slate-700 dark:text-slate-300 hover:scale-105 hover:shadow-lg transition-transform flex items-center justify-center">
+                            <span className="text-xl sm:text-2xl leading-none" aria-hidden="true">{theme === 'dark' ? '🌙' : '☀️'}</span>
                         </button>
                     </Tooltip>
                 </div>
@@ -119,27 +119,30 @@ function LayoutContent() {
                     <Tooltip content={t('view_map')}>
                         <button 
                             onClick={() => setViewMode('map')}
+                            aria-label={t('view_map')}
                             className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-transform duration-200 flex items-center gap-2 ${viewMode === 'map' ? 'bg-blue-500 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
                         >
-                            <svg className="w-4 h-4 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
+                            <svg className="w-4 h-4 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
                             <span className="sm:hidden">{t('view_map')}</span>
                         </button>
                     </Tooltip>
                     <Tooltip content={t('view_list')}>
                         <button 
                             onClick={() => setViewMode('list')}
+                            aria-label={t('view_list')}
                             className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-transform duration-200 flex items-center gap-2 ${viewMode === 'list' ? 'bg-blue-500 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
                         >
-                            <svg className="w-4 h-4 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+                            <svg className="w-4 h-4 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
                             <span className="sm:hidden">{t('view_list')}</span>
                         </button>
                     </Tooltip>
                     <Tooltip content={t('view_both')}>
                         <button 
                             onClick={() => setViewMode('both')}
+                            aria-label={t('view_both')}
                             className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-transform duration-200 flex items-center gap-2 ${viewMode === 'both' ? 'bg-blue-500 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
                         >
-                            <svg className="w-4 h-4 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" /></svg>
+                            <svg className="w-4 h-4 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" /></svg>
                             <span className="sm:hidden">{t('view_both')}</span>
                         </button>
                     </Tooltip>
@@ -148,8 +151,8 @@ function LayoutContent() {
                 {/* Right: Language (justify-self-end) */}
                 <div className="justify-self-end">
                     <Tooltip content="Cambia Lingua / Change Language">
-                        <button onClick={() => navigate(currLang === 'it' ? '/en' : '/it')} className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white dark:bg-slate-800 shadow-md border-2 border-slate-300 dark:border-slate-500 text-blue-600 dark:text-blue-400 hover:scale-105 hover:shadow-lg transition-transform flex items-center justify-center font-extrabold text-xs sm:text-sm">
-                            {currLang === 'it' ? 'ITA' : 'ENG'}
+                        <button onClick={() => navigate(currLang === 'it' ? '/en' : '/it')} aria-label="Cambia Lingua" className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white dark:bg-slate-800 shadow-md border-2 border-slate-300 dark:border-slate-500 text-blue-600 dark:text-blue-400 hover:scale-105 hover:shadow-lg transition-transform flex items-center justify-center font-extrabold text-xs sm:text-sm">
+                            <span aria-hidden="true">{currLang === 'it' ? 'ITA' : 'ENG'}</span>
                         </button>
                     </Tooltip>
                 </div>

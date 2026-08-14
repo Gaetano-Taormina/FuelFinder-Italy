@@ -100,6 +100,7 @@ export default function Header() {
                     <button 
                         onClick={() => setIsSidebarOpen(false)}
                         className="relative z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm text-slate-600 dark:text-slate-300 hover:bg-rose-100 hover:text-rose-600 dark:hover:bg-rose-900/50 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-600 shadow-sm transition-colors focus:outline-none"
+                        aria-label="Chiudi menu"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>

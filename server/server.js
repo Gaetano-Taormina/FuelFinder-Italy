@@ -180,9 +180,10 @@ app.use(async (req, res) => {
     
     const cityMatch = req.path.match(/^\/(it|en)\/(citta|city)\/([^\/]+)\/?$/);
     const exploreMatch = req.path.match(/^\/(it|en)\/(esplora|explore)\/?$/);
+    const homeMatch = req.path === '/' || req.path.match(/^\/(it|en)\/?$/);
     
-    if ((cityMatch || exploreMatch) && fs.existsSync(indexPath)) {
-        const lang = cityMatch ? cityMatch[1] : (exploreMatch ? exploreMatch[1] : 'it');
+    if ((cityMatch || exploreMatch || homeMatch) && fs.existsSync(indexPath)) {
+        const lang = cityMatch ? cityMatch[1] : (exploreMatch ? exploreMatch[1] : (req.path.match(/^\/(it|en)/) ? req.path.match(/^\/(it|en)/)[1] : 'it'));
         
         let cacheKey = '';
         let cityCap = '';
@@ -197,6 +198,8 @@ app.use(async (req, res) => {
             cacheKey = `${lang}_${slugify(cityCap)}`;
         } else if (exploreMatch) {
             cacheKey = `${lang}_esplora`;
+        } else if (homeMatch) {
+            cacheKey = `${lang}_home`;
         }
         
         if (htmlCache.has(cacheKey)) {
@@ -224,9 +227,17 @@ app.use(async (req, res) => {
                 desc = lang === 'it'
                     ? `Elenco alfabetico di tutti i comuni italiani per scoprire le stazioni di servizio e i prezzi del carburante aggiornati in tempo reale.`
                     : `Alphabetical list of all Italian municipalities to discover service stations and fuel prices updated in real time.`;
+            } else if (homeMatch) {
+                title = lang === 'it' 
+                    ? `FuelFinder Italy - Prezzi Benzina e Diesel in Tempo Reale`
+                    : `FuelFinder Italy - Real-time Petrol and Diesel Prices`;
+                    
+                desc = lang === 'it'
+                    ? `Trova i distributori di carburante più economici in Italia. Mappa interattiva con prezzi di benzina, diesel, GPL e metano aggiornati.`
+                    : `Find the cheapest fuel stations in Italy. Interactive map with updated petrol, diesel, LPG and CNG prices.`;
             }
 
-            const currentUrl = `https://${req.get('host')}${req.originalUrl}`;
+            const currentUrl = `https://${req.get('host')}${req.path === '/' ? '/it' : req.path}`;
             
             let aggregateData = null;
             if (cityMatch && db) {
@@ -319,16 +330,19 @@ app.use(async (req, res) => {
                             "position": 2,
                             "name": lang === 'it' ? "Italia" : "Italy",
                             "item": `https://fuelfinder-msn8.onrender.com/${lang}`
-                        },
-                        {
-                            "@type": "ListItem",
-                            "position": 3,
-                            "name": cityMatch ? cityCap : (lang === 'it' ? "Esplora" : "Explore"),
-                            "item": currentUrl
                         }
                     ]
                 }
             ];
+            
+            if (cityMatch || exploreMatch) {
+                jsonLd[jsonLd.length - 1].itemListElement.push({
+                    "@type": "ListItem",
+                    "position": 3,
+                    "name": cityMatch ? cityCap : (lang === 'it' ? "Esplora" : "Explore"),
+                    "item": currentUrl
+                });
+            }
 
             if (cityMatch) {
                 jsonLd.push({
