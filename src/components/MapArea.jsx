@@ -115,6 +115,19 @@ function StationMarkers({ stations }) {
   ));
 }
 
+function MapFixer() {
+  const map = useMap();
+  useEffect(() => {
+    // Forza il ricalcolo delle dimensioni della mappa dopo il mount 
+    // e l'applicazione delle classi CSS per evitare glitch visivi
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [map]);
+  return null;
+}
+
 export default function MapArea() {
   const { userPos, radius, routeData, loading } = useStations();
   const filteredStations = useDistanceLogic();
@@ -147,6 +160,7 @@ export default function MapArea() {
         zoomControl={false}
         tap={false}
       >
+        <MapFixer />
         <TileLayer
           attribution='&copy; OpenStreetMap contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

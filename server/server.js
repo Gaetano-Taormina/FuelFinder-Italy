@@ -193,7 +193,13 @@ app.use(async (req, res) => {
                 citySlug = enToItCities[citySlug] || citySlug; 
             }
             const realCity = cities.find(c => slugify(c) === citySlug);
-            cityCap = realCity || (citySlug.charAt(0).toUpperCase() + citySlug.slice(1).toLowerCase());
+            
+            if (!realCity) {
+                // Città non valida, ritorna 404 per evitare Soft 404 su Search Console
+                return res.status(404).sendFile(indexPath);
+            }
+            
+            cityCap = realCity;
 
             cacheKey = `${lang}_${slugify(cityCap)}`;
         } else if (exploreMatch) {
@@ -388,7 +394,8 @@ app.use(async (req, res) => {
         }
     }
 
-    res.sendFile(indexPath);
+    // Fallback per tutte le rotte non gestite o 404 (es. URL casuali)
+    res.status(404).sendFile(indexPath);
 });
 
 // --- GLOBAL ERROR HANDLER ---
