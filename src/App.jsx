@@ -6,6 +6,7 @@ import Header from './components/Header';
 import SearchPanel from './components/SearchPanel';
 import Loader from './components/Loader';
 import Tooltip from './components/Tooltip';
+import MapArea from './components/MapArea';
 import { Suspense, lazy } from 'react';
 
 const RoutePanel = lazy(() => import('./components/RoutePanel'));
@@ -161,9 +162,7 @@ function LayoutContent() {
             
             {(viewMode === 'map' || viewMode === 'both') && (
                 <main className="p-0 sm:p-4 relative flex flex-col max-w-7xl mx-auto w-full grow">
-                    <Suspense fallback={<div className="w-full h-[55vh] md:h-150 flex items-center justify-center bg-slate-100 dark:bg-slate-800 animate-pulse rounded-[30px] mb-8 md:mb-0 border-4 border-slate-200 dark:border-slate-700 shadow-lg">Caricamento mappa...</div>}>
-                        <MapArea />
-                    </Suspense>
+                    <MapArea />
                     <Suspense fallback={null}>
                         <RoutePanel />
                     </Suspense>
