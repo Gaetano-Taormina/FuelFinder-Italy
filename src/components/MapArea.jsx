@@ -150,6 +150,13 @@ export default function MapArea() {
         <TileLayer
           attribution='&copy; OpenStreetMap contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          eventHandlers={{
+            tileloadstart: (e) => {
+              if (e.tile) {
+                e.tile.setAttribute('fetchpriority', 'high');
+              }
+            }
+          }}
         />
         <LocationMarker />
         <CapitalMarkers />
