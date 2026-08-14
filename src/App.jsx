@@ -38,7 +38,7 @@ const getRealCityName = (slug, lang) => {
     return real || (slug.charAt(0).toUpperCase() + slug.slice(1).toLowerCase());
 };
 
-const MapArea = lazy(() => import('./components/MapArea'));
+
 
 function LayoutContent() {
     const { t, i18n } = useTranslation();
