@@ -4,10 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { StationsProvider, useStations } from './context/StationsContext';
 import Header from './components/Header';
 import SearchPanel from './components/SearchPanel';
-import MapArea from './components/MapArea';
 import RoutePanel from './components/RoutePanel';
 import StationTable from './components/StationTable';
 import Loader from './components/Loader';
+import Tooltip from './components/Tooltip';
+import { Suspense, lazy } from 'react';
+
+const MapArea = lazy(() => import('./components/MapArea'));
 
 function LayoutContent() {
     const { t, i18n } = useTranslation();
@@ -78,47 +81,59 @@ function LayoutContent() {
             <div className="max-w-7xl mx-auto w-full grid grid-cols-3 items-center px-2 sm:px-4 mt-4 mb-2 z-10 relative">
                 {/* Left: Theme (justify-self-start) */}
                 <div className="justify-self-start">
-                    <button onClick={toggleTheme} title={t('title_theme')} className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white dark:bg-slate-800 shadow-md border-2 border-slate-300 dark:border-slate-500 text-slate-700 dark:text-slate-300 hover:scale-105 hover:shadow-lg transition-transform flex items-center justify-center">
-                        <span className="text-xl sm:text-2xl leading-none">{theme === 'dark' ? '🌙' : '☀️'}</span>
-                    </button>
+                    <Tooltip content={t('title_theme')}>
+                        <button onClick={toggleTheme} className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white dark:bg-slate-800 shadow-md border-2 border-slate-300 dark:border-slate-500 text-slate-700 dark:text-slate-300 hover:scale-105 hover:shadow-lg transition-transform flex items-center justify-center">
+                            <span className="text-xl sm:text-2xl leading-none">{theme === 'dark' ? '🌙' : '☀️'}</span>
+                        </button>
+                    </Tooltip>
                 </div>
 
                 {/* Center: View Toggles (justify-self-center) */}
                 <div className={`justify-self-center bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-1 rounded-xl shadow-sm border-2 border-slate-300 dark:border-slate-600 inline-flex scale-90 sm:scale-100 transition-opacity duration-500 ${hasData ? 'opacity-100 translate-y-0' : 'opacity-30 pointer-events-none translate-y-1'}`}>
-                    <button 
-                        onClick={() => setViewMode('map')}
-                        className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-transform duration-200 flex items-center gap-2 ${viewMode === 'map' ? 'bg-blue-500 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
-                    >
-                        <svg className="w-4 h-4 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
-                        {t('view_map')}
-                    </button>
-                    <button 
-                        onClick={() => setViewMode('list')}
-                        className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-transform duration-200 flex items-center gap-2 ${viewMode === 'list' ? 'bg-blue-500 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
-                    >
-                        <svg className="w-4 h-4 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
-                        {t('view_list')}
-                    </button>
-                    <button 
-                        onClick={() => setViewMode('both')}
-                        className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-transform duration-200 flex items-center gap-2 ${viewMode === 'both' ? 'bg-blue-500 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
-                    >
-                        <svg className="w-4 h-4 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" /></svg>
-                        {t('view_both')}
-                    </button>
+                    <Tooltip content={t('view_map')}>
+                        <button 
+                            onClick={() => setViewMode('map')}
+                            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-transform duration-200 flex items-center gap-2 ${viewMode === 'map' ? 'bg-blue-500 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                        >
+                            <svg className="w-4 h-4 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
+                            <span className="sm:hidden">{t('view_map')}</span>
+                        </button>
+                    </Tooltip>
+                    <Tooltip content={t('view_list')}>
+                        <button 
+                            onClick={() => setViewMode('list')}
+                            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-transform duration-200 flex items-center gap-2 ${viewMode === 'list' ? 'bg-blue-500 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                        >
+                            <svg className="w-4 h-4 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+                            <span className="sm:hidden">{t('view_list')}</span>
+                        </button>
+                    </Tooltip>
+                    <Tooltip content={t('view_both')}>
+                        <button 
+                            onClick={() => setViewMode('both')}
+                            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-transform duration-200 flex items-center gap-2 ${viewMode === 'both' ? 'bg-blue-500 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                        >
+                            <svg className="w-4 h-4 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" /></svg>
+                            <span className="sm:hidden">{t('view_both')}</span>
+                        </button>
+                    </Tooltip>
                 </div>
 
                 {/* Right: Language (justify-self-end) */}
                 <div className="justify-self-end">
-                    <button onClick={() => navigate(currLang === 'it' ? '/en' : '/it')} title="Cambia Lingua / Change Language" className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white dark:bg-slate-800 shadow-md border-2 border-slate-300 dark:border-slate-500 text-blue-600 dark:text-blue-400 hover:scale-105 hover:shadow-lg transition-transform flex items-center justify-center font-extrabold text-xs sm:text-sm">
-                        {currLang === 'it' ? 'ITA' : 'ENG'}
-                    </button>
+                    <Tooltip content="Cambia Lingua / Change Language">
+                        <button onClick={() => navigate(currLang === 'it' ? '/en' : '/it')} className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white dark:bg-slate-800 shadow-md border-2 border-slate-300 dark:border-slate-500 text-blue-600 dark:text-blue-400 hover:scale-105 hover:shadow-lg transition-transform flex items-center justify-center font-extrabold text-xs sm:text-sm">
+                            {currLang === 'it' ? 'ITA' : 'ENG'}
+                        </button>
+                    </Tooltip>
                 </div>
             </div>
             
             {(viewMode === 'map' || viewMode === 'both') && (
                 <main className="p-0 sm:p-4 relative flex flex-col max-w-7xl mx-auto w-full grow">
-                    <MapArea />
+                    <Suspense fallback={<div className="h-[55vh] flex items-center justify-center bg-slate-100 dark:bg-slate-800 animate-pulse rounded-[30px]">Caricamento mappa...</div>}>
+                        <MapArea />
+                    </Suspense>
                     <RoutePanel />
                 </main>
             )}
@@ -152,7 +167,8 @@ function MainApp() {
 
         if (lang !== validLang) {
             if (city) {
-                navigate(`/${validLang}/citta/${city}`, { replace: true });
+                const pathSegment = validLang === 'it' ? 'citta' : 'city';
+                navigate(`/${validLang}/${pathSegment}/${city}`, { replace: true });
             } else {
                 navigate(`/${validLang}`, { replace: true });
             }
