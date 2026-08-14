@@ -76,14 +76,60 @@ await setAnalyticsDb(db);
 setupApiRoutes(app, db);
 
 // --- SITEMAP ---
+const itToEnCities = {
+    'roma': 'rome',
+    'milano': 'milan',
+    'napoli': 'naples',
+    'venezia': 'venice',
+    'firenze': 'florence',
+    'torino': 'turin',
+    'genova': 'genoa',
+    'padova': 'padua',
+    'siracusa': 'syracuse',
+    'mantova': 'mantua'
+};
+
+let cachedSitemap = null;
+
 app.get('/sitemap.xml', (req, res) => {
-    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
-    xml += `  <url>\n    <loc>https://${req.get('host')}/it</loc>\n    <changefreq>hourly</changefreq>\n    <priority>1.0</priority>\n  </url>\n`;
-    
-    for (const city of cities) {
-        xml += `  <url>\n    <loc>https://${req.get('host')}/it/citta/${encodeURIComponent(city.toLowerCase())}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+    if (cachedSitemap) {
+        res.header('Content-Type', 'application/xml');
+        return res.send(cachedSitemap);
     }
+
+    const host = `https://${req.get('host')}`;
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n`;
+    
+    const addUrl = (itPath, enPath, freq, prio) => {
+        const itUrl = `${host}/it${itPath}`;
+        const enUrl = `${host}/en${enPath}`;
+        
+        // IT Version
+        xml += `  <url>\n    <loc>${itUrl}</loc>\n    <changefreq>${freq}</changefreq>\n    <priority>${prio}</priority>\n`;
+        xml += `    <xhtml:link rel="alternate" hreflang="en" href="${enUrl}" />\n`;
+        xml += `    <xhtml:link rel="alternate" hreflang="it" href="${itUrl}" />\n  </url>\n`;
+        
+        // EN Version
+        xml += `  <url>\n    <loc>${enUrl}</loc>\n    <changefreq>${freq}</changefreq>\n    <priority>${prio}</priority>\n`;
+        xml += `    <xhtml:link rel="alternate" hreflang="it" href="${itUrl}" />\n`;
+        xml += `    <xhtml:link rel="alternate" hreflang="en" href="${enUrl}" />\n  </url>\n`;
+    };
+
+    // Core pages
+    addUrl('', '', 'hourly', '1.0');
+    addUrl('/esplora', '/explore', 'daily', '0.9');
+    
+    // Cities
+    for (const city of cities) {
+        const lowerCity = city.toLowerCase();
+        const citySegmentIt = encodeURIComponent(lowerCity);
+        const citySegmentEn = encodeURIComponent(itToEnCities[lowerCity] || lowerCity);
+        addUrl(`/citta/${citySegmentIt}`, `/city/${citySegmentEn}`, 'daily', '0.8');
+    }
+    
     xml += `</urlset>`;
+    cachedSitemap = xml;
+    
     res.header('Content-Type', 'application/xml');
     res.send(xml);
 });
@@ -102,19 +148,43 @@ app.use(express.static(distPath, {
     }
 })); // index: false forces root to also be handled by the catch-all
 
+const enToItCities = {
+    'rome': 'roma',
+    'milan': 'milano',
+    'naples': 'napoli',
+    'venice': 'venezia',
+    'florence': 'firenze',
+    'turin': 'torino',
+    'genoa': 'genova',
+    'padua': 'padova',
+    'syracuse': 'siracusa',
+    'mantua': 'mantova'
+};
+
 const htmlCache = new Map();
 
 app.use(async (req, res) => {
     trackStaticVisit(req);
     let indexPath = path.join(distPath, 'index.html');
     
-    const cityMatch = req.path.match(/^\/(it|en)\/citta\/([^\/]+)\/?$/);
+    const cityMatch = req.path.match(/^\/(it|en)\/(citta|city)\/([^\/]+)\/?$/);
+    const exploreMatch = req.path.match(/^\/(it|en)\/(esplora|explore)\/?$/);
     
-    if (cityMatch && fs.existsSync(indexPath)) {
-        const lang = cityMatch[1];
-        const cityRaw = decodeURIComponent(cityMatch[2]);
-        const cityCap = cityRaw.charAt(0).toUpperCase() + cityRaw.slice(1).toLowerCase();
-        const cacheKey = `${lang}_${cityCap}`;
+    if ((cityMatch || exploreMatch) && fs.existsSync(indexPath)) {
+        const lang = cityMatch ? cityMatch[1] : (exploreMatch ? exploreMatch[1] : 'it');
+        
+        let cacheKey = '';
+        let cityCap = '';
+        if (cityMatch) {
+            let cityRaw = decodeURIComponent(cityMatch[3]).toLowerCase();
+            if (lang === 'en') {
+                cityRaw = enToItCities[cityRaw] || cityRaw; // Convert back to Italian base if it was translated
+            }
+            cityCap = cityRaw.charAt(0).toUpperCase() + cityRaw.slice(1).toLowerCase();
+            cacheKey = `${lang}_${cityCap}`;
+        } else if (exploreMatch) {
+            cacheKey = `${lang}_esplora`;
+        }
         
         if (htmlCache.has(cacheKey)) {
             return res.send(htmlCache.get(cacheKey));
@@ -123,13 +193,25 @@ app.use(async (req, res) => {
         try {
             let html = await fs.promises.readFile(indexPath, 'utf-8');
             
-            const title = lang === 'it' 
-                ? `Prezzi Benzina e Diesel a ${cityCap} - FuelFinder`
-                : `Petrol and Diesel Prices in ${cityCap} - FuelFinder`;
-                
-            const desc = lang === 'it'
-                ? `Trova i distributori di benzina, diesel, GPL e metano più economici a ${cityCap}. Mappa interattiva con prezzi sempre aggiornati.`
-                : `Find the cheapest petrol, diesel, LPG and CNG stations in ${cityCap}. Interactive map with real-time fuel prices.`;
+            let title = '';
+            let desc = '';
+            if (cityMatch) {
+                title = lang === 'it' 
+                    ? `Prezzi Benzina e Diesel a ${cityCap} - FuelFinder`
+                    : `Petrol and Diesel Prices in ${cityCap} - FuelFinder`;
+                    
+                desc = lang === 'it'
+                    ? `Trova i distributori di benzina, diesel, GPL e metano più economici a ${cityCap}. Mappa interattiva con prezzi sempre aggiornati.`
+                    : `Find the cheapest petrol, diesel, LPG and CNG stations in ${cityCap}. Interactive map with real-time fuel prices.`;
+            } else if (exploreMatch) {
+                title = lang === 'it' 
+                    ? `Esplora le Città - Trova i Prezzi Migliori in Tutta Italia - FuelFinder`
+                    : `Explore Cities - Find the Best Prices across Italy - FuelFinder`;
+                    
+                desc = lang === 'it'
+                    ? `Elenco alfabetico di tutti i comuni italiani per scoprire le stazioni di servizio e i prezzi del carburante aggiornati in tempo reale.`
+                    : `Alphabetical list of all Italian municipalities to discover service stations and fuel prices updated in real time.`;
+            }
 
             const currentUrl = `https://${req.get('host')}${req.originalUrl}`;
             
@@ -157,6 +239,25 @@ app.use(async (req, res) => {
                 },
                 {
                     "@context": "https://schema.org",
+                    "@type": "WebSite",
+                    "name": "FuelFinder Italy",
+                    "url": "https://fuelfinder-msn8.onrender.com/",
+                    "potentialAction": {
+                        "@type": "SearchAction",
+                        "target": `https://fuelfinder-msn8.onrender.com/${lang}/${lang === 'it' ? 'citta' : 'city'}/{search_term_string}`,
+                        "query-input": "required name=search_term_string"
+                    }
+                },
+                {
+                    "@context": "https://schema.org",
+                    "@type": "Organization",
+                    "name": "FuelFinder",
+                    "url": "https://fuelfinder-msn8.onrender.com/",
+                    "logo": "https://fuelfinder-msn8.onrender.com/assets/img/icon-512.png",
+                    "description": "Piattaforma gratuita per confrontare i prezzi del carburante in Italia."
+                },
+                {
+                    "@context": "https://schema.org",
                     "@type": "BreadcrumbList",
                     "itemListElement": [
                         {
@@ -168,13 +269,13 @@ app.use(async (req, res) => {
                         {
                             "@type": "ListItem",
                             "position": 2,
-                            "name": "Italia",
-                            "item": "https://fuelfinder-msn8.onrender.com/it"
+                            "name": lang === 'it' ? "Italia" : "Italy",
+                            "item": `https://fuelfinder-msn8.onrender.com/${lang}`
                         },
                         {
                             "@type": "ListItem",
                             "position": 3,
-                            "name": cityCap,
+                            "name": cityMatch ? cityCap : (lang === 'it' ? "Esplora" : "Explore"),
                             "item": currentUrl
                         }
                     ]
