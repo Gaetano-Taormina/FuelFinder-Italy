@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { StationsProvider, useStations } from './context/StationsContext';
 import Header from './components/Header';
@@ -11,14 +11,15 @@ import { Suspense, lazy } from 'react';
 
 const RoutePanel = lazy(() => import('./components/RoutePanel'));
 const StationTable = lazy(() => import('./components/StationTable'));
-import { cities } from './utils/cities';
+import { cities as cityData } from './utils/cityData';
+const cities = cityData.map(c => c.name);
 
 const slugify = (text) => {
     return text.toString().toLowerCase()
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
         .replace(/['\s_]+/g, '-')
-        .replace(/[^\w\-]+/g, '')
-        .replace(/\-\-+/g, '-')
+        .replace(/[^\w-]+/g, '')
+        .replace(/--+/g, '-')
         .replace(/^-+/, '')
         .replace(/-+$/, '');
 };
@@ -43,7 +44,8 @@ const getRealCityName = (slug, lang) => {
 function LayoutContent() {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
-    const { stations } = useStations();
+    const location = useLocation();
+    const { stations, fuelType, setLocationStr, setUserPos } = useStations();
     const [viewMode, setViewMode] = useState('map');
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
 
@@ -60,22 +62,31 @@ function LayoutContent() {
     }, [theme]);
 
     useEffect(() => {
+        const fuelToEn = { 'Benzina': 'Petrol', 'Gasolio': 'Diesel', 'GPL': 'LPG', 'Metano': 'CNG' };
+        const enToFuel = { 'Petrol': 'Benzina', 'Diesel': 'Gasolio', 'LPG': 'GPL', 'CNG': 'Metano' };
+        
+        let itFuel = fuelType || 'Benzina';
+        if (enToFuel[itFuel]) itFuel = enToFuel[itFuel]; // normalize to IT just in case
+        
+        const displayItFuel = itFuel;
+        const displayEnFuel = fuelToEn[itFuel] || itFuel;
+
         if (city) {
             const cityName = getRealCityName(city, currLang);
             document.title = currLang === 'it' 
-                ? `Prezzi Benzina e Diesel a ${cityName} - FuelFinder` 
-                : `Petrol and Diesel Prices in ${cityName} - FuelFinder`;
+                ? `FuelFinder Italia - Prezzi ${displayItFuel} a ${cityName}` 
+                : `FuelFinder Italy - Prices for ${displayEnFuel} in ${cityName}`;
         } else {
-            document.title = 'FuelFinder - Prezzi Benzina e Diesel';
+            document.title = currLang === 'it'
+                ? `FuelFinder Italia - Prezzi ${displayItFuel}`
+                : `FuelFinder Italy - Prices for ${displayEnFuel}`;
         }
-    }, [city, currLang]);
+    }, [city, currLang, fuelType]);
 
     // Traccia la visita al caricamento dell'app
     useEffect(() => {
         fetch('/api/visit').catch(e => console.error('Errore tracciamento visita:', e));
     }, []);
-
-    const { setLocationStr, setUserPos } = useStations();
 
     // Auto-search for city from URL
     useEffect(() => {
@@ -98,6 +109,43 @@ function LayoutContent() {
     }, [city, setLocationStr, setUserPos]);
 
     const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    
+    const toggleLanguage = () => {
+        const nextLang = currLang === 'it' ? 'en' : 'it';
+        let newPath = `/${nextLang}`;
+        
+        if (city) {
+            let searchSlug = city.toLowerCase();
+            if (currLang === 'en' && enToItCities[searchSlug]) {
+                searchSlug = enToItCities[searchSlug];
+            }
+            let targetCitySlug = searchSlug;
+            if (nextLang === 'en') {
+                const enEntry = Object.entries(enToItCities).find(([en, it]) => it === targetCitySlug);
+                if (enEntry) targetCitySlug = enEntry[0];
+            }
+            
+            const pathSegment = nextLang === 'it' ? 'citta' : 'city';
+            newPath = `/${nextLang}/${pathSegment}/${targetCitySlug}`;
+        } else if (location.pathname.includes('/esplora') || location.pathname.includes('/explore')) {
+            newPath = `/${nextLang}/${nextLang === 'it' ? 'esplora' : 'explore'}`;
+        }
+
+        const searchParams = new URLSearchParams(location.search);
+        if (fuelType) {
+            const fuelToEn = { 'Benzina': 'Petrol', 'Gasolio': 'Diesel', 'GPL': 'LPG', 'Metano': 'CNG' };
+            let newFuelUrl = nextLang === 'en' ? (fuelToEn[fuelType] || fuelType) : fuelType;
+            
+            searchParams.delete('fuel');
+            searchParams.delete('carburante');
+            
+            const key = nextLang === 'en' ? 'fuel' : 'carburante';
+            searchParams.set(key, newFuelUrl);
+        }
+        
+        navigate(`${newPath}?${searchParams.toString()}`);
+    };
+
     const hasData = stations && stations.length > 0;
 
     return (
@@ -153,7 +201,7 @@ function LayoutContent() {
                 {/* Right: Language (justify-self-end) */}
                 <div className="justify-self-end">
                     <Tooltip content="Cambia Lingua / Change Language">
-                        <button onClick={() => navigate(currLang === 'it' ? '/en' : '/it')} aria-label="Cambia Lingua" className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white dark:bg-slate-800 shadow-md border-2 border-slate-300 dark:border-slate-500 text-blue-600 dark:text-blue-400 hover:scale-105 hover:shadow-lg transition-transform flex items-center justify-center font-extrabold text-xs sm:text-sm">
+                        <button onClick={toggleLanguage} aria-label="Cambia Lingua" className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white dark:bg-slate-800 shadow-md border-2 border-slate-300 dark:border-slate-500 text-blue-600 dark:text-blue-400 hover:scale-105 hover:shadow-lg transition-transform flex items-center justify-center font-extrabold text-xs sm:text-sm">
                             <span aria-hidden="true">{currLang === 'it' ? 'ITA' : 'ENG'}</span>
                         </button>
                     </Tooltip>
@@ -188,25 +236,29 @@ function MainApp() {
     const { i18n } = useTranslation();
     const { lang, city } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
 
     // Sync URL language with i18n
     useEffect(() => {
+        const pathLang = location.pathname.startsWith('/en') ? 'en' : (location.pathname.startsWith('/it') ? 'it' : null);
+        const currentRouteLang = lang || pathLang;
+        
         const resolvedLang = (i18n.resolvedLanguage || 'it').split('-')[0]; // force 'it' instead of 'it-IT'
-        const validLang = lang && ['it', 'en'].includes(lang) ? lang : resolvedLang;
+        const validLang = currentRouteLang && ['it', 'en'].includes(currentRouteLang) ? currentRouteLang : resolvedLang;
 
         if (validLang !== (i18n.resolvedLanguage || '').split('-')[0]) {
             i18n.changeLanguage(validLang);
         }
 
-        if (lang !== validLang) {
+        if (currentRouteLang !== validLang) {
             if (city) {
                 const pathSegment = validLang === 'it' ? 'citta' : 'city';
-                navigate(`/${validLang}/${pathSegment}/${city}`, { replace: true });
+                navigate(`/${validLang}/${pathSegment}/${city}${location.search}`, { replace: true });
             } else {
-                navigate(`/${validLang}`, { replace: true });
+                navigate(`/${validLang}${location.search}`, { replace: true });
             }
         }
-    }, [lang, city, i18n.resolvedLanguage, navigate, i18n]);
+    }, [lang, city, i18n.resolvedLanguage, navigate, i18n, location.pathname, location.search]);
     
     return (
         <StationsProvider>

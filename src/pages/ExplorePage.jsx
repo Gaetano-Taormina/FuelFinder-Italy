@@ -8,8 +8,8 @@ const slugify = (text) => {
     return text.toString().toLowerCase()
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
         .replace(/['\s_]+/g, '-')
-        .replace(/[^\w\-]+/g, '')
-        .replace(/\-\-+/g, '-')
+        .replace(/[^\w-]+/g, '')
+        .replace(/--+/g, '-')
         .replace(/^-+/, '')
         .replace(/-+$/, '');
 };
@@ -148,7 +148,7 @@ export default function ExplorePage() {
                                 {groupedCities[key].map(city => (
                                         <Link 
                                             key={`${city.name}-${city.province}`} 
-                                            to={`/${currentLang}/${currentLang === 'it' ? 'citta' : 'city'}/${slugify(city.urlCityName)}`}
+                                            to={`/${currentLang}/${currentLang === 'it' ? 'citta' : 'city'}/${slugify(city.urlCityName)}?${currentLang === 'en' ? 'fuel=Petrol' : 'carburante=Benzina'}`}
                                             className={getCityStyle(city)}
                                             title={`${city.displayName} (${city.province})`}
                                         >
