@@ -4,6 +4,7 @@ import L from 'leaflet';
 import { useTranslation } from 'react-i18next';
 import { useStations } from '../context/StationsContext';
 import { useDistanceLogic } from '../hooks/useDistance';
+import { formatStationName } from '../utils/formatters';
 import CapitalMarkers from './CapitalMarkers';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 
@@ -107,7 +108,7 @@ function StationMarkers({ stations }) {
       }}
     >
       <Popup>
-        <div className="font-bold text-lg dark:text-white">{st.brand || st.name}</div>
+        <div className="font-bold text-lg dark:text-white">{formatStationName(st.brand || st.name)}</div>
         <div className="text-sm text-slate-600 dark:text-slate-400">{st.address}</div>
         <div className="text-blue-600 dark:text-blue-400 font-bold mt-2">{t('price_label')} {st.currentPrice} €</div>
       </Popup>
@@ -199,11 +200,20 @@ export default function MapArea() {
           <StationMarkers stations={filteredStations} />
         </MarkerClusterGroup>
         {routeData && (
-          <GeoJSON 
-            key={JSON.stringify(routeData.geometry)}
-            data={routeData.geometry} 
-            style={{ color: '#3b82f6', weight: 6, opacity: 0.8, lineCap: 'round', lineJoin: 'round' }} 
-          />
+          <>
+            {/* Outline del percorso */}
+            <GeoJSON 
+              key={'outline-'+JSON.stringify(routeData.geometry)}
+              data={routeData.geometry} 
+              style={{ color: '#1e3a8a', weight: 8, opacity: 0.6, lineCap: 'round', lineJoin: 'round' }} 
+            />
+            {/* Linea interna del percorso */}
+            <GeoJSON 
+              key={'inner-'+JSON.stringify(routeData.geometry)}
+              data={routeData.geometry} 
+              style={{ color: '#3b82f6', weight: 5, opacity: 1, lineCap: 'round', lineJoin: 'round' }} 
+            />
+          </>
         )}
       </MapContainer>
     </div>

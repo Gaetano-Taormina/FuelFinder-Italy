@@ -2,6 +2,7 @@
 import { useTranslation } from 'react-i18next';
 import { useStations } from '../context/StationsContext';
 import { useDistanceLogic } from '../hooks/useDistance';
+import { formatStationName } from '../utils/formatters';
 
 export default function StationTable() {
     const { t } = useTranslation();
@@ -68,13 +69,22 @@ export default function StationTable() {
                                 <tr 
                                     key={st.id} 
                                     onClick={() => setSelectedStation(st)}
-                                    className="hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors"
+                                    className="hover:bg-slate-100 dark:hover:bg-slate-700/80 even:bg-slate-50/50 dark:even:bg-slate-700/30 cursor-pointer transition-colors"
                                 >
                                     <td className="p-2 sm:p-4 text-center font-bold">
                                         {i === 0 ? '🏆' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
                                     </td>
-                                    <td className="p-2 sm:p-4 font-medium flex items-center gap-2">
-                                        {st.brand || st.name}
+                                    <td className="p-2 sm:p-4 font-medium">
+                                        <a 
+                                            href={`https://www.google.com/maps/dir/?api=1&destination=${st.lat},${st.lng}`}
+                                            target="_blank" 
+                                            rel="noreferrer"
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors cursor-pointer"
+                                            title={t('get_directions')}
+                                        >
+                                            {formatStationName(st.brand || st.name)}
+                                        </a>
                                     </td>
                                     <td className="p-2 sm:p-4 hidden md:table-cell text-sm text-slate-500 dark:text-slate-400">
                                         {st.address}
