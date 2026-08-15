@@ -45,7 +45,7 @@ function LayoutContent() {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
-    const { stations, fuelType, setLocationStr, setUserPos } = useStations();
+    const { stations, fuelType, setLocationStr, setUserPos, userPos } = useStations();
     const [viewMode, setViewMode] = useState('map');
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
     const [mapInteractive, setMapInteractive] = useState(false);
@@ -164,7 +164,7 @@ function LayoutContent() {
         navigate(`${newPath}?${searchParams.toString()}`);
     };
 
-    const hasData = stations && stations.length > 0;
+    const showViewToggles = (stations && stations.length > 0) || userPos != null;
 
     return (
         <div className="bg-slate-50 dark:bg-slate-900 transition-colors duration-300 flex flex-col min-h-screen font-sans">
@@ -183,7 +183,7 @@ function LayoutContent() {
                 </div>
 
                 {/* Center: View Toggles (justify-self-center) */}
-                <div className={`justify-self-center bg-white dark:bg-slate-800 p-1 rounded-xl shadow-sm border-2 border-slate-300 dark:border-slate-600 inline-flex scale-90 sm:scale-100 transition-all duration-500 ${hasData ? 'opacity-100 translate-y-0' : 'opacity-0 pointer-events-none translate-y-1'}`}>
+                <div className={`justify-self-center bg-white dark:bg-slate-800 p-1 rounded-xl shadow-sm border-2 border-slate-300 dark:border-slate-600 inline-flex scale-90 sm:scale-100 transition-all duration-500 ${showViewToggles ? 'opacity-100 translate-y-0' : 'opacity-0 pointer-events-none translate-y-1'}`}>
                     <Tooltip content={t('view_map')}>
                         <button 
                             onClick={() => setViewMode('map')}
