@@ -195,7 +195,9 @@ async function doSync(db) {
             UNIQUE(id_impianto, desc_carburante, is_self)
         );`,
 
-        // 2. Indici principali
+        // 2. Indici principali e Fix per UPSERT (Rimuove duplicati e crea indice univoco se mancante)
+        `DELETE FROM prices WHERE rowid NOT IN (SELECT MIN(rowid) FROM prices GROUP BY id_impianto, desc_carburante, is_self);`,
+        `CREATE UNIQUE INDEX IF NOT EXISTS idx_prices_unique ON prices(id_impianto, desc_carburante, is_self);`,
         `CREATE INDEX IF NOT EXISTS idx_stations_lat_lng ON stations(latitudine, longitudine);`,
         `CREATE INDEX IF NOT EXISTS idx_prices_impianto ON prices(id_impianto);`,
         `CREATE INDEX IF NOT EXISTS idx_prices_carburante ON prices(desc_carburante);`,
