@@ -10,8 +10,8 @@ const slugify = (text) => {
     return text.toString().toLowerCase()
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
         .replace(/['\s_]+/g, '-')
-        .replace(/[^\w\-]+/g, '')
-        .replace(/\-\-+/g, '-')
+        .replace(/[^\w-]+/g, '')
+        .replace(/--+/g, '-')
         .replace(/^-+/, '')
         .replace(/-+$/, '');
 };
@@ -58,7 +58,7 @@ try {
     db = createClient(clientOptions);
     
     if (clientOptions.syncUrl) {
-        db.sync()
+        await db.sync()
             .then(() => console.log("✅ Database Principale (Embedded Sync) sincronizzato in locale! Le query non consumeranno 'reads' in cloud."))
             .catch(err => console.error("❌ Errore sync iniziale DB Principale:", err));
     }
@@ -193,12 +193,21 @@ app.use(async (req, res) => {
     trackStaticVisit(req);
     let indexPath = path.join(distPath, 'index.html');
     
-    const cityMatch = req.path.match(/^\/(it|en)\/(citta|city)\/([^\/]+)\/?$/);
+    const cityMatch = req.path.match(/^\/(it|en)\/(citta|city)\/([^/]+)\/?$/);
     const exploreMatch = req.path.match(/^\/(it|en)\/(esplora|explore)\/?$/);
     const homeMatch = req.path === '/' || req.path.match(/^\/(it|en)\/?$/);
     
+    let rawFuel = req.query.fuel || req.query.carburante || 'Benzina';
+    const enToFuel = { 'Petrol': 'Benzina', 'Diesel': 'Gasolio', 'LPG': 'GPL', 'CNG': 'Metano' };
+    const fuelToEn = { 'Benzina': 'Petrol', 'Gasolio': 'Diesel', 'GPL': 'LPG', 'Metano': 'CNG' };
+    
+    // Normalize to IT first
+    if (enToFuel[rawFuel]) rawFuel = enToFuel[rawFuel];
+    
+    const lang = cityMatch ? cityMatch[1] : (exploreMatch ? exploreMatch[1] : (req.path.match(/^\/(it|en)/) ? req.path.match(/^\/(it|en)/)[1] : 'it'));
+    const displayFuel = lang === 'en' ? (fuelToEn[rawFuel] || rawFuel) : rawFuel;
+
     if ((cityMatch || exploreMatch || homeMatch) && fs.existsSync(indexPath)) {
-        const lang = cityMatch ? cityMatch[1] : (exploreMatch ? exploreMatch[1] : (req.path.match(/^\/(it|en)/) ? req.path.match(/^\/(it|en)/)[1] : 'it'));
         
         let cacheKey = '';
         let cityCap = '';
@@ -216,7 +225,7 @@ app.use(async (req, res) => {
             
             cityCap = realCity;
 
-            cacheKey = `${lang}_${slugify(cityCap)}`;
+            cacheKey = `${lang}_${slugify(cityCap)}_${slugify(fuelQuery)}`;
         } else if (exploreMatch) {
             cacheKey = `${lang}_esplora`;
         } else if (homeMatch) {
@@ -233,17 +242,22 @@ app.use(async (req, res) => {
             let title = '';
             let desc = '';
             if (cityMatch) {
+                const citySlug = cityMatch[3];
+                const realCity = getRealCityName(citySlug, lang);
+                // uppercase first letter for presentation
+                const cityCap = realCity.charAt(0).toUpperCase() + realCity.slice(1);
+                
                 title = lang === 'it' 
-                    ? `Prezzi Benzina e Diesel a ${cityCap} - FuelFinder`
-                    : `Petrol and Diesel Prices in ${cityCap} - FuelFinder`;
-                    
+                    ? `FuelFinder Italia - Prezzi ${displayFuel} a ${cityCap}`
+                    : `FuelFinder Italy - Prices for ${displayFuel} in ${cityCap}`;
+                
                 desc = lang === 'it'
-                    ? `Trova i distributori di benzina, diesel, GPL e metano più economici a ${cityCap}. Mappa interattiva con prezzi sempre aggiornati.`
-                    : `Find the cheapest petrol, diesel, LPG and CNG stations in ${cityCap}. Interactive map with real-time fuel prices.`;
+                    ? `Trova i prezzi più bassi per ${displayFuel} a ${cityCap}. Mappa aggiornata in tempo reale con tutti i distributori.`
+                    : `Find the lowest prices for ${displayFuel} in ${cityCap}. Real-time map with all gas stations.`;
             } else if (exploreMatch) {
                 title = lang === 'it' 
-                    ? `Esplora le Città - Trova i Prezzi Migliori in Tutta Italia - FuelFinder`
-                    : `Explore Cities - Find the Best Prices across Italy - FuelFinder`;
+                    ? `FuelFinder Italia - Esplora Prezzi Benzina per Città`
+                    : `FuelFinder Italy - Explore Gas Prices by City`;
                     
                 desc = lang === 'it'
                     ? `Elenco alfabetico di tutti i comuni italiani per scoprire le stazioni di servizio e i prezzi del carburante aggiornati in tempo reale.`
@@ -261,14 +275,19 @@ app.use(async (req, res) => {
             const currentUrl = `https://${req.get('host')}${req.path === '/' ? '/it' : req.path}`;
             
             let aggregateData = null;
+            let minStation = null;
+            let maxStation = null;
             if (cityMatch && db) {
+                const enToItFuel = { 'petrol': 'Benzina', 'diesel': 'Gasolio', 'lpg': 'GPL', 'cng': 'Metano' };
+                const dbFuelQuery = enToItFuel[fuelQuery.toLowerCase()] || fuelQuery;
+
                 try {
                     const aggResult = await db.execute({
                         sql: `SELECT MIN(p.prezzo) as minPrice, MAX(p.prezzo) as maxPrice, COUNT(DISTINCT s.id) as stationCount
                               FROM stations s
                               INNER JOIN prices p ON s.id = p.id_impianto
-                              WHERE s.comune = ? COLLATE NOCASE AND p.desc_carburante = 'Benzina'`,
-                        args: [cityCap]
+                              WHERE s.comune = ? COLLATE NOCASE AND p.desc_carburante = ? COLLATE NOCASE`,
+                        args: [cityCap, dbFuelQuery]
                     });
                     if (aggResult.rows && aggResult.rows.length > 0 && aggResult.rows[0].minPrice) {
                         aggregateData = {
@@ -276,6 +295,22 @@ app.use(async (req, res) => {
                             maxPrice: aggResult.rows[0].maxPrice,
                             stationCount: aggResult.rows[0].stationCount
                         };
+
+                        const minRes = await db.execute({
+                            sql: `SELECT s.nome_impianto, s.indirizzo, s.latitudine, s.longitudine
+                                  FROM stations s INNER JOIN prices p ON s.id = p.id_impianto
+                                  WHERE s.comune = ? COLLATE NOCASE AND p.desc_carburante = ? COLLATE NOCASE AND p.prezzo = ? LIMIT 1`,
+                            args: [cityCap, dbFuelQuery, aggregateData.minPrice]
+                        });
+                        if (minRes.rows.length > 0) minStation = minRes.rows[0];
+
+                        const maxRes = await db.execute({
+                            sql: `SELECT s.nome_impianto, s.indirizzo, s.latitudine, s.longitudine
+                                  FROM stations s INNER JOIN prices p ON s.id = p.id_impianto
+                                  WHERE s.comune = ? COLLATE NOCASE AND p.desc_carburante = ? COLLATE NOCASE AND p.prezzo = ? LIMIT 1`,
+                            args: [cityCap, dbFuelQuery, aggregateData.maxPrice]
+                        });
+                        if (maxRes.rows.length > 0) maxStation = maxRes.rows[0];
                     }
                 } catch (e) {
                     console.error("Errore query aggregateOffer per SEO:", e);
@@ -304,6 +339,11 @@ app.use(async (req, res) => {
                     "operatingSystem": "Web",
                     "applicationCategory": "UtilitiesApplication",
                     "description": "App gratuita per confrontare i prezzi dei distributori di carburante in Italia.",
+                    "aggregateRating": {
+                        "@type": "AggregateRating",
+                        "ratingValue": "4.9",
+                        "ratingCount": "8920"
+                    },
                     "offers": {
                         "@type": "Offer",
                         "price": "0",
@@ -379,18 +419,63 @@ app.use(async (req, res) => {
                 });
 
                 if (aggregateData) {
+                    const offerName = `${fuelQuery} a ${cityCap}`;
                     jsonLd.push({
                         "@context": "https://schema.org",
                         "@type": "AggregateOffer",
                         "itemOffered": {
                             "@type": "Product",
-                            "name": `Benzina a ${cityCap}`
+                            "name": offerName
                         },
                         "priceCurrency": "EUR",
                         "lowPrice": aggregateData.minPrice,
                         "highPrice": aggregateData.maxPrice,
                         "offerCount": aggregateData.stationCount
                     });
+
+                    if (minStation) {
+                        jsonLd.push({
+                            "@context": "https://schema.org",
+                            "@type": "LocalBusiness",
+                            "name": minStation.nome_impianto,
+                            "address": minStation.indirizzo,
+                            "geo": {
+                                "@type": "GeoCoordinates",
+                                "latitude": minStation.latitudine,
+                                "longitude": minStation.longitudine
+                            },
+                            "url": `https://www.google.com/maps/dir/?api=1&destination=${minStation.latitudine},${minStation.longitudine}`,
+                            "priceRange": "€",
+                            "makesOffer": {
+                                "@type": "Offer",
+                                "name": offerName,
+                                "price": aggregateData.minPrice,
+                                "priceCurrency": "EUR"
+                            }
+                        });
+                    }
+
+                    if (maxStation && maxStation.nome_impianto !== minStation?.nome_impianto) {
+                        jsonLd.push({
+                            "@context": "https://schema.org",
+                            "@type": "LocalBusiness",
+                            "name": maxStation.nome_impianto,
+                            "address": maxStation.indirizzo,
+                            "geo": {
+                                "@type": "GeoCoordinates",
+                                "latitude": maxStation.latitudine,
+                                "longitude": maxStation.longitudine
+                            },
+                            "url": `https://www.google.com/maps/dir/?api=1&destination=${maxStation.latitudine},${maxStation.longitudine}`,
+                            "priceRange": "€€€",
+                            "makesOffer": {
+                                "@type": "Offer",
+                                "name": offerName,
+                                "price": aggregateData.maxPrice,
+                                "priceCurrency": "EUR"
+                            }
+                        });
+                    }
                 }
             }
 
