@@ -23,6 +23,8 @@ dist-ssr
 *.sqlite-journal
 *.sqlite-wal
 *.sqlite-shm
+*.sqlite-info
+.tmp.*
 .env
 .env.local
 .env.*.local
