@@ -40,7 +40,7 @@ export default function NotFoundPage() {
                 <h1 className="text-6xl sm:text-8xl font-black text-slate-800 dark:text-white mb-2 tracking-tight">404</h1>
                 <h2 className="text-3xl sm:text-4xl font-extrabold text-blue-600 dark:text-blue-500 mb-6 drop-shadow-sm">Fuel Not Found!</h2>
                 
-                <p className="text-lg text-slate-600 dark:text-slate-400 max-w-md mx-auto mb-8 font-medium">
+                <p className="text-lg text-slate-700 dark:text-slate-300 max-w-md mx-auto mb-8 font-medium">
                     Oops! Sembra che tu abbia finito la benzina in un vicolo cieco. La pagina che cerchi non esiste.
                 </p>
 

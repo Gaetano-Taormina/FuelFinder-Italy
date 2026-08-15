@@ -108,7 +108,7 @@ export default function Header() {
 
                 {/* Luogo Selezionato */}
                 <div className="p-5 border-b border-slate-200 dark:border-slate-700">
-                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">{t('sidebar_location')}</p>
+                    <p className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">{t('sidebar_location')}</p>
                     <div className="flex items-center gap-3 text-slate-700 dark:text-slate-200 font-semibold bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800/50">
                         <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                         <span className="truncate">{cityName || 'Italia'}</span>
@@ -117,7 +117,7 @@ export default function Header() {
 
                 {/* Link di Navigazione */}
                 <nav className="flex-1 p-3 flex flex-col gap-2 overflow-y-auto">
-                    <p className="px-2 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-2 mb-1">{t('sidebar_nav')}</p>
+                    <p className="px-2 text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mt-2 mb-1">{t('sidebar_nav')}</p>
                     
                     <Link 
                         to={`/${langPrefix}`}
@@ -129,13 +129,13 @@ export default function Header() {
                     </Link>
 
                     <div 
-                        className="flex items-center justify-between px-4 py-3 rounded-xl text-slate-400 dark:text-slate-500 font-semibold cursor-not-allowed opacity-70"
+                        className="flex items-center justify-between px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 font-semibold cursor-not-allowed opacity-70"
                     >
                         <div className="flex items-center gap-3">
                             <svg className="w-5 h-5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                             {t('sidebar_stats')}
                         </div>
-                        <span title="Work in Progress" className="text-[10px] uppercase font-bold bg-slate-200 text-slate-500 dark:bg-slate-700/50 dark:text-slate-400 px-2 py-0.5 rounded-full flex items-center gap-1 border border-slate-300 dark:border-slate-600/50">
+                        <span title="Work in Progress" className="text-[10px] uppercase font-bold bg-slate-200 text-slate-700 dark:bg-slate-700/50 dark:text-slate-300 px-2 py-0.5 rounded-full flex items-center gap-1 border border-slate-300 dark:border-slate-600/50">
                             WIP
                         </span>
                     </div>

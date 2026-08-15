@@ -6,11 +6,11 @@ import Header from './components/Header';
 import SearchPanel from './components/SearchPanel';
 import Loader from './components/Loader';
 import Tooltip from './components/Tooltip';
-import MapArea from './components/MapArea';
 import { Suspense, lazy } from 'react';
 
-const RoutePanel = lazy(() => import('./components/RoutePanel'));
-const StationTable = lazy(() => import('./components/StationTable'));
+import RoutePanel from './components/RoutePanel';
+import StationTable from './components/StationTable';
+const MapArea = lazy(() => import('./components/MapArea'));
 import { cities as cityData } from './utils/cityData';
 const cities = cityData.map(c => c.name);
 
@@ -48,9 +48,27 @@ function LayoutContent() {
     const { stations, fuelType, setLocationStr, setUserPos } = useStations();
     const [viewMode, setViewMode] = useState('map');
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+    const [mapInteractive, setMapInteractive] = useState(false);
 
     const { city } = useParams();
     const currLang = (i18n.resolvedLanguage || 'it').split('-')[0];
+
+    useEffect(() => {
+        const handleInteraction = () => setMapInteractive(true);
+        window.addEventListener('scroll', handleInteraction, { once: true, passive: true });
+        window.addEventListener('mousemove', handleInteraction, { once: true, passive: true });
+        window.addEventListener('touchstart', handleInteraction, { once: true, passive: true });
+        window.addEventListener('click', handleInteraction, { once: true, passive: true });
+        window.addEventListener('keydown', handleInteraction, { once: true, passive: true });
+        
+        return () => {
+            window.removeEventListener('scroll', handleInteraction);
+            window.removeEventListener('mousemove', handleInteraction);
+            window.removeEventListener('touchstart', handleInteraction);
+            window.removeEventListener('click', handleInteraction);
+            window.removeEventListener('keydown', handleInteraction);
+        };
+    }, []);
 
     useEffect(() => {
         if (theme === 'dark') {
@@ -165,12 +183,12 @@ function LayoutContent() {
                 </div>
 
                 {/* Center: View Toggles (justify-self-center) */}
-                <div className={`justify-self-center bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-1 rounded-xl shadow-sm border-2 border-slate-300 dark:border-slate-600 inline-flex scale-90 sm:scale-100 transition-opacity duration-500 ${hasData ? 'opacity-100 translate-y-0' : 'opacity-30 pointer-events-none translate-y-1'}`}>
+                <div className={`justify-self-center bg-white dark:bg-slate-800 p-1 rounded-xl shadow-sm border-2 border-slate-300 dark:border-slate-600 inline-flex scale-90 sm:scale-100 transition-all duration-500 ${hasData ? 'opacity-100 translate-y-0' : 'opacity-0 pointer-events-none translate-y-1'}`}>
                     <Tooltip content={t('view_map')}>
                         <button 
                             onClick={() => setViewMode('map')}
                             aria-label={t('view_map')}
-                            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-transform duration-200 flex items-center gap-2 ${viewMode === 'map' ? 'bg-blue-500 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-transform duration-200 flex items-center gap-2 ${viewMode === 'map' ? 'bg-blue-700 text-white shadow-md' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
                         >
                             <svg className="w-4 h-4 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
                             <span className="sm:hidden">{t('view_map')}</span>
@@ -180,7 +198,7 @@ function LayoutContent() {
                         <button 
                             onClick={() => setViewMode('list')}
                             aria-label={t('view_list')}
-                            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-transform duration-200 flex items-center gap-2 ${viewMode === 'list' ? 'bg-blue-500 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-transform duration-200 flex items-center gap-2 ${viewMode === 'list' ? 'bg-blue-700 text-white shadow-md' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
                         >
                             <svg className="w-4 h-4 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
                             <span className="sm:hidden">{t('view_list')}</span>
@@ -190,7 +208,7 @@ function LayoutContent() {
                         <button 
                             onClick={() => setViewMode('both')}
                             aria-label={t('view_both')}
-                            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-transform duration-200 flex items-center gap-2 ${viewMode === 'both' ? 'bg-blue-500 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-transform duration-200 flex items-center gap-2 ${viewMode === 'both' ? 'bg-blue-700 text-white shadow-md' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
                         >
                             <svg className="w-4 h-4 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" /></svg>
                             <span className="sm:hidden">{t('view_both')}</span>
@@ -201,7 +219,7 @@ function LayoutContent() {
                 {/* Right: Language (justify-self-end) */}
                 <div className="justify-self-end">
                     <Tooltip content="Cambia Lingua / Change Language">
-                        <button onClick={toggleLanguage} aria-label="Cambia Lingua" className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white dark:bg-slate-800 shadow-md border-2 border-slate-300 dark:border-slate-500 text-blue-600 dark:text-blue-400 hover:scale-105 hover:shadow-lg transition-transform flex items-center justify-center font-extrabold text-xs sm:text-sm">
+                        <button onClick={toggleLanguage} aria-label="Cambia Lingua" className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white dark:bg-slate-800 shadow-md border-2 border-slate-300 dark:border-slate-500 text-blue-700 dark:text-blue-400 hover:scale-105 hover:shadow-lg transition-transform flex items-center justify-center font-extrabold text-xs sm:text-sm">
                             <span aria-hidden="true">{currLang === 'it' ? 'ITA' : 'ENG'}</span>
                         </button>
                     </Tooltip>
@@ -210,8 +228,8 @@ function LayoutContent() {
             
             {(viewMode === 'map' || viewMode === 'both') && (
                 <main className="p-0 sm:p-4 relative flex flex-col max-w-7xl mx-auto w-full grow">
-                    <MapArea />
-                    <Suspense fallback={null}>
+                    <Suspense fallback={<div className="w-full h-[55vh] md:h-150 rounded-[30px] border-4 border-slate-300 dark:border-slate-600 bg-slate-200 dark:bg-slate-800 animate-pulse mb-8 md:mb-0"></div>}>
+                        {mapInteractive ? <MapArea /> : <div className="w-full h-[55vh] md:h-150 rounded-[30px] border-4 border-slate-300 dark:border-slate-600 bg-slate-200 dark:bg-slate-800 mb-8 md:mb-0 flex items-center justify-center"><div className="w-8 h-8 border-4 border-slate-400 border-t-blue-500 rounded-full animate-spin"></div></div>}
                         <RoutePanel />
                     </Suspense>
                 </main>
@@ -219,13 +237,11 @@ function LayoutContent() {
             
             {(viewMode === 'list' || viewMode === 'both') && (
                 <div className="max-w-7xl mx-auto w-full grow p-0 sm:p-4 mt-4">
-                    <Suspense fallback={<div className="h-100 w-full bg-slate-100 dark:bg-slate-800 animate-pulse rounded-[30px] border-2 border-slate-200 dark:border-slate-700"></div>}>
                         <StationTable />
-                    </Suspense>
                 </div>
             )}
 
-            <footer className="mt-8 mb-4 text-center text-sm text-slate-500 dark:text-slate-400">
+            <footer className="mt-8 mb-4 text-center text-sm text-slate-700 dark:text-slate-300">
                 <p dangerouslySetInnerHTML={{ __html: t('footer_text') }} />
             </footer>
         </div>

@@ -109,7 +109,7 @@ function StationMarkers({ stations }) {
     >
       <Popup>
         <div className="font-bold text-lg dark:text-white">{formatStationName(st.brand || st.name)}</div>
-        <div className="text-sm text-slate-600 dark:text-slate-400">{st.address}</div>
+        <div className="text-sm text-slate-700 dark:text-slate-300">{st.address}</div>
         <div className="text-blue-600 dark:text-blue-400 font-bold mt-2">{t('price_label')} {st.currentPrice} €</div>
       </Popup>
     </Marker>
@@ -143,7 +143,7 @@ export default function MapArea() {
       {loading && (
         <div className="absolute inset-0 z-1000 flex items-center justify-center bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm animate-pulse">
           <div className="flex flex-col items-center gap-4">
-               <svg className="w-16 h-16 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <svg className="w-16 h-16 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                </svg>
                <div className="h-4 w-32 bg-slate-500 dark:bg-slate-400 rounded-full"></div>

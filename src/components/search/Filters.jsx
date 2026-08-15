@@ -9,7 +9,7 @@ export default function Filters() {
     return (
         <div className="w-full grid grid-cols-3 md:col-span-3 gap-2 sm:gap-4">
             <div>
-                <label htmlFor="radius-select" className="block text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-400 mb-1 truncate">{t('lbl_radius')}</label>
+                <label htmlFor="radius-select" className="block text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 truncate">{t('lbl_radius')}</label>
                 <select id="radius-select" name="radius" value={radius} onChange={(e) => setRadius(Number(e.target.value))} className="select-field">
                     <option value="3">3 km</option>
                     <option value="5">5 km</option>
@@ -19,7 +19,7 @@ export default function Filters() {
             </div>
 
             <div>
-                <label htmlFor="fuel-select" className="block text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-400 mb-1 truncate">{t('lbl_fuel')}</label>
+                <label htmlFor="fuel-select" className="block text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 truncate">{t('lbl_fuel')}</label>
                 <select id="fuel-select" name="fuelType" value={fuelType} onChange={(e) => setFuelType(e.target.value)} className="select-field">
                     <option value="Benzina">{t('fuel_gasoline')}</option>
                     <option value="Gasolio">{t('fuel_diesel')}</option>
@@ -31,7 +31,7 @@ export default function Filters() {
             </div>
 
             <div>
-                <label htmlFor="service-select" className="block text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-400 mb-1 truncate">{t('lbl_service')}</label>
+                <label htmlFor="service-select" className="block text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 truncate">{t('lbl_service')}</label>
                 <select id="service-select" name="serviceType" value={serviceType} onChange={(e) => setServiceType(e.target.value)} className="select-field">
                     <option value="1">{t('service_self')}</option>
                     <option value="0">{t('service_served')}</option>

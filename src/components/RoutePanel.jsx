@@ -40,7 +40,7 @@ export default function RoutePanel() {
                             {formatStationName(selectedStation.brand || selectedStation.name)}
                             <svg className="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                         </a>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">{selectedStation.address}</span>
+                        <span className="text-xs text-slate-700 dark:text-slate-300">{selectedStation.address}</span>
                     </div>
                 </div>
                 <div className="flex justify-between border-b border-slate-100 dark:border-slate-700 pb-1 bg-amber-50 dark:bg-amber-900/30 -mx-2 px-2 rounded-lg">

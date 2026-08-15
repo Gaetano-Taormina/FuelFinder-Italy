@@ -106,7 +106,7 @@ export default function LocationInput() {
     return (
         <div className="w-full md:col-span-3 flex gap-2 items-end">
             <div className="grow relative" ref={wrapperRef}>
-                <label htmlFor="location-input" className="block text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">{t('lbl_location')}</label>
+                <label htmlFor="location-input" className="block text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{t('lbl_location')}</label>
                 <input 
                     id="location-input"
                     name="location"

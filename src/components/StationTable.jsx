@@ -44,12 +44,12 @@ export default function StationTable() {
     if (filteredStations.length === 0) return null;
 
     return (
-        <section className={`px-4 pb-8 max-w-7xl mx-auto w-full transition-opacity duration-300 ${isFetchingBackground ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+        <section className={`px-4 pb-8 max-w-7xl mx-auto w-full transition-all duration-300 ${isFetchingBackground ? 'grayscale pointer-events-none' : ''}`}>
             <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-lg overflow-hidden border-2 border-slate-300 dark:border-slate-600 transition-colors">
                 <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-b-2 border-slate-300 dark:border-slate-600 flex justify-between items-center">
                     <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2" dangerouslySetInnerHTML={{__html: t('table_title')}}>
                     </h2>
-                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400 bg-slate-200 dark:bg-slate-700 px-3 py-1 rounded-full">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-200 dark:bg-slate-700 px-3 py-1 rounded-full">
                         {filteredStations.length} {t('dyn_results')}
                     </span>
                 </div>
@@ -86,7 +86,7 @@ export default function StationTable() {
                                             {formatStationName(st.brand || st.name)}
                                         </a>
                                     </td>
-                                    <td className="p-2 sm:p-4 hidden md:table-cell text-sm text-slate-500 dark:text-slate-400">
+                                    <td className="p-2 sm:p-4 hidden md:table-cell text-sm text-slate-700 dark:text-slate-300">
                                         {st.address}
                                     </td>
                                     <td className="p-2 sm:p-4 text-center hidden sm:table-cell font-mono text-sm">

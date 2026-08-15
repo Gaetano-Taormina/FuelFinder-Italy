@@ -84,7 +84,7 @@ export default function ExplorePage() {
             <main className="max-w-7xl mx-auto w-full px-4 py-8 grow">
                 <div className="mb-8 text-center">
                     <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-800 dark:text-white mb-3">Esplora le Città</h2>
-                    <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-6">
+                    <p className="text-slate-700 dark:text-slate-300 max-w-2xl mx-auto mb-6">
                         Cerca i distributori di carburante e confronta i prezzi in tutti i comuni italiani.
                     </p>
 
@@ -93,13 +93,13 @@ export default function ExplorePage() {
                         <div className="flex gap-2 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl">
                             <button 
                                 onClick={() => setViewMode('alphabetical')}
-                                className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${viewMode === 'alphabetical' ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
+                                className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${viewMode === 'alphabetical' ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
                             >
                                 A-Z (Alfabetico)
                             </button>
                             <button 
                                 onClick={() => setViewMode('region')}
-                                className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${viewMode === 'region' ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
+                                className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${viewMode === 'region' ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
                             >
                                 Per Regione
                             </button>
@@ -108,13 +108,13 @@ export default function ExplorePage() {
                         <div className="flex gap-2 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl">
                             <button 
                                 onClick={() => setSortOrder('asc')}
-                                className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${sortOrder === 'asc' ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
+                                className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${sortOrder === 'asc' ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
                             >
                                 ⬇️ A-Z
                             </button>
                             <button 
                                 onClick={() => setSortOrder('desc')}
-                                className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${sortOrder === 'desc' ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
+                                className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${sortOrder === 'desc' ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
                             >
                                 ⬆️ Z-A
                             </button>

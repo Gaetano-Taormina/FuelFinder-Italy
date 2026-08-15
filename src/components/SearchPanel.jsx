@@ -15,9 +15,9 @@ export default function SearchPanel() {
                 <Filters />
             </div>
             
-            <div className="max-w-7xl mx-auto mt-2 sm:mt-4 text-[10px] sm:text-sm font-medium text-slate-500 dark:text-slate-400 text-center sm:text-left">
+            <div className="max-w-7xl mx-auto mt-2 sm:mt-4 text-[10px] sm:text-sm font-medium text-slate-700 dark:text-slate-300 text-center sm:text-left">
                 {stations && stations.length > 0 ? (
-                    <span>{t('dyn_found')} <strong className="text-blue-500 dark:text-blue-400 text-base">{stations.length}</strong>{totalStations > stations.length ? <span className="text-sm font-normal text-slate-500 dark:text-slate-400"> (su {totalStations})</span> : ''} {t('dyn_stations')}</span>
+                    <span>{t('dyn_found')} <strong className="text-blue-700 dark:text-blue-400 text-base">{stations.length}</strong>{totalStations > stations.length ? <span className="text-sm font-normal text-slate-600 dark:text-slate-300"> (su {totalStations})</span> : ''} {t('dyn_stations')}</span>
                 ) : (
                     <span dangerouslySetInnerHTML={{ __html: t('status_ready') }} />
                 )}
