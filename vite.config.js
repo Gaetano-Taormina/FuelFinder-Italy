@@ -45,11 +45,6 @@ export default defineConfig({
         // Ignora il falso positivo di Tailwind v4 su Rolldown
         if (warning.message && warning.message.includes('SOURCEMAP_BROKEN')) return;
         defaultHandler(warning);
-      },
-      output: {
-        entryFileNames: 'assets/[name].js',
-        chunkFileNames: 'assets/[name].js',
-        assetFileNames: 'assets/[name].[ext]'
       }
     }
   }
