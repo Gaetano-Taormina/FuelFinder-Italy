@@ -325,10 +325,24 @@ app.use(async (req, res) => {
             html = html.replace(/<meta property="og:type" content="[^"]*">/, `<meta property="og:type" content="website">\n    <meta property="og:image" content="https://${req.get('host')}/assets/img/icon-512.png">\n    <meta property="og:url" content="${currentUrl}">`);
             
             // Inietta contenuto HTML per i crawler (risolve "Scansionata, ma attualmente non indicizzata")
-            const staticHtml = `<div style="display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; padding: 20px; text-align: center; background-color: #f9fafb;">
+            let staticHtml = `<div style="display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; padding: 20px; text-align: center; background-color: #f9fafb;">
                 <h1 style="font-size: 1.8rem; font-weight: bold; color: #111827; margin-bottom: 10px;">${title}</h1>
                 <p style="font-size: 1rem; color: #4b5563; max-width: 600px; line-height: 1.5;">${desc}</p>
             </div>`;
+            
+            if (exploreMatch) {
+                let linksHtml = '<ul style="display:none;">';
+                const cityBaseUrl = `https://${req.get('host')}/${lang}/${lang === 'it' ? 'citta' : 'city'}/`;
+                for (const city of cities) {
+                    const enName = itToEnCities[city.toLowerCase()] || city.toLowerCase();
+                    const slug = slugify(lang === 'it' ? city.toLowerCase() : enName);
+                    linksHtml += `<li><a href="${cityBaseUrl}${slug}">${city}</a></li>`;
+                }
+                linksHtml += '</ul>';
+                staticHtml += linksHtml;
+            } else if (homeMatch) {
+                staticHtml += `<div style="display:none;"><a href="https://${req.get('host')}/${lang}/${lang === 'it' ? 'esplora' : 'explore'}">Esplora Città</a></div>`;
+            }
             html = html.replace('<div id="root"></div>', `<div id="root">${staticHtml}</div>`);
             
             const jsonLd = [

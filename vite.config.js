@@ -8,7 +8,17 @@ export default defineConfig({
   plugins: [
     react(), 
     tailwindcss(),
-    compression({ algorithm: 'brotliCompress', exclude: [/\.(br)$/, /\.(gz)$/] })
+    compression({ algorithm: 'brotliCompress', exclude: [/\.(br)$/, /\.(gz)$/] }),
+    {
+      name: 'defer-css',
+      enforce: 'post',
+      transformIndexHtml(html) {
+        return html.replace(
+          /<link rel="stylesheet" crossorigin href="([^"]+)">/g,
+          '<link rel="preload" href="$1" as="style" onload="this.onload=null;this.rel=\'stylesheet\'"><noscript><link rel="stylesheet" href="$1"></noscript>'
+        );
+      }
+    }
   ],
   server: {
     proxy: {
@@ -21,24 +31,25 @@ export default defineConfig({
       ignored: ['**/server/**']
     }
   },
+  esbuild: {
+    drop: ['console', 'debugger'],
+    legalComments: 'none',
+    treeShaking: true
+  },
   build: {
+    target: 'esnext',
+    sourcemap: false,
     chunkSizeWarningLimit: 1500, // Alza il limite a 1.5MB per evitare il warning
     rollupOptions: {
+      onwarn(warning, defaultHandler) {
+        // Ignora il falso positivo di Tailwind v4 su Rolldown
+        if (warning.message && warning.message.includes('SOURCEMAP_BROKEN')) return;
+        defaultHandler(warning);
+      },
       output: {
         entryFileNames: 'assets/[name].js',
         chunkFileNames: 'assets/[name].js',
-        assetFileNames: 'assets/[name].[ext]',
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'vendor-react';
-            }
-            if (id.includes('leaflet') || id.includes('react-leaflet')) {
-              return 'vendor-leaflet';
-            }
-            return 'vendor-core'; // Tutti gli altri moduli esterni
-          }
-        }
+        assetFileNames: 'assets/[name].[ext]'
       }
     }
   }

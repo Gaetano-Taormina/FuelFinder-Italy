@@ -8,14 +8,8 @@
     <link rel="dns-prefetch" href="https://a.tile.openstreetmap.org">
     <link rel="dns-prefetch" href="https://b.tile.openstreetmap.org">
     <link rel="dns-prefetch" href="https://c.tile.openstreetmap.org">
-    <link rel="preconnect" href="https://a.tile.openstreetmap.org" crossorigin>
-    <link rel="preconnect" href="https://b.tile.openstreetmap.org" crossorigin>
-    <link rel="preconnect" href="https://c.tile.openstreetmap.org" crossorigin>
     
-    <!-- Preload Critical Assets -->
-    <link rel="preload" as="image" href="/assets/img/icon-192.webp">
-    <!-- Trucco estremo per ingannare Lighthouse sul ritardo LCP -->
-    <link rel="preload" as="image" href="https://a.tile.openstreetmap.org/6/34/23.png" fetchpriority="high">
+    <!-- Rimossi prefetch per liberare tutta la banda iniziale per index.js -->
     
     <title>FuelFinder - Prezzi Benzina e Diesel</title>
     
@@ -43,13 +37,28 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
-    <!-- Leaflet CSS Deferred -->
-    <link rel="preload" href="/leaflet.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <!-- Leaflet CSS Lazy -->
+    <link rel="stylesheet" href="/leaflet.css" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="/leaflet.css"></noscript>
 </head>
 
 <body>
-    <div id="root"></div>
+    <style>
+        body { margin: 0; background-color: #f8fafc; }
+        @media (prefers-color-scheme: dark) { body { background-color: #0f172a; } }
+        .initial-loader { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: system-ui, -apple-system, sans-serif; }
+        .spinner { width: 48px; height: 48px; border: 4px solid #cbd5e1; border-top-color: #2563eb; border-radius: 50%; animation: spin 1s linear infinite; }
+        @media (prefers-color-scheme: dark) { .spinner { border-color: #334155; border-top-color: #3b82f6; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { margin-top: 16px; color: #475569; font-size: 1.125rem; font-weight: 500; }
+        @media (prefers-color-scheme: dark) { .loading-text { color: #94a3b8; } }
+    </style>
+    <div id="root">
+        <div class="initial-loader" role="status" aria-label="Caricamento in corso">
+            <div class="spinner" aria-hidden="true"></div>
+            <div class="loading-text"><span class="tracking-tight drop-shadow-sm">FuelFinder</span></div>
+        </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
 </body>
 
