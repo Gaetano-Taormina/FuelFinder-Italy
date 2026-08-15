@@ -19,6 +19,7 @@ export default defineConfig({
     }
   },
   build: {
+    chunkSizeWarningLimit: 1500, // Alza il limite a 1.5MB per evitare il warning
     rollupOptions: {
       output: {
         entryFileNames: 'assets/[name].js',
