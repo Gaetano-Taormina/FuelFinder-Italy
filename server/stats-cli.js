@@ -1,8 +1,8 @@
-import path from 'path';
-import readline from 'readline';
+import * as readline from 'node:readline/promises';
 import crypto from 'crypto';
 import 'dotenv/config';
 import { createClient } from '@libsql/client';
+import path from 'path';
 
 const ADMIN_PASSKEY = process.env.ADMIN_PASSKEY;
 
@@ -16,8 +16,8 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
-rl.question('Inserisci la Passkey Admin: ', async (inputKey) => {
-    rl.close();
+(async () => {
+    const inputKey = await rl.question('Inserisci la Passkey Admin: ');
     const cleanKey = inputKey.trim();
 
     if (cleanKey.length !== ADMIN_PASSKEY.length) {
@@ -35,7 +35,11 @@ rl.question('Inserisci la Passkey Admin: ', async (inputKey) => {
         process.exit(1);
     }
 
-    // Se arriviamo qui, la passkey è corretta!
+    const daysInput = await rl.question('Quanti giorni indietro vuoi analizzare? (es. 7, premi Invio per tutti): ');
+    const daysLimit = parseInt(daysInput.trim(), 10) || Infinity;
+    
+    rl.close();
+
     console.log('\n=============================================');
     console.log('   📊 DASHBOARD STATISTICHE - CARBURANTE 📊');
     console.log('=============================================\n');
@@ -52,8 +56,17 @@ rl.question('Inserisci la Passkey Admin: ', async (inputKey) => {
             process.exit(0);
         }
 
-        res.rows.forEach(row => {
+        const rowsToShow = res.rows.slice(0, daysLimit);
+        
+        let totalVisits = 0;
+        let totalUnique = 0;
+        let totalSearches = 0;
+
+        rowsToShow.forEach(row => {
             const uniqueUsers = row.uniqueIps ? JSON.parse(row.uniqueIps).length : 0;
+            totalVisits += (row.visits || 0);
+            totalUnique += uniqueUsers;
+            totalSearches += (row.searches || 0);
             
             console.log(`📅 Data: ${row.date}`);
             console.log(`   👁️  Visite Totali:    ${row.visits || 0}`);
@@ -61,10 +74,17 @@ rl.question('Inserisci la Passkey Admin: ', async (inputKey) => {
             console.log(`   🔍  Ricerche Fatte:   ${row.searches || 0}`);
             console.log('---------------------------------------------');
         });
+        
+        console.log(`\n📈 SOMMARIO TOTALI (Ultimi ${rowsToShow.length} giorni registrati)`);
+        console.log(`=============================================`);
+        console.log(`   👁️  Visite Totali:    ${totalVisits}`);
+        console.log(`   👥  Visitatori Unici: ${totalUnique} (stimati)`);
+        console.log(`   🔍  Ricerche Totali:  ${totalSearches}`);
+        console.log(`=============================================\n`);
 
     } catch (e) {
         console.error('Errore durante la lettura del DB (forse tabella inesistente?):', e.message);
     }
     
     process.exit(0);
-});
+})();

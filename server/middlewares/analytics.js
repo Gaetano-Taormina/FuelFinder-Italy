@@ -50,6 +50,14 @@ export const analyticsMiddleware = (req, res, next) => {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
     const clientIp = crypto.createHash('sha256').update(ip + today).digest('hex').substring(0, 16);
 
+    // Filtro Bot/Crawler
+    const userAgent = (req.headers['user-agent'] || '').toLowerCase();
+    const isBot = /bot|crawler|spider|crawling|googlebot|bingbot|yandexbot|duckduckbot|slurp|baiduspider/i.test(userAgent);
+    
+    if (isBot) {
+        return next();
+    }
+
     if (req.path === '/api/visit') {
         dailyStats[today].visits++;
         if (clientIp && !dailyStats[today].uniqueIps.includes(clientIp)) {
@@ -74,6 +82,12 @@ export const trackStaticVisit = (req) => {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
     const anonHash = crypto.createHash('sha256').update(ip + today).digest('hex').substring(0, 16);
     
+    // Filtro Bot/Crawler
+    const userAgent = (req.headers['user-agent'] || '').toLowerCase();
+    const isBot = /bot|crawler|spider|crawling|googlebot|bingbot|yandexbot|duckduckbot|slurp|baiduspider/i.test(userAgent);
+    
+    if (isBot) return;
+
     if (!dailyStats[today]) {
         dailyStats[today] = { visits: 0, searches: 0, uniqueIps: [] };
     }
