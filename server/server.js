@@ -41,6 +41,7 @@ app.use(analyticsMiddleware);
 const DB_URL = process.env.TURSO_DATABASE_URL || 'file:' + path.join(process.env.DATA_DIR || path.join(process.cwd(), 'server'), 'database.sqlite');
 const DB_TOKEN = process.env.TURSO_AUTH_TOKEN;
 
+// Database principale (Carburanti)
 let db;
 try {
     db = createClient({
@@ -48,8 +49,28 @@ try {
         authToken: DB_TOKEN
     });
 } catch (err) {
-    console.error("ERRORE FATALE durante l'inizializzazione di Turso:", err);
+    console.error("ERRORE FATALE durante l'inizializzazione di Turso (Carburanti):", err);
     process.exit(1);
+}
+
+// Database Utenze (Embedded Sync)
+let userDb;
+try {
+    const userDbPath = path.join(process.env.DATA_DIR || path.join(process.cwd(), 'server'), 'local_users.db');
+    userDb = createClient({
+        url: `file:${userDbPath}`,
+        syncUrl: process.env.TURSO_USERS_DATABASE_URL, // Es: libsql://users-tuo-db.turso.io
+        authToken: process.env.TURSO_USERS_AUTH_TOKEN,
+        syncInterval: 60, // Sincronizza ogni 60 secondi
+    });
+    
+    // Esegue una sincronizzazione forzata all'avvio per testare la connessione
+    userDb.sync()
+        .then(() => console.log("✅ Database Utenze (Embedded Sync) sincronizzato con successo!"))
+        .catch(err => console.error("❌ Errore durante il sync iniziale del Database Utenze:", err));
+        
+} catch (err) {
+    console.warn("Avviso: Database Utenze Turso non configurato o errore inizializzazione (TURSO_USERS_DATABASE_URL mancante?).", err.message);
 }
 
 // Ensure tables exist if local or empty remote
