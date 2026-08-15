@@ -72,6 +72,10 @@
   "sidebar_home": "Home (Map)",
   "sidebar_stats": "Price Trends",
   "sidebar_explore": "Explore Cities (Directory)",
+  "get_directions": "Get directions",
+  "open_menu": "Open Menu",
+  "close_menu": "Close menu",
+  "italy": "Italy",
   "cities": {
     "roma": "Rome",
     "milano": "Milan",

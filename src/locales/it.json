@@ -72,6 +72,10 @@
   "sidebar_home": "Home (Mappa)",
   "sidebar_stats": "Andamento Prezzi",
   "sidebar_explore": "Esplora Città (Directory)",
+  "get_directions": "Ottieni indicazioni stradali",
+  "open_menu": "Apri Menu",
+  "close_menu": "Chiudi menu",
+  "italy": "Italia",
   "cities": {
     "roma": "Roma",
     "milano": "Milano",

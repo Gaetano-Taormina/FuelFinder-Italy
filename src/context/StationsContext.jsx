@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect, useContext } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import useSWR from 'swr';
 
 const StationsContext = createContext();
@@ -12,11 +13,38 @@ const fetcher = async (url) => {
 };
 
 export const StationsProvider = ({ children }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Mapping for URL translation
+  const fuelToEn = { 'Benzina': 'Petrol', 'Gasolio': 'Diesel', 'GPL': 'LPG', 'Metano': 'CNG' };
+  const enToFuel = { 'Petrol': 'Benzina', 'Diesel': 'Gasolio', 'LPG': 'GPL', 'CNG': 'Metano' };
+
+  const rawFuel = searchParams.get('fuel') || searchParams.get('carburante');
+  let initialFuel = 'Benzina';
+  if (rawFuel) {
+      initialFuel = enToFuel[rawFuel] || rawFuel;
+  }
+
   // Filters State
   const [locationStr, setLocationStr] = useState('');
   const [radius, setRadius] = useState(5);
-  const [fuelType, setFuelType] = useState('Benzina');
+  const [fuelType, setFuelTypeInternal] = useState(initialFuel);
   const [serviceType, setServiceType] = useState('1'); // '1' = self, '0' = served, 'entrambi' = both
+
+  const setFuelType = (type) => {
+    setFuelTypeInternal(type);
+    const newParams = new URLSearchParams(searchParams);
+    
+    // Check current language from pathname
+    const isEn = window.location.pathname.startsWith('/en');
+    const urlFuel = isEn ? (fuelToEn[type] || type) : type;
+    const key = isEn ? 'fuel' : 'carburante';
+    const oldKey = isEn ? 'carburante' : 'fuel';
+    
+    newParams.delete(oldKey);
+    newParams.set(key, urlFuel);
+    setSearchParams(newParams, { replace: true });
+  };
 
   // Map and user location state
   const [userPos, setUserPos] = useState(null); // { lat, lng }
