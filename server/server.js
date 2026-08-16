@@ -225,7 +225,7 @@ app.use(async (req, res) => {
             
             cityCap = realCity;
 
-            cacheKey = `${lang}_${slugify(cityCap)}_${slugify(fuelQuery)}`;
+            cacheKey = `${lang}_${slugify(cityCap)}_${slugify(rawFuel)}`;
         } else if (exploreMatch) {
             cacheKey = `${lang}_esplora`;
         } else if (homeMatch) {
@@ -279,7 +279,7 @@ app.use(async (req, res) => {
             let maxStation = null;
             if (cityMatch && db) {
                 const enToItFuel = { 'petrol': 'Benzina', 'diesel': 'Gasolio', 'lpg': 'GPL', 'cng': 'Metano' };
-                const dbFuelQuery = enToItFuel[fuelQuery.toLowerCase()] || fuelQuery;
+                const dbFuelQuery = enToItFuel[rawFuel.toLowerCase()] || rawFuel;
 
                 try {
                     const aggResult = await db.execute({
@@ -433,7 +433,7 @@ app.use(async (req, res) => {
                 });
 
                 if (aggregateData) {
-                    const offerName = `${fuelQuery} a ${cityCap}`;
+                    const offerName = `${displayFuel} a ${cityCap}`;
                     jsonLd.push({
                         "@context": "https://schema.org",
                         "@type": "AggregateOffer",
