@@ -1,4 +1,0 @@
-allowBuilds:
-  better-sqlite3: set this to true or false
-  iltorb: set this to true or false
-  node-zopfli-es: set this to true or false
