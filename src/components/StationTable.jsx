@@ -6,7 +6,7 @@ import { formatStationName } from '../utils/formatters';
 
 export default function StationTable() {
     const { t } = useTranslation();
-    const { setSelectedStation, loading, isFetchingBackground } = useStations();
+    const { setSelectedStation, handleNavigation, loading, isFetchingBackground } = useStations();
     const filteredStations = useDistanceLogic();
 
     if (loading) {
@@ -75,16 +75,16 @@ export default function StationTable() {
                                         {i === 0 ? '🏆' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
                                     </td>
                                     <td className="p-2 sm:p-4 font-medium">
-                                        <a 
-                                            href={`https://www.google.com/maps/dir/?api=1&destination=${st.lat},${st.lng}`}
-                                            target="_blank" 
-                                            rel="noreferrer"
-                                            onClick={(e) => e.stopPropagation()}
-                                            className="font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors cursor-pointer"
+                                        <button 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleNavigation(st);
+                                            }}
+                                            className="text-left font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors inline-flex items-center gap-1 cursor-pointer w-auto"
                                             title={t('get_directions')}
                                         >
                                             {formatStationName(st.brand || st.name)}
-                                        </a>
+                                        </button>
                                     </td>
                                     <td className="p-2 sm:p-4 hidden md:table-cell text-sm text-slate-700 dark:text-slate-300">
                                         {st.address}

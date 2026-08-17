@@ -5,7 +5,7 @@ import { formatStationName } from '../utils/formatters';
 
 export default function RoutePanel() {
     const { t } = useTranslation();
-    const { selectedStation, setSelectedStation, routeData } = useStations();
+    const { selectedStation, setSelectedStation, routeData, handleNavigation } = useStations();
 
     if (!selectedStation) return null;
 
@@ -30,16 +30,14 @@ export default function RoutePanel() {
             <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
                 <div className="flex justify-between border-b border-slate-100 dark:border-slate-700 pb-1">
                     <div className="flex flex-col">
-                        <a 
-                            href={`https://www.google.com/maps/dir/?api=1&destination=${selectedStation.lat},${selectedStation.lng}`}
-                            target="_blank" 
-                            rel="noreferrer"
-                            className="font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline decoration-blue-500/30 hover:decoration-blue-500 transition-colors cursor-pointer inline-flex items-center gap-1"
+                        <button 
+                            onClick={() => handleNavigation(selectedStation)}
+                            className="font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline decoration-blue-500/30 hover:decoration-blue-500 transition-colors cursor-pointer inline-flex items-center gap-1 text-left"
                             title={t('get_directions')}
                         >
                             {formatStationName(selectedStation.brand || selectedStation.name)}
                             <svg className="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                        </a>
+                        </button>
                         <span className="text-xs text-slate-700 dark:text-slate-300">{selectedStation.address}</span>
                     </div>
                 </div>
