@@ -36,6 +36,11 @@ export default defineConfig({
     legalComments: 'none',
     treeShaking: true
   },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: './tests/setupTests.js',
+  },
   build: {
     target: 'esnext',
     sourcemap: false,

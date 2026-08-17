@@ -38,3 +38,6 @@ server/stats.json
 server/storico.sqlite*
 server/storico_csv/
 server/anagrafica_impianti_attivi.csv
+
+# Test Scripts
+test-error.js
