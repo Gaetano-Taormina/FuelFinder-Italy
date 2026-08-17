@@ -212,18 +212,32 @@ app.use(async (req, res) => {
         let cacheKey = '';
         let cityCap = '';
         if (cityMatch) {
-            let citySlug = cityMatch[3].toLowerCase();
+            let originalSlug = cityMatch[3].toLowerCase();
+            let citySlug = originalSlug;
+            
+            // Se in inglese, cerchiamo se c'è una traduzione verso l'italiano per la ricerca
             if (lang === 'en') {
                 citySlug = enToItCities[citySlug] || citySlug; 
             }
-            const realCity = cities.find(c => slugify(c) === citySlug);
             
-            if (!realCity) {
-                // Città non valida, ritorna 404 per evitare Soft 404 su Search Console
+            // Normalizziamo l'input (rimuove gli spazi, es. per "mercato saraceno" -> "mercato-saraceno")
+            const normalizedSlug = slugify(citySlug);
+            const realCityObj = cities.find(c => slugify(c) === normalizedSlug);
+            
+            if (!realCityObj) {
+                // Città non valida, ritorna 404 per evitare Soft 404
                 return res.status(404).sendFile(indexPath);
             }
             
-            cityCap = realCity;
+            // Controlla se l'URL ha spazi o non è formattato correttamente come slug
+            const expectedOriginalSlug = lang === 'en' ? slugify(itToEnCities[normalizedSlug] || normalizedSlug) : normalizedSlug;
+            // Usa decodeURIComponent nel caso in cui req.path contenga '%20' originale
+            if (decodeURIComponent(originalSlug) !== expectedOriginalSlug) {
+                const searchParams = req.url.substring(req.path.length);
+                return res.redirect(301, `/${lang}/${lang === 'it' ? 'citta' : 'city'}/${expectedOriginalSlug}${searchParams}`);
+            }
+            
+            cityCap = realCityObj;
 
             cacheKey = `${lang}_${slugify(cityCap)}_${slugify(rawFuel)}`;
         } else if (exploreMatch) {
@@ -242,11 +256,6 @@ app.use(async (req, res) => {
             let title = '';
             let desc = '';
             if (cityMatch) {
-                const citySlug = cityMatch[3];
-                const realCity = getRealCityName(citySlug, lang);
-                // uppercase first letter for presentation
-                const cityCap = realCity.charAt(0).toUpperCase() + realCity.slice(1);
-                
                 title = lang === 'it' 
                     ? `FuelFinder Italia - Prezzi ${displayFuel} a ${cityCap}`
                     : `FuelFinder Italy - Prices for ${displayFuel} in ${cityCap}`;
