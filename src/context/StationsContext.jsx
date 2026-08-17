@@ -98,6 +98,23 @@ export const StationsProvider = ({ children }) => {
     fetchRoute();
   }, [selectedStation, userPos]);
 
+  const handleNavigation = (station) => {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isAndroid = /Android/.test(navigator.userAgent);
+    const stationName = encodeURIComponent(station.brand || station.name);
+
+    if (isAndroid) {
+        // Su Android, geo: triggera il menu nativo del sistema operativo (es. Maps, Waze, ecc.)
+        window.location.href = `geo:${station.lat},${station.lng}?q=${station.lat},${station.lng}(${stationName})`;
+    } else if (isIOS) {
+        // Su iOS, aprirà Mappe nativamente
+        window.location.href = `maps://?q=${stationName}&ll=${station.lat},${station.lng}`;
+    } else {
+        // Su PC/Desktop va dritto a Google Maps nel browser
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${station.lat},${station.lng}`, '_blank');
+    }
+  };
+
   return (
     <StationsContext.Provider value={{
       stations, totalStations,
@@ -108,7 +125,8 @@ export const StationsProvider = ({ children }) => {
       serviceType, setServiceType,
       userPos, setUserPos,
       selectedStation, setSelectedStation,
-      routeData
+      routeData,
+      handleNavigation
     }}>
       {children}
     </StationsContext.Provider>
