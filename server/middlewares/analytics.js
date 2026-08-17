@@ -50,11 +50,12 @@ export const analyticsMiddleware = (req, res, next) => {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
     const clientIp = crypto.createHash('sha256').update(ip + today).digest('hex').substring(0, 16);
 
-    // Filtro Bot/Crawler
+    // Filtro Bot/Crawler e Test automatizzati
     const userAgent = (req.headers['user-agent'] || '').toLowerCase();
-    const isBot = /bot|crawler|spider|crawling|googlebot|bingbot|yandexbot|duckduckbot|slurp|baiduspider/i.test(userAgent);
+    const isBot = /bot|crawler|spider|crawling|googlebot|bingbot|yandexbot|duckduckbot|slurp|baiduspider|headlesschrome/i.test(userAgent);
     
     if (isBot) {
+        if (req.path === '/api/visit') return res.json({ status: 'ignored' });
         return next();
     }
 
@@ -82,9 +83,9 @@ export const trackStaticVisit = (req) => {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
     const anonHash = crypto.createHash('sha256').update(ip + today).digest('hex').substring(0, 16);
     
-    // Filtro Bot/Crawler
+    // Filtro Bot/Crawler e Test automatizzati
     const userAgent = (req.headers['user-agent'] || '').toLowerCase();
-    const isBot = /bot|crawler|spider|crawling|googlebot|bingbot|yandexbot|duckduckbot|slurp|baiduspider/i.test(userAgent);
+    const isBot = /bot|crawler|spider|crawling|googlebot|bingbot|yandexbot|duckduckbot|slurp|baiduspider|headlesschrome/i.test(userAgent);
     
     if (isBot) return;
 

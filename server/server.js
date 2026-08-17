@@ -45,27 +45,69 @@ const syncUrl = process.env.TURSO_DATABASE_URL;
 const localDbPath = path.join(process.env.DATA_DIR || path.join(process.cwd(), 'server'), 'database.sqlite');
 
 let db;
-try {
+
+async function setupDatabase() {
     const clientOptions = { url: `file:${localDbPath}` };
-    
-    // Se è configurato un URL Turso, attiviamo l'embedded sync per il DB principale
     if (syncUrl && syncUrl.startsWith('libsql://')) {
         clientOptions.syncUrl = syncUrl;
         clientOptions.authToken = DB_TOKEN;
-        clientOptions.syncInterval = 60; // Sincronizza ogni minuto col cloud
+        clientOptions.syncInterval = 60;
     }
-    
-    db = createClient(clientOptions);
-    
-    if (clientOptions.syncUrl) {
-        await db.sync()
-            .then(() => console.log("✅ Database Principale (Embedded Sync) sincronizzato in locale! Le query non consumeranno 'reads' in cloud."))
-            .catch(err => console.error("❌ Errore sync iniziale DB Principale:", err));
+
+    try {
+        db = createClient(clientOptions);
+        
+        // Eseguiamo query più profonde per verificare se il file è corrotto internamente
+        try {
+            await db.execute('SELECT COUNT(*) FROM stations');
+            await db.execute('SELECT COUNT(*) FROM prices');
+        } catch (e) {
+            // Se le tabelle non esistono ancora (primo avvio), va bene. 
+            // Se è corrotto, lancerà l'errore che verrà catturato dal catch principale
+            if (e.message && (e.message.includes('SQLITE_CORRUPT') || e.message.includes('malformed'))) {
+                throw e;
+            }
+        }
+
+        if (clientOptions.syncUrl) {
+            await db.sync();
+            console.log("✅ Database Principale (Embedded Sync) sincronizzato in locale!");
+        }
+    } catch (err) {
+        const errMsg = err.message || err.toString();
+        if (errMsg.includes('SQLITE_CORRUPT') || errMsg.includes('malformed') || errMsg.includes('invalid local state')) {
+            console.warn("⚠️ Rilevata corruzione o stato inconsistente del database locale. Tento il ripristino automatico...");
+            try {
+                if (db) db.close();
+            } catch (e) {} // Ignora errori di chiusura
+            
+            // Elimina i file corrotti
+            const filesToDelete = [localDbPath, `${localDbPath}-shm`, `${localDbPath}-wal`, `${localDbPath}-info`];
+            for (const file of filesToDelete) {
+                if (fs.existsSync(file)) {
+                    try {
+                        fs.unlinkSync(file);
+                    } catch (e) {
+                        console.error(`Impossibile eliminare ${file}:`, e);
+                    }
+                }
+            }
+            
+            console.log("♻️ File locali eliminati. Risincronizzazione da zero in corso...");
+            db = createClient(clientOptions);
+            
+            if (clientOptions.syncUrl) {
+                await db.sync();
+                console.log("✅ Database ripristinato e sincronizzato con successo!");
+            }
+        } else {
+            console.error("ERRORE FATALE durante l'inizializzazione di Turso:", err);
+            process.exit(1);
+        }
     }
-} catch (err) {
-    console.error("ERRORE FATALE durante l'inizializzazione di Turso:", err);
-    process.exit(1);
 }
+
+await setupDatabase();
 
 // Ensure tables exist if local or empty remote
 async function initializeDB() {
