@@ -79,22 +79,23 @@ function StationMarkers({ stations }) {
   const { setSelectedStation } = useStations();
   
   const createIcon = (price, isBest) => {
-    const colorClass = isBest ? 'bg-amber-500 border-amber-700' : 'bg-blue-600 border-blue-800';
-    const textColor = isBest ? 'text-amber-900' : 'text-white';
-    const triangleColor = isBest ? 'border-t-amber-700' : 'border-t-blue-800';
+    // Colori migliorati per alto contrasto (Orange per la scelta consigliata)
+    const colorClass = isBest ? 'bg-orange-500 border-orange-700' : 'bg-blue-600 border-blue-800';
+    const textColor = 'text-white';
+    const triangleColor = isBest ? 'border-t-orange-700' : 'border-t-blue-800';
     
     return L.divIcon({
       className: 'custom-price-marker',
       isBestPrice: isBest,
       html: `
-        <div class="relative flex flex-col items-center hover:scale-125 transition-transform origin-bottom w-15">
-          <div class="${colorClass} ${textColor} font-bold text-xs px-2 py-1 rounded-lg shadow-md border-2 whitespace-nowrap">
+        <div class="relative flex flex-col items-center hover:scale-125 transition-transform origin-bottom drop-shadow-lg">
+          <div class="${colorClass} ${textColor} font-black text-sm px-2.5 py-1.5 rounded-lg border-2 whitespace-nowrap flex items-center justify-center leading-none">
             ${price.toFixed(3)} €
           </div>
           <div class="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-8 ${triangleColor} -mt-0.5"></div>
         </div>`,
-      iconSize: [60, 38],
-      iconAnchor: [30, 38] // La punta esatta del triangolo indica la coordinata GPS
+      iconSize: [64, 42],
+      iconAnchor: [32, 42] // La punta esatta del triangolo indica la coordinata GPS
     });
   };
 
