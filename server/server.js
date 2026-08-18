@@ -70,8 +70,9 @@ async function setupDatabase() {
         }
 
         if (clientOptions.syncUrl) {
-            await db.sync();
-            console.log("✅ Database Principale (Embedded Sync) sincronizzato in locale!");
+            db.sync().then(() => {
+                console.log("✅ Database Principale (Embedded Sync) sincronizzato in locale!");
+            }).catch(e => console.error("Errore sync in background:", e));
         }
     } catch (err) {
         const errMsg = err.message || err.toString();
@@ -97,8 +98,9 @@ async function setupDatabase() {
             db = createClient(clientOptions);
             
             if (clientOptions.syncUrl) {
-                await db.sync();
-                console.log("✅ Database ripristinato e sincronizzato con successo!");
+                db.sync().then(() => {
+                    console.log("✅ Database ripristinato e sincronizzato con successo!");
+                }).catch(e => console.error("Errore sync di ripristino:", e));
             }
         } else {
             console.error("ERRORE FATALE durante l'inizializzazione di Turso:", err);
@@ -128,8 +130,12 @@ async function initializeDB() {
         `);
         const rowCount = await db.execute('SELECT COUNT(*) as c FROM stations');
         if (rowCount.rows[0].c === 0) {
-            console.log("Database vuoto. Eseguo sincronizzazione iniziale in background...");
-            sync(db).catch(e => console.error("Errore sync iniziale in background:", e));
+            if (process.env.TURSO_DATABASE_URL && process.env.TURSO_DATABASE_URL.startsWith('libsql://')) {
+                console.log("Database vuoto, ma è una replica. Attendo che Turso popoli i dati in background...");
+            } else {
+                console.log("Database vuoto locale. Eseguo sincronizzazione iniziale in background dal MIMIT...");
+                sync(db).catch(e => console.error("Errore sync iniziale in background:", e));
+            }
         }
     } catch (e) {
         console.error("Errore durante l'inizializzazione dello schema:", e);
@@ -568,8 +574,8 @@ app.use(globalErrorHandler);
 
 // --- SERVER START & CRON ---
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-    console.log(`Backend SQL in esecuzione su http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Backend SQL in esecuzione su http://0.0.0.0:${PORT}`);
     scheduleDailySync();
 });
 
