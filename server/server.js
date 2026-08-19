@@ -6,6 +6,27 @@ import path from 'path';
 import fs from 'fs';
 import 'dotenv/config';
 
+// --- GESTIONE DEGLI ERRORI DI SISTEMA (es. Render timeout/kill) ---
+process.on('uncaughtException', (err) => {
+    console.error('🚨 ERRORE FATALE (uncaughtException):', err);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('🚨 PROMISE RIFIUTATA NON GESTITA (unhandledRejection):', reason);
+});
+
+process.on('SIGTERM', () => {
+    console.warn("⚠️ Ricevuto segnale SIGTERM (Render sta spegnendo il server o timeout dell'health check). Chiusura in corso...");
+    process.exit(0);
+});
+
+process.on('SIGINT', () => {
+    console.warn('⚠️ Ricevuto segnale SIGINT (Interruzione manuale). Chiusura in corso...');
+    process.exit(0);
+});
+
+
 const slugify = (text) => {
     return text.toString().toLowerCase()
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -45,6 +66,21 @@ const syncUrl = process.env.TURSO_DATABASE_URL;
 const localDbPath = path.join(process.env.DATA_DIR || path.join(process.cwd(), 'server'), 'database.sqlite');
 
 let db;
+let isReady = false;
+
+// Health check immediato per Render
+app.get('/health', (_req, res) => res.status(200).send('OK'));
+
+// Middleware per mettere in attesa le richieste durante l'avvio del DB
+app.use((req, res, next) => {
+    if (isReady || req.path === '/healthz' || req.path === '/health') return next();
+    res.status(503).send('Servizio in fase di avvio, riprova tra qualche secondo...');
+});
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server HTTP in ascolto su http://0.0.0.0:${PORT} - Inizializzazione DB in corso...`);
+});
 
 async function setupDatabase() {
     const clientOptions = { url: `file:${localDbPath}` };
@@ -109,9 +145,6 @@ async function setupDatabase() {
     }
 }
 
-await setupDatabase();
-
-// Ensure tables exist if local or empty remote
 async function initializeDB() {
     try {
         await db.execute(`
@@ -142,13 +175,17 @@ async function initializeDB() {
     }
 }
 
-await initializeDB();
-await setAnalyticsDb(db);
+// --- AVVIO ASINCRONO ---
+async function initServer() {
+    try {
+        await setupDatabase();
+        await initializeDB();
+        await setAnalyticsDb(db);
+        
+        // --- API ROUTES ---
+        setupApiRoutes(app, db);
 
-// --- API ROUTES ---
-setupApiRoutes(app, db);
-
-// --- SITEMAP ---
+        // --- SITEMAP ---
 const itToEnCities = {
     'roma': 'rome',
     'milano': 'milan',
@@ -569,15 +606,20 @@ app.use(async (req, res) => {
     res.status(404).sendFile(indexPath);
 });
 
-// --- GLOBAL ERROR HANDLER ---
-app.use(globalErrorHandler);
+        // --- GLOBAL ERROR HANDLER ---
+        app.use(globalErrorHandler);
 
-// --- SERVER START & CRON ---
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Backend SQL in esecuzione su http://0.0.0.0:${PORT}`);
-    scheduleDailySync();
-});
+        isReady = true;
+        console.log("✅ Inizializzazione completata. Server pronto.");
+        
+        scheduleDailySync();
+    } catch (e) {
+        console.error("Errore critico durante l'inizializzazione:", e);
+        process.exit(1);
+    }
+}
+
+initServer();
 
 function scheduleDailySync() {
     const now = new Date();
