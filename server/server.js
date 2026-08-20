@@ -69,11 +69,14 @@ let db;
 let isReady = false;
 
 // Health check immediato per Render
-app.get('/health', (_req, res) => res.status(200).send('OK'));
+app.get(['/health', '/healthz'], (_req, res) => res.status(200).send('OK'));
 
 // Middleware per mettere in attesa le richieste durante l'avvio del DB
 app.use((req, res, next) => {
-    if (isReady || req.path === '/healthz' || req.path === '/health') return next();
+    if (isReady) return next();
+    // Se Render effettua l'health check sulla root (/) durante l'avvio, 
+    // rispondiamo con 200 per evitare che fallisca e riavvii l'istanza.
+    if (req.path === '/') return res.status(200).send('OK - Inizializzazione in corso');
     res.status(503).send('Servizio in fase di avvio, riprova tra qualche secondo...');
 });
 
@@ -258,6 +261,26 @@ app.use(express.static(distPath, {
         }
     }
 })); // index: false forces root to also be handled by the catch-all
+
+// --- REDIRECTS PER VECCHIE URL (SEO) ---
+// Se avevi rotte vecchie come /citta/roma o /esplora senza la lingua, Googlebot le ha indicizzate. 
+// Bisogna fare redirect 301.
+app.use((req, res, next) => {
+    // Redirect /citta/slug -> /it/citta/slug
+    const oldCityMatch = req.path.match(/^\/citta\/([^/]+)\/?$/);
+    if (oldCityMatch) {
+        const searchParams = req.url.substring(req.path.length);
+        return res.redirect(301, `/it/citta/${oldCityMatch[1]}${searchParams}`);
+    }
+    
+    // Redirect /esplora -> /it/esplora
+    if (req.path === '/esplora' || req.path === '/esplora/') {
+        const searchParams = req.url.substring(req.path.length);
+        return res.redirect(301, `/it/esplora${searchParams}`);
+    }
+    
+    next();
+});
 
 const enToItCities = {
     'rome': 'roma',

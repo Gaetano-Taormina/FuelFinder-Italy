@@ -8,7 +8,7 @@ const URL_ANAGRAFICA =
   "https://www.mimit.gov.it/images/exportCSV/anagrafica_impianti_attivi.csv";
 const URL_PREZZI =
   "https://www.mimit.gov.it/images/exportCSV/prezzo_alle_8.csv";
-const BATCH_SIZE = 2000; // Ottimizzato per ridurre i roundtrip verso il database
+const BATCH_SIZE = 500; // Ottimizzato per ridurre i roundtrip verso il database e non bloccare l'event loop
 
 export async function sync(dbClient, retries = 8) {
   if (!dbClient) {
@@ -147,6 +147,7 @@ async function doSync(db) {
                 const currentBatch = [...batchQueue];
                 batchQueue = [];
                 await db.batch(currentBatch, "write");
+                await new Promise((r) => setTimeout(r, 10)); // Yield per l'event loop (health checks)
                 parser.resume();
               }
             }
@@ -210,6 +211,7 @@ async function doSync(db) {
   );
 
   console.log("Sostituzione tabelle (Swap) e creazione indici...");
+  await new Promise((r) => setTimeout(r, 50)); // Yield prima della transazione pesante
   await db.batch(
     [
       // 1. Assicurati che le tabelle principali esistano con vincoli appropriati
