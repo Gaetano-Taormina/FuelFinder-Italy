@@ -45,7 +45,37 @@ import { globalErrorHandler } from './middlewares/errorHandler.js';
 import { timeoutMiddleware } from './middlewares/timeout.js';
 import { setupApiRoutes } from './routes/api.js';
 
+let isReady = false;
 const app = express();
+
+// --- 1. HEALTHCHECK AUTOMATICO & UNIVERSALE (RENDER / GITHUB / TURSO) ---
+// Questo blocco deve rimanere IN CIMA a tutto (prima di body parser, timeout, cors, ecc.).
+// Garantisce che Render riceva sempre un 200 OK istantaneo, indipendentemente 
+// da quanto tempo impiega Turso a sincronizzarsi all'avvio. Non dovrai più toccarlo.
+app.use((req, res, next) => {
+    const ua = (req.headers['user-agent'] || '').toLowerCase();
+    
+    // 1. Intercetta gli endpoint classici di health check
+    if (req.path === '/health' || req.path === '/healthz' || req.path === '/ping') {
+        return res.status(200).send('OK');
+    }
+    
+    // 2. Intercetta il probing di Render o di altri load balancer tramite User-Agent
+    if (ua.includes('render/1.0') || ua.includes('healthcheck') || ua.includes('kube-probe') || ua.includes('uptimerobot')) {
+        return res.status(200).send('OK');
+    }
+
+    // 3. Se l'app sta ancora inizializzando il database Turso (isReady = false), 
+    // mettiamo in attesa le chiamate degli utenti, ma rispondiamo OK sulla root 
+    // nel caso in cui un check automatico punti lì.
+    if (!isReady) {
+        if (req.path === '/') return res.status(200).send('OK - Inizializzazione in corso');
+        return res.status(503).send('Servizio in fase di avvio, riprova tra qualche secondo...');
+    }
+    
+    next();
+});
+
 app.use(compression());
 app.use(cors());
 app.use(express.json());
@@ -66,19 +96,7 @@ const syncUrl = process.env.TURSO_DATABASE_URL;
 const localDbPath = path.join(process.env.DATA_DIR || path.join(process.cwd(), 'server'), 'database.sqlite');
 
 let db;
-let isReady = false;
-
-// Health check immediato per Render
-app.get(['/health', '/healthz'], (_req, res) => res.status(200).send('OK'));
-
-// Middleware per mettere in attesa le richieste durante l'avvio del DB
-app.use((req, res, next) => {
-    if (isReady) return next();
-    // Se Render effettua l'health check sulla root (/) durante l'avvio, 
-    // rispondiamo con 200 per evitare che fallisca e riavvii l'istanza.
-    if (req.path === '/') return res.status(200).send('OK - Inizializzazione in corso');
-    res.status(503).send('Servizio in fase di avvio, riprova tra qualche secondo...');
-});
+// (isReady e healthchecks sono gestiti in cima al file per prevenire i timeout di Render)
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, '0.0.0.0', () => {
