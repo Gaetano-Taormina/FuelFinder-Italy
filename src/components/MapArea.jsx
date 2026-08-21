@@ -119,6 +119,8 @@ function StationMarkers({ stations }) {
 
 function MapFixer() {
   const map = useMap();
+  const { selectedStation } = useStations();
+
   useEffect(() => {
     // Forza il ricalcolo delle dimensioni della mappa dopo il mount 
     // e l'applicazione delle classi CSS per evitare glitch visivi
@@ -127,6 +129,15 @@ function MapFixer() {
     }, 300);
     return () => clearTimeout(timer);
   }, [map]);
+
+  // Centra la mappa sulla stazione selezionata (es. quando cambia il tipo di carburante o si entra in una città)
+  useEffect(() => {
+    if (selectedStation) {
+      // Zoom 15 per concentrarsi sul distributore
+      map.flyTo([selectedStation.lat, selectedStation.lng], 15, { duration: 2 });
+    }
+  }, [selectedStation, map]);
+
   return null;
 }
 
