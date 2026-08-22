@@ -46,7 +46,7 @@ function LayoutContent() {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
-    const { stations, fuelType, setLocationStr, setUserPos, userPos } = useStations();
+    const { stations, fuelType, setLocationStr, setUserPos, userPos, selectedStation, setSelectedStation } = useStations();
     const [viewMode, setViewMode] = useState('map');
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
     const [mapInteractive, setMapInteractive] = useState(false);
