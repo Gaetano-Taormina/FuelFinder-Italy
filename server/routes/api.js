@@ -5,4 +5,6 @@ export function setupApiRoutes(app, db) {
     
     app.get('/api/stats', controller.getStats);
     app.get('/api/stations', controller.getStations);
+    app.get('/api/geocode', controller.getGeocode);
+    app.get('/api/reverse-geocode', controller.getReverseGeocode);
 }

@@ -118,7 +118,7 @@ function LayoutContent() {
             }
             
             // Geocode the city
-            const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cityName + ', Italia')}`;
+            const geocodeUrl = `/api/geocode?q=${encodeURIComponent(cityName + ', Italia')}`;
             fetch(geocodeUrl)
                 .then(res => res.json())
                 .then(data => {
@@ -147,7 +147,7 @@ function LayoutContent() {
     // Reverse geocode when user clicks or uses GPS
     useEffect(() => {
         if (userPos && (userPos.type === 'click' || userPos.type === 'gps')) {
-            const reverseUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${userPos.lat}&lon=${userPos.lng}`;
+            const reverseUrl = `/api/reverse-geocode?lat=${userPos.lat}&lon=${userPos.lng}`;
             fetch(reverseUrl)
                 .then(res => res.json())
                 .then(data => {
