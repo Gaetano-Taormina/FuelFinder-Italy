@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { StationsProvider, useStations } from './context/StationsContext';
 import Header from './components/Header';
+import Footer from './components/Footer';
 import SearchPanel from './components/SearchPanel';
 import Loader from './components/Loader';
 import Tooltip from './components/Tooltip';
@@ -279,9 +280,7 @@ function LayoutContent() {
                 </div>
             )}
 
-            <footer className="mt-8 mb-4 text-center text-sm text-slate-700 dark:text-slate-300">
-                <p dangerouslySetInnerHTML={{ __html: t('footer_text') }} />
-            </footer>
+            <Footer />
         </div>
     );
 }
