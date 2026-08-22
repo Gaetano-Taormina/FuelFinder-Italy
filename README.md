@@ -1,6 +1,7 @@
 # ⛽ FuelFinder Italia
 
 [![Live Demo](https://img.shields.io/badge/🌍_Live_Demo-Click_Here-blue?style=for-the-badge)](https://fuelfinder-msn8.onrender.com)
+[![Version](https://img.shields.io/badge/version-1.1.0-brightgreen?style=for-the-badge)]()
 
 🌍 **Choose your language / Scegli la tua lingua:**
 
@@ -31,6 +32,7 @@ The data shown is real and based on official Open Data from the Italian Ministry
 - **Advanced SEO:** Highly optimized for search engines featuring JSON-LD Structured Data, `sitemap.xml`, dynamic Meta Tags, and `robots.txt`.
 - **Admin Dashboard:** Secure passkey-protected panel at `/admin-stats` for visualizing site traffic and usage stats.
 - **Lighthouse Optimized:** Next-gen image formats (WebP) and optimized React chunks for maximum speed.
+- **Robust Testing (v1.1):** 100% Code Coverage achieved through Vitest and Happy-DOM, ensuring enterprise-grade stability.
 
 ### 🏗️ Architecture and Structure
 
@@ -83,6 +85,7 @@ I dati mostrati sono reali e basati sugli Open Data ufficiali del Ministero.
 - **SEO Strutturata:** Ottimizzazione profonda per Google tramite Dati Strutturati (JSON-LD), mappa `sitemap.xml`, `robots.txt`, tag `noscript` di fallback e Open Graph per i social.
 - **Dashboard Admin:** Pannello protetto da passkey sicura alla rotta `/admin-stats` per monitorare il traffico e l'utilizzo del sito.
 - **Ottimizzazione Lighthouse:** Immagini in formato WebP e caricamenti separati per massimizzare le prestazioni del browser.
+- **Test Robusti (v1.1):** 100% di Code Coverage raggiunto tramite Vitest e Happy-DOM, per garantire una stabilità di livello enterprise.
 
 ### 🏗️ Architettura e Struttura
 
