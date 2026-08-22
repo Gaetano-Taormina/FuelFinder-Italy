@@ -20,20 +20,24 @@ export const validateStationsInput = (query) => {
         serviceType = 'all';
     }
 
-    if (isNaN(lat) || lat < -90 || lat > 90) {
-        throw new ValidationError('Latitudine non valida o mancante.');
+    if (!lat || isNaN(lat)) {
+        throw new ValidationError('Invalid or missing latitude.');
+    }
+    
+    if (lat < -90 || lat > 90) {
+        throw new ValidationError('Invalid latitude. Must be between -90 and 90.');
     }
     if (isNaN(lng) || lng < -180 || lng > 180) {
-        throw new ValidationError('Longitudine non valida o mancante.');
+        throw new ValidationError('Invalid or missing longitude.');
     }
     if (isNaN(radius) || radius <= 0 || radius > 100) {
-        throw new ValidationError('Raggio non valido. Deve essere compreso tra 0 e 100 km.');
+        throw new ValidationError('Invalid radius. Must be between 0 and 100 km.');
     }
     if (!fuelType || fuelType.length > 50) {
-        throw new ValidationError('Tipo di carburante non valido.');
+        throw new ValidationError('Invalid fuel type.');
     }
     if (serviceType !== '1' && serviceType !== '0' && serviceType !== 'all') {
-        throw new ValidationError('Tipo di servizio non valido. Valori ammessi: "1" (self), "0" (servito), "all".');
+        throw new ValidationError('Invalid service type. Allowed values: "1" (self), "0" (served), "all".');
     }
 
     return { lat, lng, radius, fuelType, serviceType };

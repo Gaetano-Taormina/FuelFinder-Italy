@@ -3,13 +3,13 @@ import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 
 const capitals = [
-    { name: 'Italy', capital: 'Rome', lat: 41.9028, lng: 12.4964, icon: '🏛️', flag: '🇮🇹', code: 'it', rotation: '12deg', isMirrored: false },
-    { name: 'San Marino', capital: 'San Marino', lat: 43.9424, lng: 12.4578, icon: '🏰', flag: '🇸🇲', code: 'sm', rotation: '8deg', isMirrored: false },
-    { name: 'Vatican City', capital: 'Vatican', lat: 41.9022, lng: 12.4533, icon: '⛪', flag: '🇻🇦', code: 'va', rotation: '-15deg', isMirrored: true, isSticker: false },
-    { name: 'France', capital: 'Paris', lat: 48.8566, lng: 2.3522, icon: '🗼', flag: '🇫🇷', code: 'fr', rotation: '-5deg', isMirrored: false },
-    { name: 'Switzerland', capital: 'Bern', lat: 46.9480, lng: 7.4474, icon: '🏔️', flag: '🇨🇭', code: 'ch', rotation: '5deg', isMirrored: false },
-    { name: 'Austria', capital: 'Vienna', lat: 48.2082, lng: 16.3738, icon: '🎻', flag: '🇦🇹', code: 'at', rotation: '10deg', isMirrored: false },
-    { name: 'Slovenia', capital: 'Ljubljana', lat: 46.0569, lng: 14.5058, icon: '🐉', flag: '🇸🇮', code: 'si', rotation: '-8deg', isMirrored: false }
+    { name: 'Italy', capital: 'Rome', lat: 41.9028, lng: 12.4964, code: 'it', rotation: '12deg', isMirrored: false },
+    { name: 'San Marino', capital: 'San Marino', lat: 43.9424, lng: 12.4578, code: 'sm', rotation: '8deg', isMirrored: false },
+    { name: 'Vatican City', capital: 'Vatican', lat: 41.9022, lng: 12.4533, code: 'va', rotation: '-15deg', isMirrored: true, isSticker: false },
+    { name: 'France', capital: 'Paris', lat: 48.8566, lng: 2.3522, code: 'fr', rotation: '-5deg', isMirrored: false },
+    { name: 'Switzerland', capital: 'Bern', lat: 46.9480, lng: 7.4474, code: 'ch', rotation: '5deg', isMirrored: false },
+    { name: 'Austria', capital: 'Vienna', lat: 48.2082, lng: 16.3738, code: 'at', rotation: '10deg', isMirrored: false },
+    { name: 'Slovenia', capital: 'Ljubljana', lat: 46.0569, lng: 14.5058, code: 'si', rotation: '-8deg', isMirrored: false }
 ];
 
 const capitalIcon = (code, rotation, isMirrored = false, isSticker = false) => {

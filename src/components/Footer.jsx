@@ -1,6 +1,7 @@
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-export default function Footer() {
+const Footer = memo(function Footer() {
     const { t } = useTranslation();
 
     return (
@@ -8,4 +9,6 @@ export default function Footer() {
             <p dangerouslySetInnerHTML={{ __html: t('footer_text') }} />
         </footer>
     );
-}
+});
+
+export default Footer;

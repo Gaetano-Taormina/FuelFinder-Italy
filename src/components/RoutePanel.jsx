@@ -24,7 +24,7 @@ export default function RoutePanel() {
     return (
         <aside className="absolute bottom-4 left-4 right-4 sm:right-auto sm:bottom-8 sm:left-8 z-9999 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-700 sm:min-w-70 sm:max-w-sm transition-all duration-300">
             <div className="flex items-center gap-2 mb-2 sm:mb-3">
-                <span className="text-xl sm:text-2xl">👑</span>
+                <span className="text-sm sm:text-base font-black text-yellow-500 bg-yellow-100 dark:bg-yellow-900/30 px-2 py-0.5 rounded-md uppercase tracking-wider border border-yellow-200 dark:border-yellow-700/50">Migliore</span>
                 <h3 className="font-bold text-base sm:text-lg text-slate-800 dark:text-white leading-tight">{t('rp_title')}</h3>
             </div>
             <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">

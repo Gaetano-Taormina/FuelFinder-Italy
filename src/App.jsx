@@ -131,6 +131,19 @@ function LayoutContent() {
         }
     }, [city, setLocationStr, setUserPos, location.state, currLang]);
 
+    // Auto-select cheapest station when data loads for a city, or when fuel changes
+    useEffect(() => {
+        if (city && stations && stations.length > 0) {
+            const bestStation = stations[0];
+            // Selezioniamo automaticamente la migliore stazione se:
+            // 1. Non ce n'è una selezionata
+            // 2. La stazione selezionata non esiste più nei nuovi risultati (es. cambio carburante)
+            if (!selectedStation || !stations.find(s => s.id === selectedStation.id)) {
+                setSelectedStation(bestStation);
+            }
+        }
+    }, [city, stations, selectedStation, setSelectedStation]);
+
     // Reverse geocode when user clicks or uses GPS
     useEffect(() => {
         if (userPos && (userPos.type === 'click' || userPos.type === 'gps')) {
@@ -216,7 +229,7 @@ function LayoutContent() {
                 <div className="justify-self-start">
                     <Tooltip content={t('title_theme')}>
                         <button onClick={toggleTheme} aria-label="Cambia Tema" className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white dark:bg-slate-800 shadow-md border-2 border-slate-300 dark:border-slate-500 text-slate-700 dark:text-slate-300 hover:scale-105 hover:shadow-lg transition-transform flex items-center justify-center">
-                            <span className="text-xl sm:text-2xl leading-none" aria-hidden="true">{theme === 'dark' ? '🌙' : '☀️'}</span>
+                            <span className="text-sm font-bold sm:text-base leading-none" aria-hidden="true">{theme === 'dark' ? 'Dark' : 'Light'}</span>
                         </button>
                     </Tooltip>
                 </div>

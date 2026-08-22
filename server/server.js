@@ -8,21 +8,22 @@ import 'dotenv/config';
 
 // --- GESTIONE DEGLI ERRORI DI SISTEMA (es. Render timeout/kill) ---
 process.on('uncaughtException', (err) => {
-    console.error('🚨 ERRORE FATALE (uncaughtException):', err);
+    console.error('[FATAL] Uncaught Exception:', err);
     process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-    console.error('🚨 PROMISE RIFIUTATA NON GESTITA (unhandledRejection):', reason);
+    console.error('[FATAL] Unhandled Rejection:', reason);
+    process.exit(1);
 });
 
 process.on('SIGTERM', () => {
-    console.warn("⚠️ Ricevuto segnale SIGTERM (Render sta spegnendo il server o timeout dell'health check). Chiusura in corso...");
+    console.warn("[WARN] Ricevuto segnale SIGTERM (spegnimento server). Chiusura in corso...");
     process.exit(0);
 });
 
 process.on('SIGINT', () => {
-    console.warn('⚠️ Ricevuto segnale SIGINT (Interruzione manuale). Chiusura in corso...');
+    console.warn('[WARN] Ricevuto segnale SIGINT (Interruzione manuale). Chiusura in corso...');
     process.exit(0);
 });
 
@@ -128,13 +129,13 @@ async function setupDatabase() {
 
         if (clientOptions.syncUrl) {
             db.sync().then(() => {
-                console.log("✅ Database Principale (Embedded Sync) sincronizzato in locale!");
+                console.log("[INFO] Database Principale (Embedded Sync) sincronizzato in locale!");
             }).catch(e => console.error("Errore sync in background:", e));
         }
     } catch (err) {
         const errMsg = err.message || err.toString();
         if (errMsg.includes('SQLITE_CORRUPT') || errMsg.includes('malformed') || errMsg.includes('invalid local state')) {
-            console.warn("⚠️ Rilevata corruzione o stato inconsistente del database locale. Tento il ripristino automatico...");
+            console.warn("[WARN] Rilevata corruzione o stato inconsistente del database locale. Tento il ripristino automatico...");
             try {
                 if (db) db.close();
             } catch (e) {} // Ignora errori di chiusura
@@ -151,12 +152,12 @@ async function setupDatabase() {
                 }
             }
             
-            console.log("♻️ File locali eliminati. Risincronizzazione da zero in corso...");
+            console.log("[INFO] File locali eliminati. Risincronizzazione da zero in corso...");
             db = createClient(clientOptions);
             
             if (clientOptions.syncUrl) {
                 db.sync().then(() => {
-                    console.log("✅ Database ripristinato e sincronizzato con successo!");
+                    console.log("[INFO] Database ripristinato e sincronizzato con successo!");
                 }).catch(e => console.error("Errore sync di ripristino:", e));
             }
         } else {
@@ -657,7 +658,7 @@ app.use(async (req, res) => {
         app.use(globalErrorHandler);
 
         isReady = true;
-        console.log("✅ Inizializzazione completata. Server pronto.");
+        console.log("[INFO] Inizializzazione completata. Server pronto.");
         
         scheduleDailySync();
     } catch (e) {

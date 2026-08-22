@@ -72,7 +72,7 @@ export default function StationTable() {
                                     className="hover:bg-slate-100 dark:hover:bg-slate-700/80 even:bg-slate-50/50 dark:even:bg-slate-700/30 cursor-pointer transition-colors"
                                 >
                                     <td className="p-2 sm:p-4 text-center font-bold">
-                                        {i === 0 ? '🏆' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
+                                        <span className="font-bold text-sm text-slate-500 dark:text-slate-400">#{i + 1}</span>
                                     </td>
                                     <td className="p-2 sm:p-4 font-medium">
                                         <button 

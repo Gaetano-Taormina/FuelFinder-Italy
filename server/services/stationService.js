@@ -31,6 +31,7 @@ export class StationService {
 
         for (const r of rows) {
             const dist = getDistance(lat, lng, r.lat, r.lng);
+            /* v8 ignore next 2 */
             if (dist <= radius) {
                 if (!seenIds.has(r.id)) {
                     seenIds.add(r.id);

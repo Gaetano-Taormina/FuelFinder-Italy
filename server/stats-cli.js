@@ -21,17 +21,17 @@ const rl = readline.createInterface({
     const cleanKey = inputKey.trim();
 
     if (cleanKey.length !== ADMIN_PASSKEY.length) {
-        console.error("\n❌ Accesso Negato: Lunghezza della Passkey non valida.\n");
+        console.error("\n[Error] Accesso Negato: Lunghezza della Passkey non valida.\n");
         process.exit(1);
     }
     
     try {
         if (!crypto.timingSafeEqual(Buffer.from(cleanKey), Buffer.from(ADMIN_PASSKEY))) {
-            console.error("\n❌ Accesso Negato: Passkey errata.\n");
+            console.error("\n[Error] Accesso Negato: Passkey errata.\n");
             process.exit(1);
         }
     } catch (e) {
-        console.error("\n❌ Accesso Negato: Errore di validazione.\n");
+        console.error("\n[Error] Accesso Negato: Errore di validazione.\n");
         process.exit(1);
     }
 
@@ -41,7 +41,7 @@ const rl = readline.createInterface({
     rl.close();
 
     console.log('\n=============================================');
-    console.log('   📊 DASHBOARD STATISTICHE - CARBURANTE 📊');
+    console.log('   DASHBOARD STATISTICHE - CARBURANTE');
     console.log('=============================================\n');
 
     const DB_URL = process.env.TURSO_DATABASE_URL || 'file:' + path.join(process.cwd(), 'server', 'database.sqlite');
@@ -68,18 +68,18 @@ const rl = readline.createInterface({
             totalUnique += uniqueUsers;
             totalSearches += (row.searches || 0);
             
-            console.log(`📅 Data: ${row.date}`);
-            console.log(`   👁️  Visite Totali:    ${row.visits || 0}`);
-            console.log(`   👥  Visitatori Unici: ${uniqueUsers}`);
-            console.log(`   🔍  Ricerche Fatte:   ${row.searches || 0}`);
+            console.log(`  Data: ${row.date}`);
+            console.log(`    Visite Totali:    ${row.visits || 0}`);
+            console.log(`    Visitatori Unici: ${uniqueUsers}`);
+            console.log(`    Ricerche Fatte:   ${row.searches || 0}`);
             console.log('---------------------------------------------');
         });
         
-        console.log(`\n📈 SOMMARIO TOTALI (Ultimi ${rowsToShow.length} giorni registrati)`);
+        console.log(`\nSOMMARIO TOTALI (Ultimi ${rowsToShow.length} giorni registrati)`);
         console.log(`=============================================`);
-        console.log(`   👁️  Visite Totali:    ${totalVisits}`);
-        console.log(`   👥  Visitatori Unici: ${totalUnique} (stimati)`);
-        console.log(`   🔍  Ricerche Totali:  ${totalSearches}`);
+        console.log(`    Visite Totali:    ${totalVisits}`);
+        console.log(`    Visitatori Unici: ${totalUnique} (stimati)`);
+        console.log(`    Ricerche Totali:  ${totalSearches}`);
         console.log(`=============================================\n`);
 
     } catch (e) {
