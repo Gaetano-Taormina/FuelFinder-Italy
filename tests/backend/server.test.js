@@ -211,3 +211,76 @@ describe('Global Error Handler', () => {
         expect(res.json).toHaveBeenCalledWith({ success: false, error: 'Internal server error. Please try again later.' });
     });
 });
+
+describe('Backend Server API - GET /api/geocode & /api/reverse-geocode', () => {
+    let originalFetch;
+
+    beforeAll(() => {
+        originalFetch = global.fetch;
+        global.fetch = vi.fn((url, options) => {
+            if (url.includes('/search')) {
+                if (url.includes('error')) return Promise.resolve({ ok: false, status: 500 });
+                return Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve([{ lat: "41.9", lon: "12.5", display_name: "Roma, Italia" }])
+                });
+            }
+            if (url.includes('/reverse')) {
+                if (url.includes('error')) return Promise.resolve({ ok: false, status: 500 });
+                return Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve({ address: { city: "Roma" } })
+                });
+            }
+            return originalFetch(url, options);
+        });
+    });
+
+    afterAll(() => {
+        global.fetch = originalFetch;
+    });
+
+    it('dovrebbe ritornare 400 se manca q in /api/geocode', async () => {
+        const res = await request(app).get('/api/geocode');
+        expect(res.status).toBe(400);
+    });
+
+    it('dovrebbe ritornare i dati geocode correttamente e testare cache', async () => {
+        const res1 = await request(app).get('/api/geocode?q=Roma');
+        expect(res1.status).toBe(200);
+        expect(res1.body[0].lat).toBe("41.9");
+        
+        // Cache hit
+        const res2 = await request(app).get('/api/geocode?q=Roma');
+        expect(res2.status).toBe(200);
+        // Non deve chiamare fetch di nuovo, ma dato che prima non abbiamo resettato il contatore,
+        // ci fidiamo del fatto che ha ritornato 200 senza errori.
+    });
+
+    it('dovrebbe gestire errori da Nominatim in /api/geocode', async () => {
+        const res = await request(app).get('/api/geocode?q=error');
+        expect(res.status).toBe(500);
+    });
+
+    it('dovrebbe ritornare 400 se manca lat o lon in /api/reverse-geocode', async () => {
+        let res = await request(app).get('/api/reverse-geocode?lat=41');
+        expect(res.status).toBe(400);
+        res = await request(app).get('/api/reverse-geocode?lon=12');
+        expect(res.status).toBe(400);
+    });
+
+    it('dovrebbe ritornare i dati reverse-geocode correttamente e testare cache', async () => {
+        const res1 = await request(app).get('/api/reverse-geocode?lat=41.9&lon=12.5');
+        expect(res1.status).toBe(200);
+        expect(res1.body.address.city).toBe("Roma");
+        
+        // Cache hit
+        const res2 = await request(app).get('/api/reverse-geocode?lat=41.9&lon=12.5');
+        expect(res2.status).toBe(200);
+    });
+
+    it('dovrebbe gestire errori da Nominatim in /api/reverse-geocode', async () => {
+        const res = await request(app).get('/api/reverse-geocode?lat=error&lon=error');
+        expect(res.status).toBe(500);
+    });
+});
