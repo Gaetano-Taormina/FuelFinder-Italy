@@ -134,15 +134,17 @@ function LayoutContent() {
     // Auto-select cheapest station when data loads for a city, or when fuel changes
     useEffect(() => {
         if (city && stations && stations.length > 0) {
-            const bestStation = stations[0];
-            // Selezioniamo automaticamente la migliore stazione se:
-            // 1. Non ce n'è una selezionata
-            // 2. La stazione selezionata non esiste più nei nuovi risultati (es. cambio carburante)
-            if (!selectedStation || !stations.find(s => s.id === selectedStation.id)) {
-                setSelectedStation(bestStation);
-            }
+            setSelectedStation(prev => {
+                // Selezioniamo automaticamente la migliore stazione se:
+                // 1. Non ce n'è una selezionata
+                // 2. La stazione selezionata non esiste più nei nuovi risultati (es. cambio carburante)
+                if (!prev || !stations.find(s => s.id === prev.id)) {
+                    return stations[0];
+                }
+                return prev;
+            });
         }
-    }, [city, stations, selectedStation, setSelectedStation]);
+    }, [city, stations, setSelectedStation]);
 
     // Reverse geocode when user clicks or uses GPS
     useEffect(() => {
