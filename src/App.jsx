@@ -112,6 +112,10 @@ function LayoutContent() {
             const cityName = getRealCityName(city, currLang);
             setLocationStr(cityName);
             
+            if (location.state && location.state.preventRecenter) {
+                return;
+            }
+            
             // Geocode the city
             const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cityName + ', Italia')}`;
             fetch(geocodeUrl)
@@ -124,7 +128,41 @@ function LayoutContent() {
                 })
                 .catch(err => console.error("Geocoding error for city route:", err));
         }
-    }, [city, setLocationStr, setUserPos]);
+    }, [city, setLocationStr, setUserPos, location.state, currLang]);
+
+    // Reverse geocode when user clicks or uses GPS
+    useEffect(() => {
+        if (userPos && (userPos.type === 'click' || userPos.type === 'gps')) {
+            const reverseUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${userPos.lat}&lon=${userPos.lng}`;
+            fetch(reverseUrl)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.address) {
+                        const cityMatch = data.address.city || data.address.town || data.address.village || data.address.municipality;
+                        if (cityMatch) {
+                            const searchSlug = slugify(cityMatch);
+                            const matchedCity = cities.find(c => slugify(c) === searchSlug);
+                            if (matchedCity) {
+                                let targetCitySlug = searchSlug;
+                                if (currLang === 'en' && Object.values(enToItCities).includes(searchSlug)) {
+                                     const enEntry = Object.entries(enToItCities).find(([en, it]) => it === searchSlug);
+                                     if (enEntry) targetCitySlug = enEntry[0];
+                                }
+                                
+                                const pathSegment = currLang === 'it' ? 'citta' : 'city';
+                                const newPath = `/${currLang}/${pathSegment}/${targetCitySlug}`;
+                                
+                                if (location.pathname !== newPath) {
+                                    // Preserve query params (fuel, serviceType)
+                                    navigate(`${newPath}${location.search}`, { state: { preventRecenter: true } });
+                                }
+                            }
+                        }
+                    }
+                })
+                .catch(err => console.error("Reverse geocoding error:", err));
+        }
+    }, [userPos, currLang, location.pathname, location.search, navigate]);
 
     const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
     

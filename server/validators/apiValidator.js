@@ -14,7 +14,11 @@ export const validateStationsInput = (query) => {
     const lng = Math.round(parseFloat(query.lng) * 1000) / 1000;
     const radius = parseFloat(query.radius) || 5;
     const fuelType = typeof query.fuelType === 'string' ? query.fuelType.trim() : 'Benzina';
-    const serviceType = typeof query.serviceType === 'string' ? query.serviceType.trim() : '1';
+    let serviceType = typeof query.serviceType === 'string' ? query.serviceType.trim().toLowerCase() : '1';
+
+    if (serviceType === 'entrambi' || serviceType === 'both') {
+        serviceType = 'all';
+    }
 
     if (isNaN(lat) || lat < -90 || lat > 90) {
         throw new ValidationError('Latitudine non valida o mancante.');

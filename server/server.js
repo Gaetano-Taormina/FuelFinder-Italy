@@ -561,6 +561,11 @@ app.use(async (req, res) => {
                     "name": `Prezzi Carburante a ${cityCap}`,
                     "description": `Dataset dei prezzi di benzina, diesel, GPL e metano nei distributori di ${cityCap}.`,
                     "url": currentUrl,
+                    "license": "https://creativecommons.org/licenses/by/4.0/",
+                    "creator": {
+                        "@type": "Organization",
+                        "name": "FuelFinder"
+                    },
                     "provider": {
                         "@type": "Organization",
                         "name": "FuelFinder"
@@ -571,15 +576,16 @@ app.use(async (req, res) => {
                     const offerName = `${displayFuel} a ${cityCap}`;
                     jsonLd.push({
                         "@context": "https://schema.org",
-                        "@type": "AggregateOffer",
-                        "itemOffered": {
-                            "@type": "Product",
-                            "name": offerName
-                        },
-                        "priceCurrency": "EUR",
-                        "lowPrice": aggregateData.minPrice,
-                        "highPrice": aggregateData.maxPrice,
-                        "offerCount": aggregateData.stationCount
+                        "@type": "Product",
+                        "name": offerName,
+                        "description": `Migliori prezzi per ${offerName}`,
+                        "offers": {
+                            "@type": "AggregateOffer",
+                            "priceCurrency": "EUR",
+                            "lowPrice": aggregateData.minPrice,
+                            "highPrice": aggregateData.maxPrice,
+                            "offerCount": aggregateData.stationCount
+                        }
                     });
 
                     if (minStation) {
@@ -593,7 +599,7 @@ app.use(async (req, res) => {
                                 "latitude": minStation.latitudine,
                                 "longitude": minStation.longitudine
                             },
-                            "url": `https://www.google.com/maps/dir/?api=1&destination=${minStation.latitudine},${minStation.longitudine}`,
+                            "url": currentUrl,
                             "priceRange": "€",
                             "makesOffer": {
                                 "@type": "Offer",
@@ -615,7 +621,7 @@ app.use(async (req, res) => {
                                 "latitude": maxStation.latitudine,
                                 "longitude": maxStation.longitudine
                             },
-                            "url": `https://www.google.com/maps/dir/?api=1&destination=${maxStation.latitudine},${maxStation.longitudine}`,
+                            "url": currentUrl,
                             "priceRange": "€€€",
                             "makesOffer": {
                                 "@type": "Offer",
