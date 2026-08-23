@@ -7,4 +7,6 @@ export function setupApiRoutes(app, db) {
     app.get('/api/stations', controller.getStations);
     app.get('/api/geocode', controller.getGeocode);
     app.get('/api/reverse-geocode', controller.getReverseGeocode);
+    app.get('/api/cities', controller.getCities);
+    app.get('/api/cities/validate', controller.validateCity);
 }

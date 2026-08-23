@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, useContext } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useParams, useNavigate, useLocation, matchPath } from 'react-router-dom';
 import useSWR from 'swr';
 
 const StationsContext = createContext();
@@ -14,15 +14,19 @@ const fetcher = async (url) => {
 
 export const StationsProvider = ({ children }) => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { fuel, lang, city } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Mapping for URL translation
   const fuelToEn = { 'Benzina': 'Petrol', 'Gasolio': 'Diesel', 'GPL': 'LPG', 'Metano': 'CNG' };
-  const enToFuel = { 'Petrol': 'Benzina', 'Diesel': 'Gasolio', 'LPG': 'GPL', 'CNG': 'Metano' };
+  const enToFuel = { 'petrol': 'Benzina', 'diesel': 'Gasolio', 'lpg': 'GPL', 'cng': 'Metano', 'benzina': 'Benzina', 'gasolio': 'Gasolio', 'gpl': 'GPL', 'metano': 'Metano' };
 
-  const rawFuel = searchParams.get('fuel') || searchParams.get('carburante');
+  // Fallback to query params just in case old links are used
+  const rawFuel = fuel || searchParams.get('fuel') || searchParams.get('carburante');
   let initialFuel = 'Benzina';
   if (rawFuel) {
-      initialFuel = enToFuel[rawFuel] || rawFuel;
+      initialFuel = enToFuel[rawFuel.toLowerCase()] || rawFuel;
   }
 
   // Filters State
@@ -31,19 +35,37 @@ export const StationsProvider = ({ children }) => {
   const [fuelType, setFuelTypeInternal] = useState(initialFuel);
   const [serviceType, setServiceType] = useState('1'); // '1' = self, '0' = served, 'entrambi' = both
 
+  // Sync state if URL changes (e.g. back button)
+  useEffect(() => {
+    if (rawFuel) {
+      const normalized = enToFuel[rawFuel.toLowerCase()] || rawFuel;
+      if (normalized !== fuelType) {
+        setFuelTypeInternal(normalized);
+      }
+    }
+  }, [rawFuel, fuelType]);
+
   const setFuelType = (type) => {
     setFuelTypeInternal(type);
-    const newParams = new URLSearchParams(searchParams);
     
     // Check current language from pathname
     const isEn = window.location.pathname.startsWith('/en');
     const urlFuel = isEn ? (fuelToEn[type] || type) : type;
-    const key = isEn ? 'fuel' : 'carburante';
-    const oldKey = isEn ? 'carburante' : 'fuel';
+    const currentLang = isEn ? 'en' : 'it';
     
-    newParams.delete(oldKey);
-    newParams.set(key, urlFuel);
-    setSearchParams(newParams, { replace: true });
+    // Reconstruct the path with the new fuel
+    let newPath = `/${currentLang}`;
+    if (city) {
+       newPath += `/${isEn ? 'city' : 'citta'}/${city}`;
+    }
+    
+    // Clean old query params if any
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete('carburante');
+    newParams.delete('fuel');
+    
+    // the new route structure includes fuel at the end
+    navigate(`${newPath}/${urlFuel.toLowerCase()}?${newParams.toString()}`, { replace: true });
   };
 
   // Map and user location state

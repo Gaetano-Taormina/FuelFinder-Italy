@@ -247,8 +247,14 @@ app.get('/sitemap.xml', (req, res) => {
         xml += `    <xhtml:link rel="alternate" hreflang="en" href="${enUrl}" />\n  </url>\n`;
     };
 
+    const fuelsIt = ['benzina', 'gasolio', 'gpl', 'metano'];
+    const fuelsEn = ['petrol', 'diesel', 'lpg', 'cng'];
+
     // Core pages
     addUrl('', '', 'hourly', '1.0');
+    fuelsIt.forEach((fuel, i) => {
+        addUrl(`/${fuel}`, `/${fuelsEn[i]}`, 'hourly', '1.0');
+    });
     addUrl('/esplora', '/explore', 'daily', '0.9');
     
     // Cities
@@ -257,7 +263,10 @@ app.get('/sitemap.xml', (req, res) => {
         const citySegmentIt = slugify(lowerCity);
         const enName = itToEnCities[lowerCity] || lowerCity;
         const citySegmentEn = slugify(enName);
-        addUrl(`/citta/${citySegmentIt}`, `/city/${citySegmentEn}`, 'daily', '0.8');
+        
+        fuelsIt.forEach((fuel, i) => {
+            addUrl(`/citta/${citySegmentIt}/${fuel}`, `/city/${citySegmentEn}/${fuelsEn[i]}`, 'daily', '0.8');
+        });
     }
     
     xml += `</urlset>`;
@@ -281,10 +290,44 @@ app.use(express.static(distPath, {
     }
 })); // index: false forces root to also be handled by the catch-all
 
-// --- REDIRECTS PER VECCHIE URL (SEO) ---
-// Se avevi rotte vecchie come /citta/roma o /esplora senza la lingua, Googlebot le ha indicizzate. 
-// Bisogna fare redirect 301.
+// --- REDIRECTS PER VECCHIE URL E QUERY PARAMS (SEO) ---
 app.use((req, res, next) => {
+    // Redirect queries with carburante/fuel to path segment
+    if (req.query.carburante || req.query.fuel) {
+        let fuelRaw = req.query.fuel || req.query.carburante;
+        const enToFuelLocal = { 'petrol': 'benzina', 'diesel': 'gasolio', 'lpg': 'gpl', 'cng': 'metano' };
+        const itToEnLocal = { 'benzina': 'petrol', 'gasolio': 'diesel', 'gpl': 'lpg', 'metano': 'cng' };
+        let normalized = fuelRaw.toLowerCase();
+        
+        const isEn = req.path.startsWith('/en');
+        const isIt = req.path.startsWith('/it');
+        
+        let urlFuel = normalized;
+        if (isEn && itToEnLocal[normalized]) {
+            urlFuel = itToEnLocal[normalized];
+        } else if (isIt && enToFuelLocal[normalized]) {
+            urlFuel = enToFuelLocal[normalized];
+        } else if (!isEn && !isIt) {
+            urlFuel = itToEnLocal[normalized] || normalized;
+            urlFuel = enToFuelLocal[urlFuel] || urlFuel; // default to it
+        }
+        
+        const searchParams = new URLSearchParams(req.url.substring(req.path.length));
+        searchParams.delete('fuel');
+        searchParams.delete('carburante');
+        const finalSearch = searchParams.toString() ? `?${searchParams.toString()}` : '';
+        
+        // Remove trailing slash if any
+        let cleanPath = req.path;
+        if (cleanPath.endsWith('/')) cleanPath = cleanPath.slice(0, -1);
+        
+        // Se cleanPath è root o solo /it /en, appendi il carburante
+        if (cleanPath === '') cleanPath = '/it';
+        if (cleanPath === '/') cleanPath = '/it';
+        
+        return res.redirect(301, `${cleanPath}/${urlFuel}${finalSearch}`);
+    }
+
     // Redirect /citta/slug -> /it/citta/slug
     const oldCityMatch = req.path.match(/^\/citta\/([^/]+)\/?$/);
     if (oldCityMatch) {
@@ -320,11 +363,20 @@ app.use(async (req, res) => {
     trackStaticVisit(req);
     let indexPath = path.join(distPath, 'index.html');
     
-    const cityMatch = req.path.match(/^\/(it|en)\/(citta|city)\/([^/]+)\/?$/);
     const exploreMatch = req.path.match(/^\/(it|en)\/(esplora|explore)\/?$/);
-    const homeMatch = req.path === '/' || req.path.match(/^\/(it|en)\/?$/);
+    const cityMatch = req.path.match(/^\/(it|en)\/(citta|city)\/([^/]+)\/?(?:([^/]+)\/?)?$/);
+    let isHome = req.path === '/' || req.path.match(/^\/(it|en)(?:\/([^/]+))?\/?$/);
+    let homeMatch = isHome ? (req.path === '/' ? null : req.path.match(/^\/(it|en)(?:\/([^/]+))?\/?$/)) : null;
     
-    let rawFuel = req.query.fuel || req.query.carburante || 'Benzina';
+    let rawFuel = req.query.fuel || req.query.carburante;
+    
+    if (cityMatch && cityMatch[4]) {
+        rawFuel = cityMatch[4];
+    } else if (homeMatch && homeMatch[2] && !exploreMatch && !cityMatch) {
+        rawFuel = homeMatch[2];
+    }
+    
+    if (!rawFuel) rawFuel = 'Benzina';
     const enToFuel = { 'Petrol': 'Benzina', 'Diesel': 'Gasolio', 'LPG': 'GPL', 'CNG': 'Metano' };
     const fuelToEn = { 'Benzina': 'Petrol', 'Gasolio': 'Diesel', 'GPL': 'LPG', 'Metano': 'CNG' };
     
@@ -333,8 +385,10 @@ app.use(async (req, res) => {
     
     const lang = cityMatch ? cityMatch[1] : (exploreMatch ? exploreMatch[1] : (req.path.match(/^\/(it|en)/) ? req.path.match(/^\/(it|en)/)[1] : 'it'));
     const displayFuel = lang === 'en' ? (fuelToEn[rawFuel] || rawFuel) : rawFuel;
+    
+    const isHomePage = req.path === '/' || (homeMatch && !exploreMatch && !cityMatch);
 
-    if ((cityMatch || exploreMatch || homeMatch) && fs.existsSync(indexPath)) {
+    if ((cityMatch || exploreMatch || isHomePage) && fs.existsSync(indexPath)) {
         
         let cacheKey = '';
         let cityCap = '';
@@ -369,8 +423,8 @@ app.use(async (req, res) => {
             cacheKey = `${lang}_${slugify(cityCap)}_${slugify(rawFuel)}`;
         } else if (exploreMatch) {
             cacheKey = `${lang}_esplora`;
-        } else if (homeMatch) {
-            cacheKey = `${lang}_home`;
+        } else if (isHomePage) {
+            cacheKey = `${lang}_home_${slugify(rawFuel)}`;
         }
         
         if (htmlCache.has(cacheKey)) {
@@ -398,14 +452,14 @@ app.use(async (req, res) => {
                 desc = lang === 'it'
                     ? `Elenco alfabetico di tutti i comuni italiani per scoprire le stazioni di servizio e i prezzi del carburante aggiornati in tempo reale.`
                     : `Alphabetical list of all Italian municipalities to discover service stations and fuel prices updated in real time.`;
-            } else if (homeMatch) {
+            } else if (isHomePage) {
                 title = lang === 'it' 
-                    ? `FuelFinder Italy - Prezzi Benzina e Diesel in Tempo Reale`
-                    : `FuelFinder Italy - Real-time Petrol and Diesel Prices`;
+                    ? `FuelFinder Italy - Prezzi ${displayFuel} in Tempo Reale`
+                    : `FuelFinder Italy - Real-time ${displayFuel} Prices`;
                     
                 desc = lang === 'it'
-                    ? `Trova i distributori di carburante più economici in Italia. Mappa interattiva con prezzi di benzina, diesel, GPL e metano aggiornati.`
-                    : `Find the cheapest fuel stations in Italy. Interactive map with updated petrol, diesel, LPG and CNG prices.`;
+                    ? `Trova i distributori di carburante più economici in Italia. Mappa interattiva con prezzi di ${displayFuel} aggiornati.`
+                    : `Find the cheapest fuel stations in Italy. Interactive map with updated ${displayFuel} prices.`;
             }
 
             const currentUrl = `https://${req.get('host')}${req.path === '/' ? '/it' : req.path}`;
@@ -476,7 +530,7 @@ app.use(async (req, res) => {
                 }
                 linksHtml += '</ul>';
                 staticHtml += linksHtml;
-            } else if (homeMatch) {
+            } else if (isHomePage) {
                 staticHtml += `<div style="display:none;"><a href="https://${req.get('host')}/${lang}/${lang === 'it' ? 'esplora' : 'explore'}">Esplora Città</a></div>`;
             }
             html = html.replace('<div id="root"></div>', `<div id="root">${staticHtml}</div>`);

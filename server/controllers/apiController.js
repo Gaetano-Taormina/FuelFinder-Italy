@@ -1,7 +1,28 @@
+import fs from 'fs';
+import path from 'path';
 import crypto from 'crypto';
 import { getDailyStats } from '../middlewares/analytics.js';
 import { validateStationsInput } from '../validators/apiValidator.js';
 import { StationService } from '../services/stationService.js';
+
+let cityDataCache = null;
+const getCityData = () => {
+    if (!cityDataCache) {
+        const citiesPath = path.join(process.cwd(), 'server', 'data', 'cities.json');
+        cityDataCache = JSON.parse(fs.readFileSync(citiesPath, 'utf8'));
+    }
+    return cityDataCache;
+};
+
+const slugify = (text) => {
+    return text.toString().toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/['\s_]+/g, '-')
+        .replace(/[^\w-]+/g, '')
+        .replace(/--+/g, '-')
+        .replace(/^-+/, '')
+        .replace(/-+$/, '');
+};
 
 const CACHE_TTL = 15 * 60 * 1000; // 15 minuti
 const MAX_CACHE_SIZE = 1000;
@@ -58,14 +79,13 @@ export class ApiController {
                 const cached = apiCache.get(cacheKey);
                 if (Date.now() - cached.timestamp < CACHE_TTL) {
                     return res.json(cached.data);
-                } /* v8 ignore start */ else {
+                } else {
                     apiCache.delete(cacheKey);
-                } /* v8 ignore stop */
+                }
             }
 
             const results = await this.stationService.getStationsNearby(validatedInput);
             
-            /* v8 ignore start */
             if (apiCache.size >= MAX_CACHE_SIZE) {
                 // Svuota mezza cache se è troppo grande
                 const keys = Array.from(apiCache.keys());
@@ -73,7 +93,6 @@ export class ApiController {
                     apiCache.delete(keys[i]);
                 }
             }
-            /* v8 ignore stop */
             
             apiCache.set(cacheKey, { data: results, timestamp: Date.now() });
             res.json(results);
@@ -128,6 +147,33 @@ export class ApiController {
             const data = await fetchRes.json();
             apiCache.set(cacheKey, { data, timestamp: Date.now() });
             res.json(data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    getCities = (req, res, next) => {
+        try {
+            res.json(getCityData());
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    validateCity = (req, res, next) => {
+        try {
+            const { slug } = req.query;
+            if (!slug) return res.status(400).json({ error: 'Missing slug parameter' });
+            
+            const cities = getCityData();
+            const normalizedSlug = slugify(slug);
+            const realCityObj = cities.find(c => slugify(c.name) === normalizedSlug);
+            
+            if (realCityObj) {
+                res.json({ valid: true, city: realCityObj });
+            } else {
+                res.json({ valid: false });
+            }
         } catch (error) {
             next(error);
         }

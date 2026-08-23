@@ -18,6 +18,7 @@ export class StationRepository {
               AND s.longitudine BETWEEN ? AND ?
               AND p.desc_carburante = ?
               ${serviceCondition}
+            ORDER BY p.prezzo ASC
             LIMIT 300
         `;
 
