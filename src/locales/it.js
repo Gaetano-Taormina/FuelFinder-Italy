@@ -1,4 +1,4 @@
-{
+export default {
   "title": "FuelFinder Italy - Prezzi Reali",
   "loader_h2": "Caricamento dei dati ministeriali in corso...",
   "loader_p": "Questa operazione può richiedere qualche secondo...",
@@ -20,6 +20,7 @@
   "service_both": "Entrambi",
   "status_ready": "I dati sono pronti. Cerca, usa il GPS, oppure <strong class=\"text-blue-700 dark:text-blue-400\">clicca direttamente sulla mappa</strong>.",
   "rp_title": "Scelta Consigliata",
+  "rp_best_badge": "Migliore",
   "rp_brand": "Marchio:",
   "rp_price": "Prezzo:",
   "rp_dist": "📍 Distanza:",

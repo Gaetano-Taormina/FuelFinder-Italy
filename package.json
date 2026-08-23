@@ -25,7 +25,7 @@
     "test": "vitest",
     "test:frontend": "vitest run --project frontend",
     "test:backend": "vitest run --project backend",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage --coverage.reporter=text --coverage.reporter=json-summary && node tests/coverage-highlights.js"
   },
   "engines": {
     "node": ">=18.0.0"

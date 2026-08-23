@@ -1,7 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { cities } from '../utils/cityData';
 import Header from '../components/Header';
 
 const slugify = (text) => {
@@ -21,6 +20,21 @@ export default function ExplorePage() {
 
     const [viewMode, setViewMode] = useState('alphabetical'); // 'alphabetical' or 'region'
     const [sortOrder, setSortOrder] = useState('asc'); // 'asc' or 'desc'
+    const [cities, setCities] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetch('/api/cities')
+            .then(res => res.json())
+            .then(data => {
+                setCities(data);
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error('Failed to fetch cities:', err);
+                setLoading(false);
+            });
+    }, []);
 
     // Raggruppa e ordina le città
     const { groupedCities, sortedKeys } = useMemo(() => {
@@ -65,7 +79,7 @@ export default function ExplorePage() {
         }
 
         return { groupedCities: groups, sortedKeys: keys };
-    }, [viewMode, sortOrder, currentLang]);
+    }, [viewMode, sortOrder, currentLang, cities]);
 
     const getCityStyle = (city) => {
         if (city.isRegionalCapital) {
@@ -137,8 +151,16 @@ export default function ExplorePage() {
                     </div>
                 )}
 
+                {/* Loading State */}
+                {loading && (
+                    <div className="flex justify-center items-center py-20">
+                        <div className="w-12 h-12 border-4 border-slate-300 border-t-blue-500 rounded-full animate-spin"></div>
+                    </div>
+                )}
+
                 {/* Griglia Città */}
-                <div className="flex flex-col gap-10">
+                {!loading && (
+                    <div className="flex flex-col gap-10">
                     {sortedKeys.map((key) => (
                         <div key={key} id={`group-${key}`} className="scroll-mt-24">
                             <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-200 border-b-2 border-blue-500/30 pb-2 mb-4 pl-2">
@@ -148,7 +170,7 @@ export default function ExplorePage() {
                                 {groupedCities[key].map(city => (
                                         <Link 
                                             key={`${city.name}-${city.province}`} 
-                                            to={`/${currentLang}/${currentLang === 'it' ? 'citta' : 'city'}/${slugify(city.urlCityName)}?${currentLang === 'en' ? 'fuel=Petrol' : 'carburante=Benzina'}`}
+                                            to={`/${currentLang}/${currentLang === 'it' ? 'citta' : 'city'}/${slugify(city.urlCityName)}/${currentLang === 'en' ? 'petrol' : 'benzina'}`}
                                             className={getCityStyle(city)}
                                             title={`${city.displayName} (${city.province})`}
                                         >
@@ -162,6 +184,7 @@ export default function ExplorePage() {
                         </div>
                     ))}
                 </div>
+                )}
             </main>
         </div>
     );

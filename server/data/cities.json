@@ -1,4 +1,4 @@
-export const cities = [
+[
   {
     "name": "Agrigento",
     "englishName": null,
@@ -63231,4 +63231,4 @@ export const cities = [
     "isProvincialCapital": false,
     "isRegionalCapital": false
   }
-];
+]

@@ -1,4 +1,4 @@
-{
+export default {
   "title": "FuelFinder Italy - Real Prices",
   "loader_h2": "Loading ministerial data...",
   "loader_p": "This operation may take a few seconds...",
@@ -20,6 +20,7 @@
   "service_both": "Both",
   "status_ready": "Data is ready. Search, use GPS, or <strong class=\"text-blue-700 dark:text-blue-400\">click directly on the map</strong>.",
   "rp_title": "Recommended Choice",
+  "rp_best_badge": "Best",
   "rp_brand": "Brand:",
   "rp_price": "Price:",
   "rp_dist": "📍 Distance:",

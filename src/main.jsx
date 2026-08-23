@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './index.css'
 import i18n from './utils/i18n'
+import { ROUTES } from './config/routes.js'
 import App from './App.jsx'
 
 import { ErrorBoundary } from './components/ErrorBoundary.jsx'
@@ -28,14 +29,17 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/it/esplora" element={<PageWrapper><ExplorePage /></PageWrapper>} />
-        <Route path="/en/explore" element={<PageWrapper><ExplorePage /></PageWrapper>} />
-        <Route path="/esplora" element={<PageWrapper><ExplorePage /></PageWrapper>} />
-        <Route path="/explore" element={<PageWrapper><ExplorePage /></PageWrapper>} />
+        {Object.keys(ROUTES).map((lang) => (
+          <Route key={`explore-${lang}`} path={`/${lang}/${ROUTES[lang].explore}`} element={<PageWrapper><ExplorePage /></PageWrapper>} />
+        ))}
+        {Object.keys(ROUTES).map((lang) => (
+          <Route key={`explore-naked-${lang}`} path={`/${ROUTES[lang].explore}`} element={<PageWrapper><ExplorePage /></PageWrapper>} />
+        ))}
         
-        <Route path="/it/citta/:city" element={<PageWrapper><App /></PageWrapper>} />
-        <Route path="/en/city/:city" element={<PageWrapper><App /></PageWrapper>} />
-        <Route path="/:lang" element={<PageWrapper><App /></PageWrapper>} />
+        {Object.keys(ROUTES).map((lang) => (
+          <Route key={`city-${lang}`} path={`/${lang}/${ROUTES[lang].cityPrefix}/:city/:fuel?`} element={<PageWrapper><App /></PageWrapper>} />
+        ))}
+        <Route path="/:lang/:fuel?" element={<PageWrapper><App /></PageWrapper>} />
         <Route path="/" element={<PageWrapper><App /></PageWrapper>} />
         
         <Route path="*" element={<PageWrapper><NotFoundPage /></PageWrapper>} />

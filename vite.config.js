@@ -46,6 +46,7 @@ export default defineConfig(({ mode }) => ({
     slowTestThreshold: 1000,
     coverage: {
       provider: "v8",
+      reportsDirectory: "tests/coverage",
       exclude: ["server/middlewares/analytics.js", "server/stats-cli.js"],
       reporter: [
         ["text", { maxCols: 80 }]

@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { ROUTES } from '../config/routes.js';
 
 const Sidebar = memo(function Sidebar({ isOpen, onClose, cityName, langPrefix }) {
     const { t } = useTranslation();
@@ -74,7 +75,7 @@ const Sidebar = memo(function Sidebar({ isOpen, onClose, cityName, langPrefix })
                     </div>
                     
                     <Link 
-                        to={`/${langPrefix}/${langPrefix === 'it' ? 'esplora' : 'explore'}`}
+                        to={`/${langPrefix}/${ROUTES[langPrefix]?.explore || ROUTES.it.explore}`}
                         onClick={onClose}
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-700 dark:text-slate-200 font-semibold hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-slate-700 dark:hover:text-blue-400 transition-colors"
                     >

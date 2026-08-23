@@ -11,9 +11,8 @@ import { Suspense, lazy } from 'react';
 
 import RoutePanel from './components/RoutePanel';
 import StationTable from './components/StationTable';
+import { ROUTES } from './config/routes.js';
 const MapArea = lazy(() => import('./components/MapArea'));
-import { cities as cityData } from './utils/cityData';
-const cities = cityData.map(c => c.name);
 
 const slugify = (text) => {
     return text.toString().toLowerCase()
@@ -31,15 +30,22 @@ const enToItCities = {
     'syracuse': 'siracusa', 'mantua': 'mantova'
 };
 
-const getRealCityName = (slug, lang) => {
+const getRealCityName = async (slug, lang) => {
     let searchSlug = slug.toLowerCase();
     if (lang === 'en' && enToItCities[searchSlug]) {
         searchSlug = enToItCities[searchSlug];
     }
-    const real = cities.find(c => slugify(c) === searchSlug);
-    return real || (slug.charAt(0).toUpperCase() + slug.slice(1).toLowerCase());
+    try {
+        const res = await fetch(`/api/cities/validate?slug=${encodeURIComponent(searchSlug)}`);
+        const data = await res.json();
+        if (data.valid) {
+            return data.city.name;
+        }
+    } catch (e) {
+        console.error("Errore validazione città:", e);
+    }
+    return (slug.charAt(0).toUpperCase() + slug.slice(1).toLowerCase());
 };
-
 
 
 function LayoutContent() {
@@ -91,10 +97,11 @@ function LayoutContent() {
         const displayEnFuel = fuelToEn[itFuel] || itFuel;
 
         if (city) {
-            const cityName = getRealCityName(city, currLang);
-            document.title = currLang === 'it' 
-                ? `FuelFinder Italia - Prezzi ${displayItFuel} a ${cityName}` 
-                : `FuelFinder Italy - Prices for ${displayEnFuel} in ${cityName}`;
+            getRealCityName(city, currLang).then(cityName => {
+                document.title = currLang === 'it' 
+                    ? `FuelFinder Italia - Prezzi ${displayItFuel} a ${cityName}` 
+                    : `FuelFinder Italy - Prices for ${displayEnFuel} in ${cityName}`;
+            });
         } else {
             document.title = currLang === 'it'
                 ? `FuelFinder Italia - Prezzi ${displayItFuel}`
@@ -110,24 +117,25 @@ function LayoutContent() {
     // Auto-search for city from URL
     useEffect(() => {
         if (city) {
-            const cityName = getRealCityName(city, currLang);
-            setLocationStr(cityName);
-            
-            if (location.state && location.state.preventRecenter) {
-                return;
-            }
-            
-            // Geocode the city
-            const geocodeUrl = `/api/geocode?q=${encodeURIComponent(cityName + ', Italia')}`;
-            fetch(geocodeUrl)
-                .then(res => res.json())
-                .then(data => {
-                    if (data && data.length > 0) {
-                        const { lat, lon } = data[0];
-                        setUserPos({ lat: parseFloat(lat), lng: parseFloat(lon) });
-                    }
-                })
-                .catch(err => console.error("Geocoding error for city route:", err));
+            getRealCityName(city, currLang).then(cityName => {
+                setLocationStr(cityName);
+                
+                if (location.state && location.state.preventRecenter) {
+                    return;
+                }
+                
+                // Geocode the city
+                const geocodeUrl = `/api/geocode?q=${encodeURIComponent(cityName + ', Italia')}`;
+                fetch(geocodeUrl)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            const { lat, lon } = data[0];
+                            setUserPos({ lat: parseFloat(lat), lng: parseFloat(lon) });
+                        }
+                    })
+                    .catch(err => console.error("Geocoding error for city route:", err));
+            });
         }
     }, [city, setLocationStr, setUserPos, location.state, currLang]);
 
@@ -157,22 +165,36 @@ function LayoutContent() {
                         const cityMatch = data.address.city || data.address.town || data.address.village || data.address.municipality;
                         if (cityMatch) {
                             const searchSlug = slugify(cityMatch);
-                            const matchedCity = cities.find(c => slugify(c) === searchSlug);
-                            if (matchedCity) {
-                                let targetCitySlug = searchSlug;
-                                if (currLang === 'en' && Object.values(enToItCities).includes(searchSlug)) {
-                                     const enEntry = Object.entries(enToItCities).find(([en, it]) => it === searchSlug);
-                                     if (enEntry) targetCitySlug = enEntry[0];
-                                }
-                                
-                                const pathSegment = currLang === 'it' ? 'citta' : 'city';
-                                const newPath = `/${currLang}/${pathSegment}/${targetCitySlug}`;
-                                
-                                if (location.pathname !== newPath) {
-                                    // Preserve query params (fuel, serviceType)
-                                    navigate(`${newPath}${location.search}`, { state: { preventRecenter: true } });
-                                }
-                            }
+                            
+                            fetch(`/api/cities/validate?slug=${encodeURIComponent(searchSlug)}`)
+                                .then(res => res.json())
+                                .then(validateData => {
+                                    if (validateData.valid) {
+                                        let targetCitySlug = searchSlug;
+                                        if (currLang === 'en' && Object.values(enToItCities).includes(searchSlug)) {
+                                             const enEntry = Object.entries(enToItCities).find(([en, it]) => it === searchSlug);
+                                             if (enEntry) targetCitySlug = enEntry[0];
+                                        }
+                                        
+                                        const pathSegment = ROUTES[currLang]?.cityPrefix || ROUTES.it.cityPrefix;
+                                        
+                                        const fuelToEnLocal = { 'Benzina': 'Petrol', 'Gasolio': 'Diesel', 'GPL': 'LPG', 'Metano': 'CNG' };
+                                        let urlFuel = currLang === 'en' ? (fuelToEnLocal[fuelType] || fuelType) : fuelType;
+                                        if (!urlFuel) urlFuel = currLang === 'en' ? 'petrol' : 'benzina';
+                                        
+                                        const newPath = `/${currLang}/${pathSegment}/${targetCitySlug}/${urlFuel.toLowerCase()}`;
+                                        
+                                        const searchParams = new URLSearchParams(location.search);
+                                        searchParams.delete('fuel');
+                                        searchParams.delete('carburante');
+                                        const finalSearch = searchParams.toString() ? `?${searchParams.toString()}` : '';
+                                        
+                                        if (location.pathname !== newPath) {
+                                            // Preserve query params (serviceType)
+                                            navigate(`${newPath}${finalSearch}`, { state: { preventRecenter: true } });
+                                        }
+                                    }
+                                }).catch(err => console.error("Validation error:", err));
                         }
                     }
                 })
@@ -197,25 +219,26 @@ function LayoutContent() {
                 if (enEntry) targetCitySlug = enEntry[0];
             }
             
-            const pathSegment = nextLang === 'it' ? 'citta' : 'city';
+            const pathSegment = ROUTES[nextLang]?.cityPrefix || ROUTES.it.cityPrefix;
             newPath = `/${nextLang}/${pathSegment}/${targetCitySlug}`;
-        } else if (location.pathname.includes('/esplora') || location.pathname.includes('/explore')) {
-            newPath = `/${nextLang}/${nextLang === 'it' ? 'esplora' : 'explore'}`;
+        } else if (Object.values(ROUTES).some(r => location.pathname.includes('/' + r.explore))) {
+            const exploreSegment = ROUTES[nextLang]?.explore || ROUTES.it.explore;
+            newPath = `/${nextLang}/${exploreSegment}`;
         }
 
         const searchParams = new URLSearchParams(location.search);
+        let newFuelUrl = null;
         if (fuelType) {
-            const fuelToEn = { 'Benzina': 'Petrol', 'Gasolio': 'Diesel', 'GPL': 'LPG', 'Metano': 'CNG' };
-            let newFuelUrl = nextLang === 'en' ? (fuelToEn[fuelType] || fuelType) : fuelType;
+            const fuelToEnLocal = { 'Benzina': 'Petrol', 'Gasolio': 'Diesel', 'GPL': 'LPG', 'Metano': 'CNG' };
+            newFuelUrl = nextLang === 'en' ? (fuelToEnLocal[fuelType] || fuelType) : fuelType;
             
             searchParams.delete('fuel');
             searchParams.delete('carburante');
-            
-            const key = nextLang === 'en' ? 'fuel' : 'carburante';
-            searchParams.set(key, newFuelUrl);
         }
         
-        navigate(`${newPath}?${searchParams.toString()}`);
+        const finalPath = newFuelUrl ? `${newPath}/${newFuelUrl.toLowerCase()}` : newPath;
+        const finalSearch = searchParams.toString() ? `?${searchParams.toString()}` : '';
+        navigate(`${finalPath}${finalSearch}`);
     };
 
     const showViewToggles = (stations && stations.length > 0) || userPos != null;
@@ -231,7 +254,11 @@ function LayoutContent() {
                 <div className="justify-self-start">
                     <Tooltip content={t('title_theme')}>
                         <button onClick={toggleTheme} aria-label="Cambia Tema" className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white dark:bg-slate-800 shadow-md border-2 border-slate-300 dark:border-slate-500 text-slate-700 dark:text-slate-300 hover:scale-105 hover:shadow-lg transition-transform flex items-center justify-center">
-                            <span className="text-sm font-bold sm:text-base leading-none" aria-hidden="true">{theme === 'dark' ? 'Dark' : 'Light'}</span>
+                            {theme === 'dark' ? (
+                                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                            ) : (
+                                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                            )}
                         </button>
                     </Tooltip>
                 </div>
@@ -302,7 +329,7 @@ function LayoutContent() {
 
 function MainApp() {
     const { i18n } = useTranslation();
-    const { lang, city } = useParams();
+    const { lang, city, fuel } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -319,14 +346,27 @@ function MainApp() {
         }
 
         if (currentRouteLang !== validLang) {
+            let redirectPath = `/${validLang}`;
             if (city) {
-                const pathSegment = validLang === 'it' ? 'citta' : 'city';
-                navigate(`/${validLang}/${pathSegment}/${city}${location.search}`, { replace: true });
-            } else {
-                navigate(`/${validLang}${location.search}`, { replace: true });
+                const pathSegment = ROUTES[validLang]?.cityPrefix || ROUTES.it.cityPrefix;
+                redirectPath += `/${pathSegment}/${city}`;
             }
+            if (fuel) {
+                const enToFuelLocal = { 'petrol': 'benzina', 'diesel': 'gasolio', 'lpg': 'gpl', 'cng': 'metano' };
+                const itToEnLocal = { 'benzina': 'petrol', 'gasolio': 'diesel', 'gpl': 'lpg', 'metano': 'cng' };
+                
+                let translatedFuel = fuel.toLowerCase();
+                if (validLang === 'en' && itToEnLocal[translatedFuel]) {
+                    translatedFuel = itToEnLocal[translatedFuel];
+                } else if (validLang === 'it' && enToFuelLocal[translatedFuel]) {
+                    translatedFuel = enToFuelLocal[translatedFuel];
+                }
+                redirectPath += `/${translatedFuel}`;
+            }
+            
+            navigate(`${redirectPath}${location.search}`, { replace: true });
         }
-    }, [lang, city, i18n.resolvedLanguage, navigate, i18n, location.pathname, location.search]);
+    }, [lang, city, fuel, i18n.resolvedLanguage, navigate, i18n, location.pathname, location.search]);
     
     return (
         <StationsProvider>
