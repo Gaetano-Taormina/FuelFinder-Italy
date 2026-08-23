@@ -122,12 +122,11 @@ async function doSync(db) {
         }
 
         console.log(
-          `Scaricamento completato in memoria per ${url}. Avvio parsing...`,
+          `Avvio download e parsing in streaming per ${url}...`,
         );
-        const textData = await response.text();
 
         const parser = parse(parseOptions);
-        const stream = Readable.from([textData]);
+        const stream = Readable.fromWeb(response.body);
 
         let count = 0;
         let batchQueue = [];
