@@ -144,6 +144,7 @@ function MapFixer() {
 export default function MapArea() {
   const { userPos, radius, routeData, loading } = useStations();
   const filteredStations = useDistanceLogic();
+  const { t } = useTranslation();
 
   const europeBounds = [
     [34.0, -10.0], // Sud Ovest
@@ -152,14 +153,25 @@ export default function MapArea() {
 
   return (
     <div className="w-full h-[55vh] md:h-150 rounded-[30px] shadow-lg overflow-hidden border-4 border-slate-300 dark:border-slate-600 relative z-0 mb-8 md:mb-0">
-      {loading && (
-        <div className="absolute inset-0 z-1000 flex items-center justify-center bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-sm animate-pulse">
-          <div className="flex flex-col items-center gap-4">
-               <svg className="w-16 h-16 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-               </svg>
-               <div className="h-4 w-32 bg-slate-500 dark:bg-slate-400 rounded-full"></div>
-          </div>
+      {(!userPos || loading) && (
+        <div className="absolute inset-0 z-1000 flex items-center justify-center bg-slate-100/60 dark:bg-slate-800/60 backdrop-blur-sm pointer-events-none">
+          {!userPos ? (
+            <div className="flex flex-col items-center gap-3 p-6 bg-white/80 dark:bg-slate-900/80 rounded-3xl shadow-2xl backdrop-blur-md border border-slate-200 dark:border-slate-700 animate-pulse">
+                <svg className="w-12 h-12 text-blue-500 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                </svg>
+                <div className="text-lg md:text-xl font-bold text-slate-800 dark:text-white text-center">
+                    {t('map_prompt')}
+                </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-4 animate-pulse">
+                <svg className="w-16 h-16 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+                <div className="h-4 w-32 bg-slate-500 dark:bg-slate-400 rounded-full"></div>
+            </div>
+          )}
         </div>
       )}
 

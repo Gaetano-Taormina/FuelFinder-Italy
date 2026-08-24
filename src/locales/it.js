@@ -68,6 +68,7 @@ export default {
   "fuel_hvo": "HVO (Bio-Diesel)",
   "fuel_gnl": "GNL (Camion)",
   "loading_app": "Loading...",
+  "map_prompt": "Clicca sulla mappa o usa la ricerca per iniziare",
   "sidebar_location": "Luogo Attuale",
   "sidebar_nav": "Navigazione",
   "sidebar_home": "Home (Mappa)",

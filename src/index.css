@@ -47,13 +47,7 @@ html.dark .leaflet-popup-close-button {
 .flag-si { transform-origin: bottom left; transform: rotate(-8deg); }
 
 .popup-bg-blur { filter: blur(1px); }
-.popup-bg-it { background-image: url('/assets/img/it.webp'); }
-.popup-bg-sm { background-image: url('/assets/img/sm.webp'); }
-.popup-bg-va { background-image: url('/assets/img/va.webp'); }
-.popup-bg-fr { background-image: url('/assets/img/fr.webp'); }
-.popup-bg-ch { background-image: url('/assets/img/ch.webp'); }
-.popup-bg-at { background-image: url('/assets/img/at.webp'); }
-.popup-bg-si { background-image: url('/assets/img/si.webp'); }
+
 
 @keyframes wave-flag {
     0%, 100% { transform: rotateY(-5deg) skewY(0deg); }
