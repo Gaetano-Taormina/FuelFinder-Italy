@@ -46,4 +46,15 @@ describe('Sidebar Component', () => {
     const exploreLink = screen.getByText('sidebar_explore');
     expect(exploreLink.getAttribute('href')).toBe('/en/explore');
   });
+
+  it('dovrebbe usare il fallback IT per explore se langPrefix è sconosciuto', () => {
+    render(
+      <BrowserRouter>
+        <Sidebar isOpen={false} onClose={vi.fn()} cityName="" langPrefix="fr" />
+      </BrowserRouter>
+    );
+
+    const exploreLink = screen.getByText('sidebar_explore');
+    expect(exploreLink.getAttribute('href')).toBe('/fr/esplora');
+  });
 });

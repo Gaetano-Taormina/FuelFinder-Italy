@@ -1,7 +1,7 @@
 import { render, screen, act, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { StationsProvider, useStations } from '../../../src/context/StationsContext';
-import { MemoryRouter, useSearchParams } from 'react-router-dom';
+import { MemoryRouter, useSearchParams, useLocation, Routes, Route, useNavigate } from 'react-router-dom';
 import { SWRConfig } from 'swr';
 
 // Salva le properties originali di window
@@ -20,11 +20,12 @@ const TestConsumer = () => {
 
   // Test usiamo un URL search param per mostrare come interagisce setFuelType
   const [searchParams] = useSearchParams();
+  const location = useLocation();
 
   return (
     <div>
       <div data-testid="fuelType">{fuelType}</div>
-      <div data-testid="searchParamFuel">{searchParams.get('fuel') || searchParams.get('carburante')}</div>
+      <div data-testid="searchParamFuel">{location.pathname.split('/').pop()}</div>
       <div data-testid="stationsCount">{stations.length}</div>
       <div data-testid="totalStations">{totalStations}</div>
       <div data-testid="routeData">{routeData ? routeData.distance : 'null'}</div>
@@ -34,6 +35,10 @@ const TestConsumer = () => {
       <button onClick={() => setUserPos({lat: 41, lng: 12})}>Set Pos</button>
       <button onClick={() => setSelectedStation({lat: 42, lng: 13})}>Set Selected Station</button>
       <button onClick={() => handleNavigation({lat: 42, lng: 13, name: 'Eni'})}>Navigate</button>
+      <button onClick={() => setFuelType('Idrogeno')}>Set Idrogeno</button>
+      <button onClick={() => setUserPos(null)}>Clear Pos</button>
+      <button onClick={() => handleNavigation({lat: 42, lng: 13, name: 'Senza Brand'})}>Navigate Name</button>
+      <button onClick={() => handleNavigation({lat: 42, lng: 13, brand: 'Q8', name: 'Senza Brand'})}>Navigate Brand</button>
     </div>
   );
 };
@@ -105,13 +110,18 @@ describe('StationsContext', () => {
     expect(screen.getByTestId('fuelType').textContent).toBe('Benzina');
   });
 
+  it('Inizializza con carburante non mappato come fallback (copre righe 29 e 41)', () => {
+    renderWithProvider(['/it/?carburante=Idrogeno']);
+    expect(screen.getByTestId('fuelType').textContent).toBe('Idrogeno');
+  });
+
   it('setFuelType aggiorna l\'URL in italiano (carburante=Gasolio)', async () => {
     window.location.pathname = '/it/';
     renderWithProvider(['/it/']);
 
     fireEvent.click(screen.getByText('Set Gasolio'));
     expect(screen.getByTestId('fuelType').textContent).toBe('Gasolio');
-    expect(screen.getByTestId('searchParamFuel').textContent).toBe('Gasolio');
+    expect(screen.getByTestId('searchParamFuel').textContent).toBe('gasolio');
   });
 
   it('setFuelType aggiorna l\'URL in inglese (fuel=Diesel) traducendolo', async () => {
@@ -120,16 +130,95 @@ describe('StationsContext', () => {
 
     fireEvent.click(screen.getByText('Set Gasolio')); 
     expect(screen.getByTestId('fuelType').textContent).toBe('Gasolio');
-    expect(screen.getByTestId('searchParamFuel').textContent).toBe('Diesel');
+    expect(screen.getByTestId('searchParamFuel').textContent).toBe('diesel');
   });
 
   it('setFuelType con un carburante non mappato non va in errore', async () => {
     window.location.pathname = '/en/';
     renderWithProvider(['/en/']);
 
-    fireEvent.click(screen.getByText('Set Diesel')); 
-    expect(screen.getByTestId('fuelType').textContent).toBe('Diesel');
-    expect(screen.getByTestId('searchParamFuel').textContent).toBe('Diesel');
+    fireEvent.click(screen.getByText('Set Idrogeno')); 
+    expect(screen.getByTestId('fuelType').textContent).toBe('Idrogeno');
+    expect(screen.getByTestId('searchParamFuel').textContent).toBe('idrogeno');
+  });
+
+  it('setFuelType rigenera correttamente il path se è presente una città (copre riga 59)', async () => {
+    window.location.pathname = '/it/citta/roma/Benzina';
+    
+    render(
+      <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0, shouldRetryOnError: false }}>
+        <MemoryRouter initialEntries={['/it/citta/roma/Benzina']}>
+          <Routes>
+            <Route path="/:lang/citta/:city/:fuel" element={
+              <StationsProvider>
+                <TestConsumer />
+              </StationsProvider>
+            } />
+          </Routes>
+        </MemoryRouter>
+      </SWRConfig>
+    );
+
+    fireEvent.click(screen.getByText('Set Gasolio'));
+    expect(screen.getByTestId('fuelType').textContent).toBe('Gasolio');
+    // Verifica che navighi al nuovo path mantenendo la città
+    expect(screen.getByTestId('searchParamFuel').textContent).toBe('gasolio');
+  });
+
+  it('setFuelType rigenera il path in inglese se è presente una città (copre branch isEn riga 59)', async () => {
+    window.location.pathname = '/en/city/rome/Petrol';
+    
+    render(
+      <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0, shouldRetryOnError: false }}>
+        <MemoryRouter initialEntries={['/en/city/rome/Petrol']}>
+          <Routes>
+            <Route path="/:lang/city/:city/:fuel" element={
+              <StationsProvider>
+                <TestConsumer />
+              </StationsProvider>
+            } />
+          </Routes>
+        </MemoryRouter>
+      </SWRConfig>
+    );
+
+    fireEvent.click(screen.getByText('Set Gasolio'));
+    expect(screen.getByTestId('searchParamFuel').textContent).toBe('diesel');
+  });
+
+  it('Sincronizza lo stato se l\'URL cambia esternamente (es. tasto indietro, copre riga 43)', async () => {
+    
+    const ExternalNavigator = () => {
+        const navigate = useNavigate();
+        return <button onClick={() => navigate('/it/citta/milano/GPL')}>Go GPL</button>;
+    };
+
+    render(
+      <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0, shouldRetryOnError: false }}>
+        <MemoryRouter initialEntries={['/it/citta/milano/Benzina']}>
+          <Routes>
+            <Route path="/:lang/citta/:city/:fuel" element={
+              <>
+                <StationsProvider>
+                  <TestConsumer />
+                </StationsProvider>
+                <ExternalNavigator />
+              </>
+            } />
+          </Routes>
+        </MemoryRouter>
+      </SWRConfig>
+    );
+
+    expect(screen.getByTestId('fuelType').textContent).toBe('Benzina');
+    
+    // Cliccando Go GPL, cambiamo URL senza passare da setFuelType
+    // Questo innescherà lo useEffect che chiamerà setFuelTypeInternal('GPL')
+    act(() => {
+        fireEvent.click(screen.getByText('Go GPL'));
+    });
+    
+    expect(screen.getByTestId('fuelType').textContent).toBe('GPL');
   });
 
   it('Effettua la chiamata API Stations quando userPos è impostato e popola stations', async () => {
@@ -199,23 +288,34 @@ describe('StationsContext', () => {
     }, { interval: 5 });
   });
 
-  it('handleNavigation usa window.open su Desktop', () => {
+  it('handleNavigation usa window.open su Desktop (usa name se brand assente)', () => {
     renderWithProvider(['/it/']);
-    fireEvent.click(screen.getByText('Navigate'));
+    fireEvent.click(screen.getByText('Navigate Name'));
     expect(window.open).toHaveBeenCalledWith(expect.stringContaining('google.com/maps/dir/?api=1&destination=42,13'), '_blank');
   });
 
-  it('handleNavigation usa maps:// su iOS', () => {
+  it('handleNavigation usa maps:// su iOS e da priorità al brand', () => {
     vi.stubGlobal('navigator', { userAgent: 'iPhone' });
     renderWithProvider(['/it/']);
-    fireEvent.click(screen.getByText('Navigate'));
-    expect(window.location.href).toContain('maps://?q=Eni&ll=42,13');
+    fireEvent.click(screen.getByText('Navigate Brand'));
+    expect(window.location.href).toContain('maps://?q=Q8&ll=42,13');
+  });
+
+  it('handleNavigation evita iOS se window.MSStream è presente', () => {
+    vi.stubGlobal('navigator', { userAgent: 'iPhone' });
+    window.MSStream = true;
+    renderWithProvider(['/it/']);
+    fireEvent.click(screen.getByText('Navigate Brand'));
+    // Ricade nel blocco desktop
+    expect(window.open).toHaveBeenCalled();
+    delete window.MSStream;
   });
 
   it('handleNavigation usa geo: su Android', () => {
     vi.stubGlobal('navigator', { userAgent: 'Android' });
     renderWithProvider(['/it/']);
-    fireEvent.click(screen.getByText('Navigate'));
+    fireEvent.click(screen.getByText('Navigate Brand'));
+    expect(window.location.href).toContain('geo:42,13?q=42,13(Q8)');
   });
 
   it('Parsa correttamente stationsData se l\'API restituisce direttamente un array (riga 67)', async () => {
@@ -239,6 +339,46 @@ describe('StationsContext', () => {
     global.fetch = vi.fn(async (url) => {
       if (url.includes('router.project-osrm.org')) {
         return { ok: true, json: async () => ({ routes: [] }) }; 
+      }
+      return { ok: true, json: async () => ({}) };
+    });
+
+    renderWithProvider(['/it/']);
+
+    act(() => {
+      fireEvent.click(screen.getByText('Set Pos'));
+      fireEvent.click(screen.getByText('Set Selected Station'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('routeData').textContent).toBe('null');
+    }, { interval: 5 });
+  });
+
+  it('Resetta routeData se userPos viene rimosso', async () => {
+    renderWithProvider(['/it/']);
+    act(() => {
+      fireEvent.click(screen.getByText('Set Pos'));
+      fireEvent.click(screen.getByText('Set Selected Station'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('routeData').textContent).toBe('100'); 
+    }, { interval: 5 });
+
+    act(() => {
+      fireEvent.click(screen.getByText('Clear Pos'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('routeData').textContent).toBe('null'); 
+    }, { interval: 5 });
+  });
+
+  it('Non va in errore se OSRM restituisce dati nulli per routes', async () => {
+    global.fetch = vi.fn(async (url) => {
+      if (url.includes('router.project-osrm.org')) {
+        return { ok: true, json: async () => ({ error: 'Not found' }) }; 
       }
       return { ok: true, json: async () => ({}) };
     });
