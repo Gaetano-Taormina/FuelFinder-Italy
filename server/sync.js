@@ -125,47 +125,35 @@ async function doSync(db) {
           `Avvio download e parsing in streaming per ${url}...`,
         );
 
-        const parser = parse(parseOptions);
         const stream = Readable.fromWeb(response.body);
+        const parser = stream.pipe(parse(parseOptions));
 
         let count = 0;
         let batchQueue = [];
 
-        parser.on("readable", async () => {
-          let record;
-          try {
-            while ((record = parser.read()) !== null) {
-              const args = rowMapper(record);
-              if (args) {
-                batchQueue.push({ sql: sqlTemplate, args });
-                count++;
-              }
-
-              if (batchQueue.length >= BATCH_SIZE) {
-                parser.pause();
-                const currentBatch = [...batchQueue];
-                batchQueue = [];
-                await db.batch(currentBatch, "write");
-                await new Promise((r) => setTimeout(r, 10)); // Yield per l'event loop (health checks)
-                parser.resume();
-              }
+        try {
+          for await (const record of parser) {
+            const args = rowMapper(record);
+            if (args) {
+              batchQueue.push({ sql: sqlTemplate, args });
+              count++;
             }
-          } catch (e) {
-            reject(e);
-          }
-        });
 
-        parser.on("error", reject);
-        stream.on("error", reject);
-        parser.on("end", async () => {
+            if (batchQueue.length >= BATCH_SIZE) {
+              const currentBatch = [...batchQueue];
+              batchQueue = [];
+              await db.batch(currentBatch, "write");
+            }
+          }
+          
           if (batchQueue.length > 0) {
             await db.batch(batchQueue, "write");
           }
           console.log(`Inserite ${count} righe da ${url}`);
           resolve();
-        });
-
-        stream.pipe(parser);
+        } catch (err) {
+          reject(err);
+        }
       } catch (err) {
         reject(err);
       }
