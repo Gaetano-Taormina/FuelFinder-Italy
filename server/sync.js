@@ -1,14 +1,16 @@
 import { parse } from "csv-parse";
 import { Readable } from "stream";
+import { pipeline } from "stream/promises";
 import { createClient } from "@libsql/client";
 import path from "path";
+import fs from "fs";
 import "dotenv/config";
 
 const URL_ANAGRAFICA =
   "https://www.mimit.gov.it/images/exportCSV/anagrafica_impianti_attivi.csv";
 const URL_PREZZI =
   "https://www.mimit.gov.it/images/exportCSV/prezzo_alle_8.csv";
-const BATCH_SIZE = 500; // Ottimizzato per ridurre i roundtrip verso il database e non bloccare l'event loop
+const BATCH_SIZE = 2500; // Aumentato per velocizzare il sync riducendo i roundtrip verso Turso
 
 export async function sync(dbClient, retries = 8) {
   if (!dbClient) {
@@ -113,6 +115,7 @@ async function doSync(db) {
 
   const processStream = (url, sqlTemplate, rowMapper) => {
     return new Promise(async (resolve, reject) => {
+      let tmpFile;
       try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -121,17 +124,20 @@ async function doSync(db) {
           );
         }
 
-        console.log(
-          `Avvio download e parsing in streaming per ${url}...`,
-        );
+        tmpFile = path.join(process.cwd(), "server", `temp_${Date.now()}.csv`);
+        console.log(`Scaricamento veloce in locale (${url}) in ${tmpFile}...`);
+        const webStream = Readable.fromWeb(response.body);
+        await pipeline(webStream, fs.createWriteStream(tmpFile));
 
-        const stream = Readable.fromWeb(response.body);
-        const parser = stream.pipe(parse(parseOptions));
+        console.log(`Download completato, avvio parsing e caricamento a blocchi...`);
+        
+        const fileStream = fs.createReadStream(tmpFile);
+        const parser = fileStream.pipe(parse(parseOptions));
 
         let count = 0;
         let batchQueue = [];
 
-        stream.on("error", reject);
+        fileStream.on("error", reject);
         parser.on("error", reject);
 
         try {
@@ -159,6 +165,10 @@ async function doSync(db) {
         }
       } catch (err) {
         reject(err);
+      } finally {
+        if (tmpFile && fs.existsSync(tmpFile)) {
+          fs.unlinkSync(tmpFile);
+        }
       }
     });
   };
