@@ -110,10 +110,10 @@ export class ApiController {
                 return res.json(apiCache.get(cacheKey).data);
             }
 
-            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}`;
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&email=contact@fuelfinder.it`;
             const fetchRes = await fetch(url, {
                 headers: {
-                    'User-Agent': 'FuelFinderItaly/1.0'
+                    'User-Agent': 'FuelFinderItaly/1.0 (contact@fuelfinder.it)'
                 }
             });
             if (!fetchRes.ok) throw new Error(`Nominatim API error: ${fetchRes.status}`);
@@ -136,10 +136,10 @@ export class ApiController {
                 return res.json(apiCache.get(cacheKey).data);
             }
 
-            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
+            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&email=contact@fuelfinder.it`;
             const fetchRes = await fetch(url, {
                 headers: {
-                    'User-Agent': 'FuelFinderItaly/1.0'
+                    'User-Agent': 'FuelFinderItaly/1.0 (contact@fuelfinder.it)'
                 }
             });
             if (!fetchRes.ok) throw new Error(`Nominatim API error: ${fetchRes.status}`);
