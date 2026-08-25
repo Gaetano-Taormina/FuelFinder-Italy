@@ -56,6 +56,25 @@ const app = express();
 app.use((req, res, next) => {
     const ua = (req.headers['user-agent'] || '').toLowerCase();
     
+    // Endpoint di RECOVERY MANUALE
+    if (req.path === '/healthz/recover') {
+        const passkey = req.query.token || req.headers['x-admin-passkey'];
+        if (passkey && passkey === process.env.ADMIN_PASSKEY) {
+            console.warn("[WARN] Procedura di RECOVERY innescata manualmente via healthcheck.");
+            isReady = false;
+            // Riavvia asincronamente il DB
+            setupDatabase().then(() => {
+                isReady = true;
+                console.log("[INFO] Recovery completato.");
+            }).catch(e => {
+                console.error("Errore Recovery:", e);
+                isReady = true;
+            });
+            return res.status(200).send('OK - Procedura di Recovery avviata sul database.');
+        }
+        return res.status(403).send('Accesso Negato: Token non valido o mancante.');
+    }
+
     // 1. Intercetta gli endpoint classici di health check
     if (req.path === '/health' || req.path === '/healthz' || req.path === '/ping') {
         return res.status(200).send('OK');

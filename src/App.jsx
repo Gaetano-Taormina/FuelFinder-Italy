@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { StationsProvider, useStations } from './context/StationsContext';
@@ -154,9 +154,14 @@ function LayoutContent() {
         }
     }, [city, stations, setSelectedStation]);
 
+    const lastGeocodedPos = useRef(null);
+
     // Reverse geocode when user clicks or uses GPS
     useEffect(() => {
         if (userPos && (userPos.type === 'click' || userPos.type === 'gps')) {
+            const posKey = `${userPos.lat},${userPos.lng}`;
+            if (lastGeocodedPos.current === posKey) return;
+            
             const reverseUrl = `/api/reverse-geocode?lat=${userPos.lat}&lon=${userPos.lng}`;
             fetch(reverseUrl)
                 .then(res => res.json())
@@ -190,8 +195,11 @@ function LayoutContent() {
                                         const finalSearch = searchParams.toString() ? `?${searchParams.toString()}` : '';
                                         
                                         if (location.pathname !== newPath) {
+                                            lastGeocodedPos.current = posKey; // set before navigate to avoid double trigger
                                             // Preserve query params (serviceType)
                                             navigate(`${newPath}${finalSearch}`, { state: { preventRecenter: true } });
+                                        } else {
+                                            lastGeocodedPos.current = posKey;
                                         }
                                     }
                                 }).catch(err => console.error("Validation error:", err));
@@ -200,7 +208,7 @@ function LayoutContent() {
                 })
                 .catch(err => console.error("Reverse geocoding error:", err));
         }
-    }, [userPos, currLang, location.pathname, location.search, navigate]);
+    }, [userPos, currLang, location.pathname, location.search, navigate, fuelType]);
 
     const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
     
