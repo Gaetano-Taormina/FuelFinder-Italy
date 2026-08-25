@@ -131,6 +131,9 @@ async function doSync(db) {
         let count = 0;
         let batchQueue = [];
 
+        stream.on("error", reject);
+        parser.on("error", reject);
+
         try {
           for await (const record of parser) {
             const args = rowMapper(record);
