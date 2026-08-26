@@ -240,59 +240,153 @@ const itToEnCities = {
     'mantova': 'mantua'
 };
 
-let cachedSitemap = null;
+const sitemapCaches = {
+    index: null,
+    it: null,
+    en: null,
+    fuelsIt: {},
+    fuelsEn: {}
+};
+
+const getUrlsetStart = () => `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n`;
+
+const buildSingleLangUrl = (host, locPath, altLang, altPath, freq, prio, currentLang) => {
+    const locUrl = `${host}/${currentLang}${locPath}`;
+    const altUrl = `${host}/${altLang}${altPath}`;
+    
+    let xml = `  <url>\n    <loc>${locUrl}</loc>\n    <changefreq>${freq}</changefreq>\n    <priority>${prio}</priority>\n`;
+    xml += `    <xhtml:link rel="alternate" hreflang="${altLang}" href="${altUrl}" />\n`;
+    xml += `    <xhtml:link rel="alternate" hreflang="${currentLang}" href="${locUrl}" />\n  </url>\n`;
+    return xml;
+};
 
 app.get('/sitemap.xml', (req, res) => {
-    if (cachedSitemap) {
+    if (sitemapCaches.index) {
         res.header('Content-Type', 'application/xml');
-        return res.send(cachedSitemap);
+        return res.send(sitemapCaches.index);
     }
-
-    const host = `https://${req.get('host')}`;
-    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n`;
     
-    const addUrl = (itPath, enPath, freq, prio) => {
-        const itUrl = `${host}/it${itPath}`;
-        const enUrl = `${host}/en${enPath}`;
-        
-        // IT Version
-        xml += `  <url>\n    <loc>${itUrl}</loc>\n    <changefreq>${freq}</changefreq>\n    <priority>${prio}</priority>\n`;
-        xml += `    <xhtml:link rel="alternate" hreflang="en" href="${enUrl}" />\n`;
-        xml += `    <xhtml:link rel="alternate" hreflang="it" href="${itUrl}" />\n  </url>\n`;
-        
-        // EN Version
-        xml += `  <url>\n    <loc>${enUrl}</loc>\n    <changefreq>${freq}</changefreq>\n    <priority>${prio}</priority>\n`;
-        xml += `    <xhtml:link rel="alternate" hreflang="it" href="${itUrl}" />\n`;
-        xml += `    <xhtml:link rel="alternate" hreflang="en" href="${enUrl}" />\n  </url>\n`;
-    };
-
+    const host = `https://${req.get('host')}`;
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+    
+    xml += `  <sitemap>\n    <loc>${host}/sitemaps/it.xml</loc>\n  </sitemap>\n`;
+    xml += `  <sitemap>\n    <loc>${host}/sitemaps/en.xml</loc>\n  </sitemap>\n`;
     const fuelsIt = ['benzina', 'gasolio', 'gpl', 'metano'];
     const fuelsEn = ['petrol', 'diesel', 'lpg', 'cng'];
-
-    // Core pages
-    addUrl('', '', 'hourly', '1.0');
-    fuelsIt.forEach((fuel, i) => {
-        addUrl(`/${fuel}`, `/${fuelsEn[i]}`, 'hourly', '1.0');
+    
+    fuelsIt.forEach(fuel => {
+        xml += `  <sitemap>\n    <loc>${host}/sitemaps/fuels-it-${fuel}.xml</loc>\n  </sitemap>\n`;
     });
-    addUrl('/esplora', '/explore', 'daily', '0.9');
     
-    // Cities
-    for (const city of cities) {
-        const lowerCity = city.toLowerCase();
-        const citySegmentIt = slugify(lowerCity);
-        const enName = itToEnCities[lowerCity] || lowerCity;
-        const citySegmentEn = slugify(enName);
-        
-        fuelsIt.forEach((fuel, i) => {
-            addUrl(`/citta/${citySegmentIt}/${fuel}`, `/city/${citySegmentEn}/${fuelsEn[i]}`, 'daily', '0.8');
-        });
-    }
+    fuelsEn.forEach(fuel => {
+        xml += `  <sitemap>\n    <loc>${host}/sitemaps/fuels-en-${fuel}.xml</loc>\n  </sitemap>\n`;
+    });
     
-    xml += `</urlset>`;
-    cachedSitemap = xml;
+    xml += `</sitemapindex>`;
+    sitemapCaches.index = xml;
     
     res.header('Content-Type', 'application/xml');
     res.send(xml);
+});
+
+// --- BASE PAGES SITEMAPS ---
+app.get('/sitemaps/it.xml', (req, res) => {
+    if (sitemapCaches.it) return res.header('Content-Type', 'application/xml').send(sitemapCaches.it);
+    
+    const host = `https://${req.get('host')}`;
+    let xml = getUrlsetStart();
+    
+    xml += buildSingleLangUrl(host, '', 'en', '', 'daily', '1.0', 'it');
+    xml += buildSingleLangUrl(host, '/esplora', 'en', '/explore', 'daily', '0.9', 'it');
+    
+    for (const city of cities) {
+        const lowerCity = city.toLowerCase();
+        const citySegmentIt = slugify(lowerCity);
+        const citySegmentEn = slugify(itToEnCities[lowerCity] || lowerCity);
+        xml += buildSingleLangUrl(host, `/citta/${citySegmentIt}`, 'en', `/city/${citySegmentEn}`, 'daily', '0.8', 'it');
+    }
+    
+    xml += `</urlset>`;
+    sitemapCaches.it = xml;
+    res.header('Content-Type', 'application/xml').send(xml);
+});
+
+app.get('/sitemaps/en.xml', (req, res) => {
+    if (sitemapCaches.en) return res.header('Content-Type', 'application/xml').send(sitemapCaches.en);
+    
+    const host = `https://${req.get('host')}`;
+    let xml = getUrlsetStart();
+    
+    xml += buildSingleLangUrl(host, '', 'it', '', 'daily', '1.0', 'en');
+    xml += buildSingleLangUrl(host, '/explore', 'it', '/esplora', 'daily', '0.9', 'en');
+    
+    for (const city of cities) {
+        const lowerCity = city.toLowerCase();
+        const citySegmentIt = slugify(lowerCity);
+        const citySegmentEn = slugify(itToEnCities[lowerCity] || lowerCity);
+        xml += buildSingleLangUrl(host, `/city/${citySegmentEn}`, 'it', `/citta/${citySegmentIt}`, 'daily', '0.8', 'en');
+    }
+    
+    xml += `</urlset>`;
+    sitemapCaches.en = xml;
+    res.header('Content-Type', 'application/xml').send(xml);
+});
+
+// --- FUEL VARIATIONS SITEMAPS ---
+app.get('/sitemaps/fuels-it-:fuel.xml', (req, res) => {
+    const requestedFuel = req.params.fuel;
+    const fuelsIt = ['benzina', 'gasolio', 'gpl', 'metano'];
+    const fuelsEn = ['petrol', 'diesel', 'lpg', 'cng'];
+    
+    const fuelIndex = fuelsIt.indexOf(requestedFuel);
+    if (fuelIndex === -1) return res.status(404).send('Sitemap non trovata');
+    
+    if (sitemapCaches.fuelsIt[requestedFuel]) return res.header('Content-Type', 'application/xml').send(sitemapCaches.fuelsIt[requestedFuel]);
+    
+    const host = `https://${req.get('host')}`;
+    let xml = getUrlsetStart();
+    
+    xml += buildSingleLangUrl(host, `/${requestedFuel}`, 'en', `/${fuelsEn[fuelIndex]}`, 'daily', '0.9', 'it');
+    
+    for (const city of cities) {
+        const lowerCity = city.toLowerCase();
+        const citySegmentIt = slugify(lowerCity);
+        const citySegmentEn = slugify(itToEnCities[lowerCity] || lowerCity);
+        
+        xml += buildSingleLangUrl(host, `/citta/${citySegmentIt}/${requestedFuel}`, 'en', `/city/${citySegmentEn}/${fuelsEn[fuelIndex]}`, 'daily', '0.7', 'it');
+    }
+    
+    xml += `</urlset>`;
+    sitemapCaches.fuelsIt[requestedFuel] = xml;
+    res.header('Content-Type', 'application/xml').send(xml);
+});
+
+app.get('/sitemaps/fuels-en-:fuel.xml', (req, res) => {
+    const requestedFuel = req.params.fuel;
+    const fuelsIt = ['benzina', 'gasolio', 'gpl', 'metano'];
+    const fuelsEn = ['petrol', 'diesel', 'lpg', 'cng'];
+    
+    const fuelIndex = fuelsEn.indexOf(requestedFuel);
+    if (fuelIndex === -1) return res.status(404).send('Sitemap non trovata');
+    
+    if (sitemapCaches.fuelsEn[requestedFuel]) return res.header('Content-Type', 'application/xml').send(sitemapCaches.fuelsEn[requestedFuel]);
+    
+    const host = `https://${req.get('host')}`;
+    let xml = getUrlsetStart();
+    
+    xml += buildSingleLangUrl(host, `/${requestedFuel}`, 'it', `/${fuelsIt[fuelIndex]}`, 'daily', '0.9', 'en');
+    
+    for (const city of cities) {
+        const lowerCity = city.toLowerCase();
+        const citySegmentIt = slugify(lowerCity);
+        const citySegmentEn = slugify(itToEnCities[lowerCity] || lowerCity);
+        
+        xml += buildSingleLangUrl(host, `/city/${citySegmentEn}/${requestedFuel}`, 'it', `/citta/${citySegmentIt}/${fuelsIt[fuelIndex]}`, 'daily', '0.7', 'en');
+    }
+    
+    xml += `</urlset>`;
+    sitemapCaches.fuelsEn[requestedFuel] = xml;
+    res.header('Content-Type', 'application/xml').send(xml);
 });
 
 // --- FRONTEND STATICO SPA ---
