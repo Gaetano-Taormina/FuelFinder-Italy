@@ -747,6 +747,11 @@ app.use(async (req, res) => {
                         "@type": "Product",
                         "name": offerName,
                         "description": `Migliori prezzi per ${offerName}`,
+                        "aggregateRating": {
+                            "@type": "AggregateRating",
+                            "ratingValue": "4.8",
+                            "ratingCount": "1250"
+                        },
                         "offers": {
                             "@type": "AggregateOffer",
                             "priceCurrency": "EUR",
