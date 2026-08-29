@@ -2,7 +2,7 @@
 export const BATCH_SIZE = 2500;
 
 export async function initSchema(db) {
-  console.log("Verifica tabelle principali...");
+  console.log("Checking tables...");
   await db.batch([
       `CREATE TABLE IF NOT EXISTS sync_meta (key TEXT PRIMARY KEY, value TEXT);`,
       `CREATE TABLE IF NOT EXISTS stations (
@@ -51,7 +51,7 @@ export async function setLastModified(db, newLastModified) {
 }
 
 export async function loadExistingData(db) {
-  console.log("Caricamento dati attuali in memoria...");
+  console.log("Loading current data...");
   const existingStations = new Map();
   try {
       const stRes = await db.execute("SELECT id, gestore, bandiera, tipo_impianto, nome_impianto, indirizzo, comune, provincia, latitudine, longitudine FROM stations");
@@ -64,18 +64,18 @@ export async function loadExistingData(db) {
       for (const r of prRes.rows) existingPrices.set(`${r.id_impianto}_${r.desc_carburante}_${r.is_self}`, r);
   } catch {}
 
-  console.log(`Dati caricati: ${existingStations.size} stazioni, ${existingPrices.size} prezzi.`);
+  console.log(`Loaded: ${existingStations.size} stations, ${existingPrices.size} prices.`);
   return { existingStations, existingPrices };
 }
 
 export async function applyChanges(db, syncOperations) {
-  console.log(`Totale query SQL da inviare a Turso: ${syncOperations.length}`);
+  console.log(`SQL queries for Turso: ${syncOperations.length}`);
   if (syncOperations.length > 0) {
       for (let i = 0; i < syncOperations.length; i += BATCH_SIZE) {
           const chunk = syncOperations.slice(i, i + BATCH_SIZE);
           // oxlint-disable-next-line no-await-in-loop
           await db.batch(chunk, "write");
       }
-      console.log(`Salvataggio completato in blocchi da ${BATCH_SIZE}.`);
+      console.log(`Saved in batches of ${BATCH_SIZE}.`);
   }
 }

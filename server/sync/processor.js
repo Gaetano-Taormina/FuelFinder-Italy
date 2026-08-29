@@ -29,7 +29,7 @@ async function parseCsv(filePath, rowProcessor) {
 }
 
 export async function processStationsDiff(filePath, existingStations, syncOperations, seenStationIds) {
-    console.log(`Analisi anagrafica...`);
+    console.log(`Parsing stations...`);
     await parseCsv(filePath, (r) => {
         if (r.length < 10) return;
         const id = parseInt(r[0]) || 0;
@@ -65,7 +65,7 @@ export async function processStationsDiff(filePath, existingStations, syncOperat
 }
 
 export async function processPricesDiff(filePath, existingPrices, syncOperations, seenPriceIds) {
-    console.log(`Analisi prezzi...`);
+    console.log(`Parsing prices...`);
     await parseCsv(filePath, (r) => {
         if (r.length < 5) return;
         const id_impianto = parseInt(r[0]) || 0;
@@ -93,7 +93,7 @@ export async function processPricesDiff(filePath, existingPrices, syncOperations
 }
 
 export function processDeletions(existingStations, existingPrices, seenStationIds, seenPriceIds, syncOperations) {
-    console.log("Calcolo cancellazioni...");
+    console.log("Calculating deletions...");
     for (const id of existingStations.keys()) {
         if (!seenStationIds.has(id)) {
             syncOperations.push({ sql: `DELETE FROM stations WHERE id=?`, args: [id] });

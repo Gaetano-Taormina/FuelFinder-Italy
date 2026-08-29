@@ -8,7 +8,7 @@ import path from 'path';
 const ADMIN_PASSKEY = process.env.ADMIN_PASSKEY;
 
 if (!ADMIN_PASSKEY) {
-    console.error("ERRORE: Passkey non trovata. Controlla che ADMIN_PASSKEY sia definita nel file .env");
+    console.error("[Error] Missing ADMIN_PASSKEY in .env");
     process.exit(1);
 }
 
@@ -22,17 +22,17 @@ const rl = readline.createInterface({
     const cleanKey = inputKey.trim();
 
     if (cleanKey.length !== ADMIN_PASSKEY.length) {
-        console.error("\n[Error] Accesso Negato: Lunghezza della Passkey non valida.\n");
+        console.error("\n[Error] Access Denied: Invalid passkey length.\n");
         process.exit(1);
     }
     
     try {
         if (!crypto.timingSafeEqual(Buffer.from(cleanKey), Buffer.from(ADMIN_PASSKEY))) {
-            console.error("\n[Error] Accesso Negato: Passkey errata.\n");
+            console.error("\n[Error] Access Denied: Wrong passkey.\n");
             process.exit(1);
         }
     } catch {
-        console.error("\n[Error] Accesso Negato: Errore di validazione.\n");
+        console.error("\n[Error] Access Denied: Validation error.\n");
         process.exit(1);
     }
 
@@ -42,7 +42,7 @@ const rl = readline.createInterface({
     rl.close();
 
     console.log('\n=============================================');
-    console.log('   DASHBOARD STATISTICHE - CARBURANTE');
+    console.log('   FUEL STATISTICS DASHBOARD');
     console.log('=============================================\n');
 
     const DB_URL = process.env.TURSO_DATABASE_URL || 'file:' + path.join(process.cwd(), 'server', 'database.sqlite');
@@ -53,7 +53,7 @@ const rl = readline.createInterface({
         const res = await db.execute('SELECT * FROM app_analytics ORDER BY date DESC');
 
         if (res.rows.length === 0) {
-            console.log('Il database delle statistiche è vuoto.');
+            console.log('Stats DB is empty.');
             process.exit(0);
         }
 
@@ -69,10 +69,10 @@ const rl = readline.createInterface({
             totalUnique += uniqueUsers;
             totalSearches += (row.searches || 0);
             
-            console.log(`  Data: ${row.date}`);
-            console.log(`    Visite Totali:    ${row.visits || 0}`);
-            console.log(`    Visitatori Unici: ${uniqueUsers}`);
-            console.log(`    Ricerche Fatte:   ${row.searches || 0}`);
+            console.log(`  Date: ${row.date}`);
+            console.log(`    Total Visits:    ${row.visits || 0}`);
+            console.log(`    Unique Visitors: ${uniqueUsers}`);
+            console.log(`    Searches:   ${row.searches || 0}`);
             console.log('---------------------------------------------');
         });
         
@@ -80,11 +80,11 @@ const rl = readline.createInterface({
         console.log(`=============================================`);
         console.log(`    Visite Totali:    ${totalVisits}`);
         console.log(`    Visitatori Unici: ${totalUnique} (stimati)`);
-        console.log(`    Ricerche Totali:  ${totalSearches}`);
+        console.log(`    Total Searches:  ${totalSearches}`);
         console.log(`=============================================\n`);
 
     } catch (e) {
-        console.error('Errore durante la lettura del DB (forse tabella inesistente?):', e.message);
+        console.error('DB Read Error:', e.message);
     }
     
     process.exit(0);

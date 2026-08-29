@@ -19,12 +19,12 @@ process.on('unhandledRejection', (reason, _promise) => {
 });
 
 process.on('SIGTERM', () => {
-    console.warn("[WARN] Ricevuto segnale SIGTERM (spegnimento server). Chiusura in corso...");
+    console.warn("[WARN] SIGTERM received. Shutting down...");
     process.exit(0);
 });
 
 process.on('SIGINT', () => {
-    console.warn('[WARN] Ricevuto segnale SIGINT (Interruzione manuale). Chiusura in corso...');
+    console.warn('[WARN] SIGINT received. Shutting down...');
     process.exit(0);
 });
 
@@ -59,11 +59,11 @@ app.use((req, res, next) => {
     if (req.path === '/healthz/recover') {
         const passkey = req.query.token || req.headers['x-admin-passkey'];
         if (passkey && passkey === process.env.ADMIN_PASSKEY) {
-            console.warn("[WARN] Procedura di RECOVERY innescata manualmente via healthcheck.");
+            console.warn("[WARN] Manual recovery triggered via healthcheck.");
             isReady = false;
             // Riavvia asincronamente il DB
             setupDatabase().then(() => {
-                console.log("[INFO] Database reinizializzato con successo post-recovery.");
+                console.log("[INFO] DB reinitialized after recovery.");
             }).catch(e => console.error(e));
             return res.status(200).send('Recovery procedure started');
         }
@@ -117,9 +117,9 @@ app.use((req, res, next) => {
             <body>
                 <div class="container">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    <h1>Sito in Manutenzione</h1>
-                    <p>FuelFinder Italy è temporaneamente offline per manutenzione programmata.</p>
-                    <p>Il servizio tornerà online al termine del seguente conto alla rovescia. Grazie per la pazienza!</p>
+                    <h1>Site Under Maintenance</h1>
+                    <p>FuelFinder Italy is temporarily offline for scheduled maintenance.</p>
+                    <p>The service will be back online when the countdown finishes. Thank you for your patience!</p>
                     <div id="countdown" style="font-size: 2.2rem; font-weight: bold; margin-top: 30px; color: #38bdf8; font-variant-numeric: tabular-nums; letter-spacing: 2px;"></div>
                 </div>
                 <script>
@@ -187,7 +187,7 @@ let db;
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server HTTP in ascolto su http://0.0.0.0:${PORT} - Inizializzazione DB in corso...`);
+    console.log(`Server listening on port ${PORT} - Init DB...`);
 });
 
 async function setupDatabase() {
@@ -214,13 +214,13 @@ async function setupDatabase() {
 
         if (clientOptions.syncUrl) {
             db.sync().then(() => {
-                console.log("[INFO] Database Principale (Embedded Sync) sincronizzato in locale!");
-            }).catch(e => console.error("Errore sync in background:", e));
+                console.log("[INFO] Local DB synced.");
+            }).catch(e => console.error("Background sync error:", e));
         }
     } catch (err) {
         const errMsg = err.message || err.toString();
         if (errMsg.includes('SQLITE_CORRUPT') || errMsg.includes('malformed') || errMsg.includes('invalid local state') || errMsg.includes('WalConflict')) {
-            console.warn("[WARN] Rilevata corruzione o stato inconsistente del database locale. Tento il ripristino automatico...");
+            console.warn("[WARN] Local DB corrupted. Attempting recovery...");
             try {
                 if (db) db.close();
             } catch {} // Ignora errori di chiusura
@@ -232,12 +232,12 @@ async function setupDatabase() {
                     try {
                         fs.unlinkSync(file);
                     } catch (e) {
-                        console.error(`Impossibile eliminare ${file}:`, e);
+                        console.error(`Failed to delete ${file}:`, e);
                     }
                 }
             }
             
-            console.log("[INFO] File locali eliminati. Risincronizzazione da zero in corso...");
+            console.log("[INFO] Local files deleted. Resyncing from scratch...");
             db = createClient(clientOptions);
             
             if (clientOptions.syncUrl) {
@@ -896,7 +896,7 @@ function scheduleDailySync() {
                 console.log("[Cron] Aggiornamento completato con successo.");
             }
         } catch (e) {
-            console.error("[Cron] Errore durante l'aggiornamento programmato:", e);
+            console.error("[Cron] Scheduled update error:", e);
         } finally {
             scheduleDailySync();
         }

@@ -8,7 +8,7 @@ export const URL_ANAGRAFICA = "https://www.mimit.gov.it/images/exportCSV/anagraf
 export const URL_PREZZI = "https://www.mimit.gov.it/images/exportCSV/prezzo_alle_8.csv";
 
 export async function checkUpdates(lastModifiedHeader) {
-  console.log("Controllo aggiornamenti sul server ministeriale...");
+  console.log("Checking MIMIT updates...");
   const headers = {};
   if (lastModifiedHeader) {
     headers["If-Modified-Since"] = lastModifiedHeader;
@@ -16,7 +16,7 @@ export async function checkUpdates(lastModifiedHeader) {
 
   const headResponse = await fetch(URL_PREZZI, { method: "HEAD", headers });
   if (headResponse.status === 304) {
-    console.log(`HTTP 304 (Not Modified): I dati del Ministero non sono cambiati dall'ultimo sync (${lastModifiedHeader}). Aggiornamento saltato.`);
+    console.log(`HTTP 304: No changes since ${lastModifiedHeader}. Sync skipped.`);
     return { shouldUpdate: false };
   }
   if (!headResponse.ok) {

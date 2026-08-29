@@ -22,13 +22,13 @@ export async function sync(dbClient, retries = 8) {
     
     // Rilevamento Quota Turso esaurita anche durante il sync in background
     if (errMsg.includes('quota') || errMsg.includes('billing') || errMsg.includes('exceeded') || errMsg.includes('payment required') || errMsg.includes('resource_exhausted')) {
-        console.warn("[WARN] Rilevato esaurimento crediti Turso durante il Sync! Attivazione automatica Maintenance Mode.");
+        console.warn("[WARN] Turso quota exceeded. Maintenance mode active.");
         process.env.MAINTENANCE_MODE = 'true';
     }
 
-    console.error(`[Sync] Errore durante la sincronizzazione:`, error.message);
+    console.error(`[Sync] Error:`, error.message);
     if (retries > 0) {
-      console.log(`[Sync] Ritento tra 5 minuti... (Tentativi rimasti: ${retries})`);
+      console.log(`[Sync] Retrying in 5m... (Left: ${retries})`);
       await new Promise((res) => setTimeout(res, 5 * 60 * 1000));
       return sync(dbClient, retries - 1);
     }
@@ -37,7 +37,7 @@ export async function sync(dbClient, retries = 8) {
 }
 
 async function doSync(db) {
-  console.log("Avvio sincronizzazione dati dal MIMIT su Turso (Modulare con Diff in memoria)...");
+  console.log("Starting MIMIT sync to Turso...");
 
   await initSchema(db);
   const lastModifiedHeader = await getLastModified(db);
@@ -57,11 +57,11 @@ async function doSync(db) {
   let prezziFile = null;
 
   try {
-      console.log(`Download ${URL_ANAGRAFICA}...`);
+      console.log(`Downloading ${URL_ANAGRAFICA}...`);
       anagraficaFile = await downloadFile(URL_ANAGRAFICA);
       await processStationsDiff(anagraficaFile, existingStations, syncOperations, seenStationIds);
 
-      console.log(`Download ${URL_PREZZI}...`);
+      console.log(`Downloading ${URL_PREZZI}...`);
       prezziFile = await downloadFile(URL_PREZZI);
       await processPricesDiff(prezziFile, existingPrices, syncOperations, seenPriceIds);
 
@@ -71,7 +71,7 @@ async function doSync(db) {
       
       await setLastModified(db, updateCheck.newLastModified);
       
-      console.log("Sincronizzazione DB completata con successo (Zero quote sprecate)!");
+      console.log("DB sync completed successfully.");
 
   } finally {
       if (anagraficaFile && fs.existsSync(anagraficaFile)) fs.unlinkSync(anagraficaFile);
