@@ -49,6 +49,48 @@ import { setupApiRoutes } from './routes/api.js';
 let isReady = false;
 const app = express();
 
+// --- 1. HEALTHCHECK AUTOMATICO & UNIVERSALE (RENDER / GITHUB / TURSO) ---
+// Questo blocco deve rimanere IN CIMA a tutto (prima di body parser, timeout, cors, ecc.).
+// Garantisce che Render riceva sempre un 200 OK istantaneo, indipendentemente 
+// da quanto tempo impiega Turso a sincronizzarsi all'avvio. Non dovrai più toccarlo.
+app.use((req, res, next) => {
+    const ua = (req.headers['user-agent'] || '').toLowerCase();
+    
+    // Endpoint di RECOVERY MANUALE
+    if (req.path === '/healthz/recover') {
+        const passkey = req.query.token || req.headers['x-admin-passkey'];
+        if (passkey && passkey === process.env.ADMIN_PASSKEY) {
+            console.warn("[WARN] Procedura di RECOVERY innescata manualmente via healthcheck.");
+            isReady = false;
+            // Riavvia asincronamente il DB
+            setupDatabase().then(() => {
+                console.log("[INFO] Database reinizializzato con successo post-recovery.");
+            }).catch(e => console.error(e));
+            return res.status(200).send('Recovery procedure started');
+        }
+    }
+
+    // 1. Intercetta gli endpoint classici di health check
+    if (req.path === '/health' || req.path === '/healthz' || req.path === '/ping') {
+        return res.status(200).send('OK');
+    }
+    
+    // 2. Intercetta il probing di Render o di altri load balancer tramite User-Agent
+    if (ua.includes('render/1.0') || ua.includes('healthcheck') || ua.includes('kube-probe') || ua.includes('uptimerobot')) {
+        return res.status(200).send('OK');
+    }
+    
+    // 3. Se l'app sta ancora inizializzando il database Turso (isReady = false), 
+    // mettiamo in attesa le chiamate degli utenti, ma rispondiamo OK sulla root 
+    // nel caso in cui un check automatico punti lì.
+    if (!isReady) {
+        if (req.path === '/') return res.status(200).send('OK - Inizializzazione in corso');
+        return res.status(503).send('Servizio in fase di avvio, riprova tra qualche secondo...');
+    }
+    
+    next();
+});
+
 // --- 0. MAINTENANCE MODE (SEO FRIENDLY) ---
 app.use((req, res, next) => {
     if (process.env.MAINTENANCE_MODE === 'true') {
@@ -89,50 +131,16 @@ app.use((req, res, next) => {
     next();
 });
 
-// --- 1. HEALTHCHECK AUTOMATICO & UNIVERSALE (RENDER / GITHUB / TURSO) ---
-// Questo blocco deve rimanere IN CIMA a tutto (prima di body parser, timeout, cors, ecc.).
-// Garantisce che Render riceva sempre un 200 OK istantaneo, indipendentemente 
-// da quanto tempo impiega Turso a sincronizzarsi all'avvio. Non dovrai più toccarlo.
+// --- 2. INITIALIZATION BLOCKER ---
 app.use((req, res, next) => {
-    const ua = (req.headers['user-agent'] || '').toLowerCase();
-    
-    // Endpoint di RECOVERY MANUALE
-    if (req.path === '/healthz/recover') {
-        const passkey = req.query.token || req.headers['x-admin-passkey'];
-        if (passkey && passkey === process.env.ADMIN_PASSKEY) {
-            console.warn("[WARN] Procedura di RECOVERY innescata manualmente via healthcheck.");
-            isReady = false;
-            // Riavvia asincronamente il DB
-            setupDatabase().then(() => {
-                isReady = true;
-                console.log("[INFO] Recovery completato.");
-            }).catch(e => {
-                console.error("Errore Recovery:", e);
-                isReady = true;
-            });
-            return res.status(200).send('OK - Procedura di Recovery avviata sul database.');
-        }
-        return res.status(403).send('Accesso Negato: Token non valido o mancante.');
-    }
-
-    // 1. Intercetta gli endpoint classici di health check
-    if (req.path === '/health' || req.path === '/healthz' || req.path === '/ping') {
-        return res.status(200).send('OK');
-    }
-    
-    // 2. Intercetta il probing di Render o di altri load balancer tramite User-Agent
-    if (ua.includes('render/1.0') || ua.includes('healthcheck') || ua.includes('kube-probe') || ua.includes('uptimerobot')) {
-        return res.status(200).send('OK');
-    }
-
-    // 3. Se l'app sta ancora inizializzando il database Turso (isReady = false), 
-    // mettiamo in attesa le chiamate degli utenti, ma rispondiamo OK sulla root 
-    // nel caso in cui un check automatico punti lì.
     if (!isReady) {
-        if (req.path === '/') return res.status(200).send('OK - Inizializzazione in corso');
-        return res.status(503).send('Servizio in fase di avvio, riprova tra qualche secondo...');
+        if (req.path.startsWith('/api/')) {
+            return res.status(503).json({ 
+                success: false, 
+                error: 'Il database è in fase di inizializzazione (download stazioni). Riprova tra 1 minuto...' 
+            });
+        }
     }
-    
     next();
 });
 
@@ -244,11 +252,13 @@ async function initializeDB() {
         `);
         const rowCount = await db.execute('SELECT COUNT(*) as c FROM stations');
         if (rowCount.rows[0].c === 0) {
-            if (process.env.TURSO_DATABASE_URL && process.env.TURSO_DATABASE_URL.startsWith('libsql://')) {
+            if (process.env.MAINTENANCE_MODE === 'true') {
+                console.log("[INFO] Maintenance Mode attivo. Salto la sincronizzazione iniziale del database per avvio immediato.");
+            } else if (syncUrl && syncUrl.startsWith('libsql://')) {
                 console.log("Database vuoto, ma è una replica. Attendo che Turso popoli i dati in background...");
             } else {
-                console.log("Database vuoto locale. Eseguo sincronizzazione iniziale in background dal MIMIT...");
-                sync(db).catch(e => console.error("Errore sync iniziale in background:", e));
+                console.log("Database vuoto locale. Eseguo sincronizzazione iniziale dal MIMIT...");
+                await sync(db);
             }
         }
     } catch (e) {
