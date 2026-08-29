@@ -234,43 +234,10 @@ async function setupDatabase() {
     }
 }
 
-async function initializeDB() {
-    try {
-        await db.execute(`
-            CREATE TABLE IF NOT EXISTS stations (
-                id INTEGER PRIMARY KEY,
-                gestore TEXT,
-                bandiera TEXT,
-                tipo_impianto TEXT,
-                nome_impianto TEXT,
-                indirizzo TEXT,
-                comune TEXT,
-                provincia TEXT,
-                latitudine REAL,
-                longitudine REAL
-            );
-        `);
-        const rowCount = await db.execute('SELECT COUNT(*) as c FROM stations');
-        if (rowCount.rows[0].c === 0) {
-            if (process.env.MAINTENANCE_MODE === 'true') {
-                console.log("[INFO] Maintenance Mode attivo. Salto la sincronizzazione iniziale del database per avvio immediato.");
-            } else if (syncUrl && syncUrl.startsWith('libsql://')) {
-                console.log("Database vuoto, ma è una replica. Attendo che Turso popoli i dati in background...");
-            } else {
-                console.log("Database vuoto locale. Eseguo sincronizzazione iniziale dal MIMIT...");
-                await sync(db);
-            }
-        }
-    } catch (e) {
-        console.error("Errore durante l'inizializzazione dello schema:", e);
-    }
-}
-
 // --- AVVIO ASINCRONO ---
 async function initServer() {
     try {
         await setupDatabase();
-        await initializeDB();
         await setAnalyticsDb(db);
         
         // --- API ROUTES ---
