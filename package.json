@@ -26,10 +26,14 @@
     "test": "vitest",
     "test:frontend": "vitest run --project frontend",
     "test:backend": "vitest run --project backend",
-    "test:coverage": "vitest run --coverage --coverage.reporter=text --coverage.reporter=json-summary && node tests/coverage-highlights.js"
+    "test:coverage": "vitest run --coverage --coverage.reporter=text --coverage.reporter=json-summary && node tests/coverage-highlights.js",
+    "prepare": "husky"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "lint-staged": {
+    "*.{js,jsx}": "oxlint -c .oxlintrc.json"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",
@@ -64,6 +68,8 @@
     "concurrently": "^10.0.5",
     "cross-env": "^10.1.0",
     "happy-dom": "^20.11.13",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.4.1",
     "oxlint": "^1.80.0",
     "supertest": "^7.2.2",
     "tailwindcss": "^4.3.3",

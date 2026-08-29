@@ -1,18 +1,20 @@
 import { useTranslation } from 'react-i18next';
 import { useGeolocation } from '../../hooks/useGeolocation';
 
+import { useCallback } from 'react';
+
 export default function GPSButton({ onLocationFound }) {
     const { t } = useTranslation();
     const { isLocating, locate } = useGeolocation();
 
-    const handleGPS = async () => {
+    const handleGPS = useCallback(async () => {
         try {
             const coords = await locate();
             onLocationFound(coords);
         } catch {
             alert(t('dyn_gps_error'));
         }
-    };
+    }, [locate, onLocationFound, t]);
 
     return (
         <button 

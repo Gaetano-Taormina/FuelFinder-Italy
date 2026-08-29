@@ -31,6 +31,9 @@ describe('LocationAutocomplete Component', () => {
         fireEvent.focus(input);
         expect(mockProps.setShowSuggestions).toHaveBeenCalledWith(true);
         
+        fireEvent.keyDown(input, { key: 'Escape' });
+        expect(mockProps.onSearch).not.toHaveBeenCalled();
+
         fireEvent.keyDown(input, { key: 'Enter' });
         expect(mockProps.onSearch).toHaveBeenCalled();
     });

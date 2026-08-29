@@ -14,6 +14,7 @@ dist-ssr
 
 # Editor directories and files
 .vscode/*
+.vscode
 !.vscode/extensions.json
 .idea
 .DS_Store
@@ -42,4 +43,10 @@ server/anagrafica_impianti_attivi.csv
 # Test Scripts
 test-error.js
 
+# Linting
+.lint_logs/
+.lint_logs
 
+# Git Hooks
+.husky/
+.husky

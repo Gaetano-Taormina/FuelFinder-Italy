@@ -35,6 +35,7 @@ const TestConsumer = () => {
       <button onClick={() => handleNavigation({lat: 42, lng: 13, name: 'Eni'})}>Navigate</button>
       <button onClick={() => setFuelType('Idrogeno')}>Set Idrogeno</button>
       <button onClick={() => setUserPos(null)}>Clear Pos</button>
+      <button onClick={() => setSelectedStation(null)}>Clear Selected Station</button>
       <button onClick={() => handleNavigation({lat: 42, lng: 13, name: 'Senza Brand'})}>Navigate Name</button>
       <button onClick={() => handleNavigation({lat: 42, lng: 13, brand: 'Q8', name: 'Senza Brand'})}>Navigate Brand</button>
     </div>
@@ -85,9 +86,10 @@ describe('StationsContext', () => {
     return render(
       <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0, shouldRetryOnError: false }}>
         <MemoryRouter initialEntries={initialEntries}>
-          <StationsProvider>
-            <TestConsumer />
-          </StationsProvider>
+          <Routes>
+            <Route path="/:lang/:fuel?" element={<StationsProvider><TestConsumer /></StationsProvider>} />
+            <Route path="*" element={<StationsProvider><TestConsumer /></StationsProvider>} />
+          </Routes>
         </MemoryRouter>
       </SWRConfig>
     );
@@ -366,6 +368,26 @@ describe('StationsContext', () => {
 
     act(() => {
       fireEvent.click(screen.getByText('Clear Pos'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('routeData').textContent).toBe('null'); 
+    }, { interval: 5 });
+  });
+
+  it('Resetta routeData se selectedStation viene rimosso', async () => {
+    renderWithProvider(['/it/']);
+    act(() => {
+      fireEvent.click(screen.getByText('Set Pos'));
+      fireEvent.click(screen.getByText('Set Selected Station'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('routeData').textContent).toBe('100'); 
+    }, { interval: 5 });
+
+    act(() => {
+      fireEvent.click(screen.getByText('Clear Selected Station'));
     });
 
     await waitFor(() => {

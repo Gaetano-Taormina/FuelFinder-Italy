@@ -1,4 +1,4 @@
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect, memo, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import Sidebar from './Sidebar';
@@ -26,6 +26,11 @@ const Header = memo(function Header() {
         }
     }, [isSidebarOpen]);
 
+    const openSidebar = useCallback(() => setIsSidebarOpen(true), []);
+    const closeSidebar = useCallback(() => setIsSidebarOpen(false), []);
+    const logoStyle = useMemo(() => ({ width: 44, height: 44 }), []);
+    const handleLogoError = useCallback((e) => { e.target.style.display = 'none'; }, []);
+
     const decodedCity = city ? decodeURIComponent(city) : '';
     const cityName = decodedCity ? decodedCity.charAt(0).toUpperCase() + decodedCity.slice(1).toLowerCase() : '';
     const langPrefix = (i18n.resolvedLanguage || 'it').split('-')[0];
@@ -44,7 +49,7 @@ const Header = memo(function Header() {
                     <div className="flex justify-between items-start sm:items-center gap-2 mb-2 sm:mb-0">
                         <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 dark:text-white flex flex-wrap items-center gap-3 sm:gap-4">
                             <button 
-                                onClick={() => setIsSidebarOpen(true)}
+                                onClick={openSidebar}
                                 className="group flex items-center gap-2 sm:gap-3 p-1 -ml-1 mr-1 rounded-xl text-slate-600 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 transition-colors focus:outline-none"
                                 aria-label="Apri Menu Navigazione"
                                 title="Apri Menu"
@@ -57,8 +62,8 @@ const Header = memo(function Header() {
                                     fetchPriority="high"
                                     loading="eager"
                                     className="object-contain rounded-xl shadow-sm animate-pulse group-hover:animate-none group-hover:scale-110 transition-transform" 
-                                    style={{width: 44, height: 44}} 
-                                    onError={(e)=>{e.target.style.display='none'}} 
+                                    style={logoStyle} 
+                                    onError={handleLogoError} 
                                 />
                             </button>
                             <span className="tracking-tight drop-shadow-sm">
@@ -77,7 +82,7 @@ const Header = memo(function Header() {
 
             <Sidebar 
                 isOpen={isSidebarOpen} 
-                onClose={() => setIsSidebarOpen(false)} 
+                onClose={closeSidebar} 
                 cityName={cityName} 
                 langPrefix={langPrefix} 
             />

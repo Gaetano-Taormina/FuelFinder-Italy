@@ -3,9 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { useStations } from '../context/StationsContext';
 import { formatStationName } from '../utils/formatters';
 
+import { useCallback } from 'react';
+
 export default function RoutePanel() {
     const { t } = useTranslation();
     const { selectedStation, setSelectedStation, routeData, handleNavigation } = useStations();
+
+    const navigateToStation = useCallback(() => handleNavigation(selectedStation), [handleNavigation, selectedStation]);
+    const closePanel = useCallback(() => setSelectedStation(null), [setSelectedStation]);
 
     if (!selectedStation) return null;
 
@@ -31,7 +36,7 @@ export default function RoutePanel() {
                 <div className="flex justify-between border-b border-slate-100 dark:border-slate-700 pb-1">
                     <div className="flex flex-col">
                         <button 
-                            onClick={() => handleNavigation(selectedStation)}
+                            onClick={navigateToStation}
                             className="font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline decoration-blue-500/30 hover:decoration-blue-500 transition-colors cursor-pointer inline-flex items-center gap-1 text-left"
                             title={t('get_directions')}
                         >
@@ -54,7 +59,7 @@ export default function RoutePanel() {
                     <span className="font-bold text-slate-800 dark:text-white">{travelTime} min</span>
                 </div>
             </div>
-            <button onClick={() => setSelectedStation(null)} className="mt-3 sm:mt-4 w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 text-[10px] sm:text-xs font-bold py-2 rounded-xl transition-colors">
+            <button onClick={closePanel} className="mt-3 sm:mt-4 w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 text-[10px] sm:text-xs font-bold py-2 rounded-xl transition-colors">
                 {t('btn_close')}
             </button>
         </aside>

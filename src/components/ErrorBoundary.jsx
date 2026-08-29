@@ -19,6 +19,10 @@ export class ErrorBoundary extends React.Component {
         console.error("ErrorBoundary caught an error:", error, errorInfo);
     }
 
+    handleReset = () => {
+        window.location.href = '/';
+    }
+
     render() {
         if (this.state.hasError) {
             return (
@@ -32,7 +36,7 @@ export class ErrorBoundary extends React.Component {
                             <pre className="text-slate-500 dark:text-slate-400 mt-2">{this.state.errorInfo && this.state.errorInfo.componentStack}</pre>
                         </details>
                         <button 
-                            onClick={() => window.location.href = '/'}
+                            onClick={this.handleReset}
                             className="mt-6 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors"
                         >
                             Torna alla Home

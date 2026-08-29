@@ -1,15 +1,19 @@
 import { useState } from 'react';
 
+import { useCallback } from 'react';
+
 export default function Tooltip({ children, content }) {
   const [isVisible, setIsVisible] = useState(false);
+  const show = useCallback(() => setIsVisible(true), []);
+  const hide = useCallback(() => setIsVisible(false), []);
 
   return (
     <div 
       className="relative flex items-center group"
-      onMouseEnter={() => setIsVisible(true)}
-      onMouseLeave={() => setIsVisible(false)}
-      onFocus={() => setIsVisible(true)}
-      onBlur={() => setIsVisible(false)}
+      onMouseEnter={show}
+      onMouseLeave={hide}
+      onFocus={show}
+      onBlur={hide}
     >
       {children}
       {isVisible && (

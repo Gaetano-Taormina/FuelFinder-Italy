@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Header from '../components/Header';
@@ -22,6 +22,11 @@ export default function ExplorePage() {
     const [sortOrder, setSortOrder] = useState('asc'); // 'asc' or 'desc'
     const [cities, setCities] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    const setViewAlphabetical = useCallback(() => setViewMode('alphabetical'), []);
+    const setViewRegion = useCallback(() => setViewMode('region'), []);
+    const setSortAsc = useCallback(() => setSortOrder('asc'), []);
+    const setSortDesc = useCallback(() => setSortOrder('desc'), []);
 
     useEffect(() => {
         fetch('/api/cities')
@@ -106,13 +111,13 @@ export default function ExplorePage() {
                     <div className="inline-flex flex-wrap justify-center gap-4 bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
                         <div className="flex gap-2 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl">
                             <button 
-                                onClick={() => setViewMode('alphabetical')}
+                                onClick={setViewAlphabetical}
                                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${viewMode === 'alphabetical' ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
                             >
                                 A-Z (Alfabetico)
                             </button>
                             <button 
-                                onClick={() => setViewMode('region')}
+                                onClick={setViewRegion}
                                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${viewMode === 'region' ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
                             >
                                 Per Regione
@@ -121,13 +126,13 @@ export default function ExplorePage() {
                         <div className="w-px bg-slate-300 dark:bg-slate-700 mx-2 hidden sm:block"></div>
                         <div className="flex gap-2 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl">
                             <button 
-                                onClick={() => setSortOrder('asc')}
+                                onClick={setSortAsc}
                                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${sortOrder === 'asc' ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
                             >
                                 ⬇️ A-Z
                             </button>
                             <button 
-                                onClick={() => setSortOrder('desc')}
+                                onClick={setSortDesc}
                                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${sortOrder === 'desc' ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
                             >
                                 ⬆️ Z-A

@@ -1,5 +1,6 @@
 
 import { Marker, Popup } from 'react-leaflet';
+import { memo, useMemo } from 'react';
 import L from 'leaflet';
 
 const capitals = [
@@ -60,29 +61,34 @@ const capitalIcon = (code, rotation, isMirrored = false, isSticker = false) => {
     });
 };
 
+const CapitalMarker = memo(function CapitalMarker({ cap }) {
+    const position = useMemo(() => [cap.lat, cap.lng], [cap.lat, cap.lng]);
+    const icon = useMemo(() => capitalIcon(cap.code, cap.rotation, cap.isMirrored, cap.isSticker), [cap.code, cap.rotation, cap.isMirrored, cap.isSticker]);
+    const bgStyle = useMemo(() => ({ backgroundImage: `url('https://flagcdn.com/${cap.code}.svg')` }), [cap.code]);
+
+    return (
+        <Marker position={position} icon={icon} zIndexOffset={1000}>
+            <Popup className="custom-capital-popup" closeButton={false}>
+                <div className="text-center p-4 min-w-44 relative overflow-hidden rounded-2xl shadow-xl border-2 border-slate-300 dark:border-slate-600">
+                    <div className="absolute inset-0 bg-cover bg-center opacity-90 dark:opacity-70" style={bgStyle}></div>
+                    <div className="absolute inset-0 bg-white/30 dark:bg-slate-900/60"></div>
+                    <div className="relative z-10 flex flex-col items-center">
+                        <h4 className="font-black text-2xl text-slate-900 dark:text-white drop-shadow-lg tracking-wide uppercase mt-1">{cap.name}</h4>
+                        <div className="text-xs font-bold text-slate-800 dark:text-slate-100 mt-3 bg-white/80 dark:bg-slate-800/80 px-3 py-1 rounded-full shadow-sm border border-slate-200/50 dark:border-slate-600/50">
+                            Capital: <span className="text-blue-700 dark:text-blue-400">{cap.capital}</span>
+                        </div>
+                    </div>
+                </div>
+            </Popup>
+        </Marker>
+    );
+});
+
 export default function CapitalMarkers() {
     return (
         <>
             {capitals.map(cap => (
-                <Marker 
-                    key={cap.code} 
-                    position={[cap.lat, cap.lng]} 
-                    icon={capitalIcon(cap.code, cap.rotation, cap.isMirrored, cap.isSticker)} 
-                    zIndexOffset={1000}
-                >
-                    <Popup className="custom-capital-popup" closeButton={false}>
-                        <div className="text-center p-4 min-w-44 relative overflow-hidden rounded-2xl shadow-xl border-2 border-slate-300 dark:border-slate-600">
-                            <div className="absolute inset-0 bg-cover bg-center opacity-90 dark:opacity-70" style={{ backgroundImage: `url('https://flagcdn.com/${cap.code}.svg')` }}></div>
-                            <div className="absolute inset-0 bg-white/30 dark:bg-slate-900/60"></div>
-                            <div className="relative z-10 flex flex-col items-center">
-                                <h4 className="font-black text-2xl text-slate-900 dark:text-white drop-shadow-lg tracking-wide uppercase mt-1">{cap.name}</h4>
-                                <div className="text-xs font-bold text-slate-800 dark:text-slate-100 mt-3 bg-white/80 dark:bg-slate-800/80 px-3 py-1 rounded-full shadow-sm border border-slate-200/50 dark:border-slate-600/50">
-                                    Capital: <span className="text-blue-700 dark:text-blue-400">{cap.capital}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </Popup>
-                </Marker>
+                <CapitalMarker key={cap.code} cap={cap} />
             ))}
         </>
     );

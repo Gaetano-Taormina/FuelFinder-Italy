@@ -53,7 +53,7 @@ export const analyticsMiddleware = (req, res, next) => {
 
     // Filtro Bot/Crawler e Test automatizzati
     const userAgent = (req.headers['user-agent'] || '').toLowerCase();
-    const isBot = /bot|crawler|spider|crawling|googlebot|bingbot|yandexbot|duckduckbot|slurp|baiduspider|headlesschrome/i.test(userAgent);
+    const isBot = !userAgent || /bot|crawler|spider|crawling|google|bing|yandex|duckduck|slurp|baidu|headless|node-superagent|axios|fetch|curl|wget|postman|insomnia/i.test(userAgent);
     
     if (isBot) {
         if (req.path === '/api/visit') return res.json({ status: 'ignored' });
@@ -86,7 +86,7 @@ export const trackStaticVisit = (req) => {
     
     // Filtro Bot/Crawler e Test automatizzati
     const userAgent = (req.headers['user-agent'] || '').toLowerCase();
-    const isBot = /bot|crawler|spider|crawling|googlebot|bingbot|yandexbot|duckduckbot|slurp|baiduspider|headlesschrome/i.test(userAgent);
+    const isBot = !userAgent || /bot|crawler|spider|crawling|google|bing|yandex|duckduck|slurp|baidu|headless|node-superagent|axios|fetch|curl|wget|postman|insomnia/i.test(userAgent);
     
     if (isBot) return;
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStations } from '../../context/StationsContext';
 import { useNominatim } from '../../hooks/useNominatim';
@@ -12,7 +12,7 @@ export default function LocationInput() {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const { suggestions, fetchSuggestions, clearSuggestions, searchCoords } = useNominatim();
 
-    const handleInputChange = (e) => {
+    const handleInputChange = useCallback((e) => {
         const val = e.target.value;
         setLocationStr(val);
 
@@ -24,9 +24,9 @@ export default function LocationInput() {
             clearSuggestions();
             setShowSuggestions(false);
         }
-    };
+    }, [setLocationStr, t, fetchSuggestions, clearSuggestions]);
 
-    const handleSuggestionClick = (suggestion) => {
+    const handleSuggestionClick = useCallback((suggestion) => {
         setLocationStr(suggestion.display_name);
         setShowSuggestions(false);
         setUserPos({
@@ -34,9 +34,9 @@ export default function LocationInput() {
             lng: parseFloat(suggestion.lon),
             type: 'manual'
         });
-    };
+    }, [setLocationStr, setUserPos]);
 
-    const handleSearch = async () => {
+    const handleSearch = useCallback(async () => {
         if (!locationStr.trim()) return;
         if (locationStr === t('dyn_current_pos') || locationStr === t('dyn_map_point')) return;
         
@@ -46,12 +46,12 @@ export default function LocationInput() {
         } else {
             alert(t('dyn_not_found'));
         }
-    };
+    }, [locationStr, t, searchCoords, setUserPos]);
 
-    const handleLocationFound = (coords) => {
+    const handleLocationFound = useCallback((coords) => {
         setUserPos({ ...coords, type: 'gps' });
         setLocationStr(t('dyn_current_pos'));
-    };
+    }, [setUserPos, setLocationStr, t]);
 
     return (
         <div className="w-full md:col-span-3 flex gap-2 items-end">

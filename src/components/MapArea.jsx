@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, memo, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap, useMapEvents, GeoJSON } from 'react-leaflet';
 import L from 'leaflet';
 import { useTranslation } from 'react-i18next';
@@ -17,6 +17,43 @@ L.Icon.Default.mergeOptions({
 });
 
 const defaultCenter = [41.9028, 12.4964];
+
+const mapStyle = { height: '100%', width: '100%' };
+
+const tileEventHandlers = {
+  tileloadstart: (e) => {
+    if (e.tile) {
+      e.tile.setAttribute('fetchpriority', 'high');
+    }
+  }
+};
+
+const europeBounds = [
+  [34.0, -10.0], // Sud Ovest
+  [71.0, 40.0]   // Nord Est
+];
+
+const geoJsonOutlineStyle = { color: '#1e3a8a', weight: 8, opacity: 0.6, lineCap: 'round', lineJoin: 'round' };
+const geoJsonInnerStyle = { color: '#3b82f6', weight: 5, opacity: 1, lineCap: 'round', lineJoin: 'round' };
+
+const createClusterIcon = (cluster) => {
+  const hasBestPrice = cluster.getAllChildMarkers().some(m => m.options.icon.options.isBestPrice);
+  
+  const outerColor = hasBestPrice ? 'bg-amber-500/90 shadow-[0_0_15px_rgba(245,158,11,0.5)]' : 'bg-blue-600/90 shadow-[0_0_15px_rgba(37,99,235,0.5)]';
+  const innerColor = hasBestPrice ? 'bg-amber-900/80 border-amber-300/50' : 'bg-slate-900/80 border-blue-300/50';
+  const textColor = hasBestPrice ? 'text-amber-100' : 'text-white';
+
+  return L.divIcon({
+    html: `<div class="relative flex items-center justify-center w-12 h-12 ${outerColor} backdrop-blur-md rounded-full border-4 border-white/80 z-50 transition-transform hover:scale-110">
+             <div class="flex items-center justify-center w-8 h-8 ${innerColor} rounded-full border-2 shadow-inner">
+               <span class="${textColor} font-black text-sm drop-shadow-md">${cluster.getChildCount()}</span>
+             </div>
+           </div>`,
+    className: 'custom-cluster-icon',
+    iconSize: L.point(48, 48, true),
+  });
+};
+
 
 function LocationMarker() {
   const { t } = useTranslation();
@@ -67,8 +104,10 @@ function LocationMarker() {
 
   const activeIcon = userPos && userPos.type === 'gps' ? gpsIcon : manualIcon;
 
+  const position = useMemo(() => userPos ? [userPos.lat, userPos.lng] : null, [userPos]);
+
   return userPos ? (
-    <Marker position={[userPos.lat, userPos.lng]} icon={activeIcon}>
+    <Marker position={position} icon={activeIcon}>
       <Popup>{t('your_position')}</Popup>
     </Marker>
   ) : null;
@@ -78,8 +117,7 @@ function StationMarkers({ stations }) {
   const { t } = useTranslation();
   const { setSelectedStation } = useStations();
   
-  const createIcon = (price, isBest) => {
-    // Colori migliorati per alto contrasto (Orange per la scelta consigliata)
+  const createIcon = useCallback((price, isBest) => {
     const colorClass = isBest ? 'bg-orange-500 border-orange-700' : 'bg-blue-600 border-blue-800';
     const textColor = 'text-white';
     const triangleColor = isBest ? 'border-t-orange-700' : 'border-t-blue-800';
@@ -95,27 +133,40 @@ function StationMarkers({ stations }) {
           <div class="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-8 ${triangleColor} -mt-0.5"></div>
         </div>`,
       iconSize: [64, 42],
-      iconAnchor: [32, 42] // La punta esatta del triangolo indica la coordinata GPS
+      iconAnchor: [32, 42]
     });
-  };
+  }, []);
 
   return stations.map((st, i) => (
-    <Marker 
-      key={st.id} 
-      position={[st.lat, st.lng]} 
-      icon={createIcon(st.currentPrice, i === 0)}
-      eventHandlers={{
-        click: () => setSelectedStation(st),
-      }}
-    >
-      <Popup>
-        <div className="font-bold text-lg dark:text-white">{formatStationName(st.brand || st.name)}</div>
-        <div className="text-sm text-slate-700 dark:text-slate-300">{st.address}</div>
-        <div className="text-blue-600 dark:text-blue-400 font-bold mt-2">{t('price_label')} {st.currentPrice} €</div>
-      </Popup>
-    </Marker>
+    <StationMarker 
+        key={st.id} 
+        st={st} 
+        i={i} 
+        createIcon={createIcon} 
+        setSelectedStation={setSelectedStation} 
+        t={t} 
+        formatStationName={formatStationName}
+    />
   ));
 }
+
+const StationMarker = memo(function StationMarker({ st, i, createIcon, setSelectedStation, t, formatStationName }) {
+    const position = useMemo(() => [st.lat, st.lng], [st.lat, st.lng]);
+    const icon = useMemo(() => createIcon(st.currentPrice, i === 0), [createIcon, st.currentPrice, i]);
+    const eventHandlers = useMemo(() => ({
+        click: () => setSelectedStation(st)
+    }), [setSelectedStation, st]);
+
+    return (
+        <Marker position={position} icon={icon} eventHandlers={eventHandlers}>
+          <Popup>
+            <div className="font-bold text-lg dark:text-white">{formatStationName(st.brand || st.name)}</div>
+            <div className="text-sm text-slate-700 dark:text-slate-300">{st.address}</div>
+            <div className="text-blue-600 dark:text-blue-400 font-bold mt-2">{t('price_label')} {st.currentPrice} €</div>
+          </Popup>
+        </Marker>
+    );
+});
 
 function MapFixer() {
   const map = useMap();
@@ -145,11 +196,7 @@ export default function MapArea() {
   const { userPos, radius, routeData, loading } = useStations();
   const filteredStations = useDistanceLogic();
   const { t } = useTranslation();
-
-  const europeBounds = [
-    [34.0, -10.0], // Sud Ovest
-    [71.0, 40.0]   // Nord Est
-  ];
+  const circleCenter = useMemo(() => userPos ? [userPos.lat, userPos.lng] : null, [userPos]);
 
   return (
     <div className="w-full h-[55vh] md:h-150 rounded-[30px] shadow-lg overflow-hidden border-4 border-slate-300 dark:border-slate-600 relative z-0 mb-8 md:mb-0">
@@ -181,7 +228,7 @@ export default function MapArea() {
         minZoom={5}
         maxBounds={europeBounds}
         maxBoundsViscosity={1.0}
-        style={{ height: '100%', width: '100%' }}
+        style={mapStyle}
         zoomControl={false}
         tap={false}
       >
@@ -189,37 +236,15 @@ export default function MapArea() {
         <TileLayer
           attribution='&copy; OpenStreetMap contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          eventHandlers={{
-            tileloadstart: (e) => {
-              if (e.tile) {
-                e.tile.setAttribute('fetchpriority', 'high');
-              }
-            }
-          }}
+          eventHandlers={tileEventHandlers}
         />
         <LocationMarker />
         <CapitalMarkers />
-        {userPos && <Circle center={[userPos.lat, userPos.lng]} radius={radius * 1000} color="#3b82f6" fillColor="#3b82f6" fillOpacity={0.1} />}
+        {userPos && circleCenter && <Circle center={circleCenter} radius={radius * 1000} color="#3b82f6" fillColor="#3b82f6" fillOpacity={0.1} />}
         <MarkerClusterGroup
           chunkedLoading
           maxClusterRadius={50}
-          iconCreateFunction={(cluster) => {
-            const hasBestPrice = cluster.getAllChildMarkers().some(m => m.options.icon.options.isBestPrice);
-            
-            const outerColor = hasBestPrice ? 'bg-amber-500/90 shadow-[0_0_15px_rgba(245,158,11,0.5)]' : 'bg-blue-600/90 shadow-[0_0_15px_rgba(37,99,235,0.5)]';
-            const innerColor = hasBestPrice ? 'bg-amber-900/80 border-amber-300/50' : 'bg-slate-900/80 border-blue-300/50';
-            const textColor = hasBestPrice ? 'text-amber-100' : 'text-white';
-
-            return L.divIcon({
-              html: `<div class="relative flex items-center justify-center w-12 h-12 ${outerColor} backdrop-blur-md rounded-full border-4 border-white/80 z-50 transition-transform hover:scale-110">
-                       <div class="flex items-center justify-center w-8 h-8 ${innerColor} rounded-full border-2 shadow-inner">
-                         <span class="${textColor} font-black text-sm drop-shadow-md">${cluster.getChildCount()}</span>
-                       </div>
-                     </div>`,
-              className: 'custom-cluster-icon',
-              iconSize: L.point(48, 48, true),
-            });
-          }}
+          iconCreateFunction={createClusterIcon}
         >
           <StationMarkers stations={filteredStations} />
         </MarkerClusterGroup>
@@ -229,13 +254,13 @@ export default function MapArea() {
             <GeoJSON 
               key={'outline-'+JSON.stringify(routeData.geometry)}
               data={routeData.geometry} 
-              style={{ color: '#1e3a8a', weight: 8, opacity: 0.6, lineCap: 'round', lineJoin: 'round' }} 
+              style={geoJsonOutlineStyle} 
             />
             {/* Linea interna del percorso */}
             <GeoJSON 
               key={'inner-'+JSON.stringify(routeData.geometry)}
               data={routeData.geometry} 
-              style={{ color: '#3b82f6', weight: 5, opacity: 1, lineCap: 'round', lineJoin: 'round' }} 
+              style={geoJsonInnerStyle} 
             />
           </>
         )}

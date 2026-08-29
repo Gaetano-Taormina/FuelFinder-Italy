@@ -12,8 +12,10 @@ import { ErrorBoundary } from './components/ErrorBoundary.jsx'
 const ExplorePage = lazy(() => import('./pages/ExplorePage.jsx'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'))
 
+const fallbackStyle = { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'sans-serif' };
+
 const LoadingFallback = () => (
-  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'sans-serif' }}>
+  <div style={fallbackStyle}>
     {i18n.t('loading_app')}
   </div>
 );

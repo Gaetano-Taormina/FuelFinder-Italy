@@ -4,9 +4,12 @@ import { useStations } from '../context/StationsContext';
 import LocationInput from './search/LocationInput';
 import Filters from './search/Filters';
 
+import { useMemo } from 'react';
+
 export default function SearchPanel() {
     const { t } = useTranslation();
     const { stations, totalStations } = useStations();
+    const statusReadyProps = useMemo(() => ({ __html: t('status_ready') }), [t]);
 
     return (
         <div className="card-panel">
@@ -19,7 +22,7 @@ export default function SearchPanel() {
                 {stations && stations.length > 0 ? (
                     <span>{t('dyn_found')} <strong className="text-blue-700 dark:text-blue-400 text-base">{stations.length}</strong>{totalStations > stations.length ? <span className="text-sm font-normal text-slate-600 dark:text-slate-300"> (su {totalStations})</span> : ''} {t('dyn_stations')}</span>
                 ) : (
-                    <span dangerouslySetInnerHTML={{ __html: t('status_ready') }} />
+                    <span dangerouslySetInnerHTML={statusReadyProps} />
                 )}
             </div>
         </div>

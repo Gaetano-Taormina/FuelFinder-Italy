@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+/* oxlint-disable no-console */
 export const BATCH_SIZE = 2500;
 
 export async function initSchema(db) {
@@ -73,6 +73,7 @@ export async function applyChanges(db, syncOperations) {
   if (syncOperations.length > 0) {
       for (let i = 0; i < syncOperations.length; i += BATCH_SIZE) {
           const chunk = syncOperations.slice(i, i + BATCH_SIZE);
+          // oxlint-disable-next-line no-await-in-loop
           await db.batch(chunk, "write");
       }
       console.log(`Salvataggio completato in blocchi da ${BATCH_SIZE}.`);

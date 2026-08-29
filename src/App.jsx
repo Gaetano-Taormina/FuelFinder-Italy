@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { StationsProvider, useStations } from './context/StationsContext';
@@ -47,6 +47,16 @@ const getRealCityName = async (slug, lang) => {
     return (slug.charAt(0).toUpperCase() + slug.slice(1).toLowerCase());
 };
 
+
+const MapLoadingSkeleton = () => (
+    <div className="w-full h-[55vh] md:h-150 rounded-[30px] border-4 border-slate-300 dark:border-slate-600 bg-slate-200 dark:bg-slate-800 animate-pulse mb-8 md:mb-0"></div>
+);
+
+const MapWaitingSkeleton = () => (
+    <div className="w-full h-[55vh] md:h-150 rounded-[30px] border-4 border-slate-300 dark:border-slate-600 bg-slate-200 dark:bg-slate-800 mb-8 md:mb-0 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-slate-400 border-t-blue-500 rounded-full animate-spin"></div>
+    </div>
+);
 
 function LayoutContent() {
     const { t, i18n } = useTranslation();
@@ -210,9 +220,9 @@ function LayoutContent() {
         }
     }, [userPos, currLang, location.pathname, location.search, navigate, fuelType]);
 
-    const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    const toggleTheme = useCallback(() => setTheme(prev => prev === 'light' ? 'dark' : 'light'), []);
     
-    const toggleLanguage = () => {
+    const toggleLanguage = useCallback(() => {
         const nextLang = currLang === 'it' ? 'en' : 'it';
         let newPath = `/${nextLang}`;
         
@@ -247,9 +257,13 @@ function LayoutContent() {
         const finalPath = newFuelUrl ? `${newPath}/${newFuelUrl.toLowerCase()}` : newPath;
         const finalSearch = searchParams.toString() ? `?${searchParams.toString()}` : '';
         navigate(`${finalPath}${finalSearch}`);
-    };
+    }, [currLang, city, location.pathname, location.search, fuelType, navigate]);
 
     const showViewToggles = (stations && stations.length > 0) || userPos != null;
+
+    const setViewMap = useCallback(() => setViewMode('map'), []);
+    const setViewList = useCallback(() => setViewMode('list'), []);
+    const setViewBoth = useCallback(() => setViewMode('both'), []);
 
     return (
         <div className="bg-slate-50 dark:bg-slate-900 transition-colors duration-300 flex flex-col min-h-screen font-sans">
@@ -275,7 +289,7 @@ function LayoutContent() {
                 <div className={`justify-self-center bg-white dark:bg-slate-800 p-1 rounded-xl shadow-sm border-2 border-slate-300 dark:border-slate-600 inline-flex scale-90 sm:scale-100 transition-all duration-500 ${showViewToggles ? 'opacity-100 translate-y-0' : 'opacity-0 pointer-events-none translate-y-1'}`}>
                     <Tooltip content={t('view_map')}>
                         <button 
-                            onClick={() => setViewMode('map')}
+                            onClick={setViewMap}
                             aria-label={t('view_map')}
                             className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-transform duration-200 flex items-center gap-2 ${viewMode === 'map' ? 'bg-blue-700 text-white shadow-md' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
                         >
@@ -285,7 +299,7 @@ function LayoutContent() {
                     </Tooltip>
                     <Tooltip content={t('view_list')}>
                         <button 
-                            onClick={() => setViewMode('list')}
+                            onClick={setViewList}
                             aria-label={t('view_list')}
                             className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-transform duration-200 flex items-center gap-2 ${viewMode === 'list' ? 'bg-blue-700 text-white shadow-md' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
                         >
@@ -295,7 +309,7 @@ function LayoutContent() {
                     </Tooltip>
                     <Tooltip content={t('view_both')}>
                         <button 
-                            onClick={() => setViewMode('both')}
+                            onClick={setViewBoth}
                             aria-label={t('view_both')}
                             className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-transform duration-200 flex items-center gap-2 ${viewMode === 'both' ? 'bg-blue-700 text-white shadow-md' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
                         >
@@ -317,8 +331,9 @@ function LayoutContent() {
             
             {(viewMode === 'map' || viewMode === 'both') && (
                 <main className="p-0 sm:p-4 relative flex flex-col max-w-7xl mx-auto w-full grow">
-                    <Suspense fallback={<div className="w-full h-[55vh] md:h-150 rounded-[30px] border-4 border-slate-300 dark:border-slate-600 bg-slate-200 dark:bg-slate-800 animate-pulse mb-8 md:mb-0"></div>}>
-                        {mapInteractive ? <MapArea /> : <div className="w-full h-[55vh] md:h-150 rounded-[30px] border-4 border-slate-300 dark:border-slate-600 bg-slate-200 dark:bg-slate-800 mb-8 md:mb-0 flex items-center justify-center"><div className="w-8 h-8 border-4 border-slate-400 border-t-blue-500 rounded-full animate-spin"></div></div>}
+                    {/* eslint-disable-next-line react-perf/jsx-no-jsx-as-prop */}
+                    <Suspense fallback={<MapLoadingSkeleton />}>
+                        {mapInteractive ? <MapArea /> : <MapWaitingSkeleton />}
                         <RoutePanel />
                     </Suspense>
                 </main>

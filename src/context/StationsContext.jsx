@@ -1,8 +1,12 @@
-import { createContext, useState, useEffect, useContext } from 'react';
+import { createContext, useState, useEffect, useContext, useMemo, useCallback } from 'react';
 import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
 
 const StationsContext = createContext();
+
+// Mapping for URL translation
+const fuelToEn = { 'Benzina': 'Petrol', 'Gasolio': 'Diesel', 'GPL': 'LPG', 'Metano': 'CNG' };
+const enToFuel = { 'petrol': 'Benzina', 'diesel': 'Gasolio', 'lpg': 'GPL', 'cng': 'Metano', 'benzina': 'Benzina', 'gasolio': 'Gasolio', 'gpl': 'GPL', 'metano': 'Metano' };
 
 // eslint-disable-next-line react/only-export-components
 export const useStations = () => useContext(StationsContext);
@@ -18,15 +22,13 @@ export const StationsProvider = ({ children }) => {
   const { fuel, city } = useParams();
   const navigate = useNavigate();
 
-  // Mapping for URL translation
-  const fuelToEn = { 'Benzina': 'Petrol', 'Gasolio': 'Diesel', 'GPL': 'LPG', 'Metano': 'CNG' };
-  const enToFuel = { 'petrol': 'Benzina', 'diesel': 'Gasolio', 'lpg': 'GPL', 'cng': 'Metano', 'benzina': 'Benzina', 'gasolio': 'Gasolio', 'gpl': 'GPL', 'metano': 'Metano' };
+
 
   // Fallback to query params just in case old links are used
   const rawFuel = fuel || searchParams.get('fuel') || searchParams.get('carburante');
   let initialFuel = 'Benzina';
   if (rawFuel) {
-      initialFuel = enToFuel[rawFuel.toLowerCase()] || rawFuel;
+      initialFuel = enToFuel[rawFuel.toLowerCase()] || (rawFuel.charAt(0).toUpperCase() + rawFuel.slice(1));
   }
 
   // Filters State
@@ -40,7 +42,7 @@ export const StationsProvider = ({ children }) => {
     setFuelTypeInternal(initialFuel);
   }
 
-  const setFuelType = (type) => {
+  const setFuelType = useCallback((type) => {
     setFuelTypeInternal(type);
     
     // Check current language from pathname
@@ -61,7 +63,7 @@ export const StationsProvider = ({ children }) => {
     
     // the new route structure includes fuel at the end
     navigate(`${newPath}/${urlFuel.toLowerCase()}?${newParams.toString()}`, { replace: true });
-  };
+  }, [navigate, searchParams, city]);
 
   // Map and user location state
   const [userPos, setUserPos] = useState(null); // { lat, lng }
@@ -86,7 +88,7 @@ export const StationsProvider = ({ children }) => {
     dedupingInterval: 10000 // Cache le richieste identiche per 10 secondi
   });
 
-  const stations = stationsData?.stations || (Array.isArray(stationsData) ? stationsData : []);
+  const stations = useMemo(() => stationsData?.stations || (Array.isArray(stationsData) ? stationsData : []), [stationsData]);
   const totalStations = stationsData?.totalCount || stations.length || 0;
   
   // Usiamo isValidating per capire se SWR sta facendo un fetch in background,
@@ -96,7 +98,10 @@ export const StationsProvider = ({ children }) => {
 
   // Fetch route when a station is selected
   useEffect(() => {
-    if (!selectedStation || !userPos) return;
+    if (!selectedStation || !userPos) {
+        setRouteData(null);
+        return;
+    }
 
     const fetchRoute = async () => {
       try {
@@ -110,14 +115,14 @@ export const StationsProvider = ({ children }) => {
             duration: data.routes[0].duration
           });
         }
-      } catch {
-        // Error ignored to keep console clean
+      } catch (err) {
+        console.error('OSRM Fetch Error:', err);
       }
     };
     fetchRoute();
   }, [selectedStation, userPos]);
 
-  const handleNavigation = (station) => {
+  const handleNavigation = useCallback((station) => {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const isAndroid = /Android/.test(navigator.userAgent);
     const stationName = encodeURIComponent(station.brand || station.name);
@@ -132,10 +137,9 @@ export const StationsProvider = ({ children }) => {
         // Su PC/Desktop va dritto a Google Maps nel browser
         window.open(`https://www.google.com/maps/dir/?api=1&destination=${station.lat},${station.lng}`, '_blank');
     }
-  };
+  }, []);
 
-  return (
-    <StationsContext.Provider value={{
+  const contextValue = useMemo(() => ({
       stations, totalStations,
       loading, isFetchingBackground, error,
       locationStr, setLocationStr,
@@ -146,7 +150,14 @@ export const StationsProvider = ({ children }) => {
       selectedStation, setSelectedStation,
       routeData,
       handleNavigation
-    }}>
+  }), [
+      stations, totalStations, loading, isFetchingBackground, error,
+      locationStr, radius, fuelType, serviceType, userPos, selectedStation, routeData,
+      setFuelType, handleNavigation
+  ]);
+
+  return (
+    <StationsContext.Provider value={contextValue}>
       {children}
     </StationsContext.Provider>
   );

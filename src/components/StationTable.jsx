@@ -4,8 +4,48 @@ import { useStations } from '../context/StationsContext';
 import { useDistanceLogic } from '../hooks/useDistance';
 import { formatStationName } from '../utils/formatters';
 
+import { memo, useCallback, useMemo } from 'react';
+
+const StationRow = memo(function StationRow({ station, index, setSelectedStation, handleNavigation, t }) {
+    const handleClick = useCallback(() => setSelectedStation(station), [setSelectedStation, station]);
+    const handleNav = useCallback((e) => {
+        e.stopPropagation();
+        handleNavigation(station);
+    }, [handleNavigation, station]);
+
+    return (
+        <tr 
+            onClick={handleClick}
+            className="hover:bg-slate-100 dark:hover:bg-slate-700/80 even:bg-slate-50/50 dark:even:bg-slate-700/30 cursor-pointer transition-colors"
+        >
+            <td className="p-2 sm:p-4 text-center font-bold">
+                <span className="font-bold text-sm text-slate-500 dark:text-slate-400">#{index + 1}</span>
+            </td>
+            <td className="p-2 sm:p-4 font-medium">
+                <button 
+                    onClick={handleNav}
+                    className="text-left font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors inline-flex items-center gap-1 cursor-pointer w-auto"
+                    title={t('get_directions')}
+                >
+                    {formatStationName(station.brand || station.name)}
+                </button>
+            </td>
+            <td className="p-2 sm:p-4 hidden md:table-cell text-sm text-slate-700 dark:text-slate-300">
+                {station.address}
+            </td>
+            <td className="p-2 sm:p-4 text-center hidden sm:table-cell font-mono text-sm">
+                {station.dist.toFixed(2)} km
+            </td>
+            <td className="p-2 sm:p-4 text-right font-extrabold text-blue-600 dark:text-blue-400">
+                {station.currentPrice} €
+            </td>
+        </tr>
+    );
+});
+
 export default function StationTable() {
     const { t } = useTranslation();
+    const tableTitleProps = useMemo(() => ({ __html: t('table_title') }), [t]);
     const { setSelectedStation, handleNavigation, loading, isFetchingBackground } = useStations();
     const filteredStations = useDistanceLogic();
 
@@ -47,7 +87,7 @@ export default function StationTable() {
         <section className={`px-4 pb-8 max-w-7xl mx-auto w-full transition-all duration-300 ${isFetchingBackground ? 'grayscale pointer-events-none' : ''}`}>
             <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-lg overflow-hidden border-2 border-slate-300 dark:border-slate-600 transition-colors">
                 <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-b-2 border-slate-300 dark:border-slate-600 flex justify-between items-center">
-                    <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2" dangerouslySetInnerHTML={{__html: t('table_title')}}>
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2" dangerouslySetInnerHTML={tableTitleProps}>
                     </h2>
                     <span className="text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-200 dark:bg-slate-700 px-3 py-1 rounded-full">
                         {filteredStations.length} {t('dyn_results')}
@@ -66,36 +106,14 @@ export default function StationTable() {
                         </thead>
                         <tbody className="divide-y divide-slate-300 dark:divide-slate-600 text-slate-800 dark:text-slate-200">
                             {filteredStations.map((st, i) => (
-                                <tr 
-                                    key={st.id} 
-                                    onClick={() => setSelectedStation(st)}
-                                    className="hover:bg-slate-100 dark:hover:bg-slate-700/80 even:bg-slate-50/50 dark:even:bg-slate-700/30 cursor-pointer transition-colors"
-                                >
-                                    <td className="p-2 sm:p-4 text-center font-bold">
-                                        <span className="font-bold text-sm text-slate-500 dark:text-slate-400">#{i + 1}</span>
-                                    </td>
-                                    <td className="p-2 sm:p-4 font-medium">
-                                        <button 
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleNavigation(st);
-                                            }}
-                                            className="text-left font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors inline-flex items-center gap-1 cursor-pointer w-auto"
-                                            title={t('get_directions')}
-                                        >
-                                            {formatStationName(st.brand || st.name)}
-                                        </button>
-                                    </td>
-                                    <td className="p-2 sm:p-4 hidden md:table-cell text-sm text-slate-700 dark:text-slate-300">
-                                        {st.address}
-                                    </td>
-                                    <td className="p-2 sm:p-4 text-center hidden sm:table-cell font-mono text-sm">
-                                        {st.dist.toFixed(2)} km
-                                    </td>
-                                    <td className="p-2 sm:p-4 text-right font-extrabold text-blue-600 dark:text-blue-400">
-                                        {st.currentPrice} €
-                                    </td>
-                                </tr>
+                                <StationRow
+                                    key={st.id}
+                                    station={st}
+                                    index={i}
+                                    setSelectedStation={setSelectedStation}
+                                    handleNavigation={handleNavigation}
+                                    t={t}
+                                />
                             ))}
                         </tbody>
                     </table>

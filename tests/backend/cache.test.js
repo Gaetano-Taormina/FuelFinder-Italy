@@ -51,10 +51,12 @@ describe('Backend Server API - Cache Management', () => {
     });
 
     it('dovrebbe svuotare mezza cache se si supera MAX_CACHE_SIZE', async () => {
+        const promises = [];
         for (let i = 0; i < 1002; i++) {
-            req.query.lng = String(12.5 + i * 0.001);
-            await controller.getStations(req, res, next);
+            const currentReq = { ...req, query: { ...req.query, lng: String(12.5 + i * 0.001) } };
+            promises.push(controller.getStations(currentReq, res, next));
         }
+        await Promise.all(promises);
         
         // At this point cache should be halved, the code didn't crash
         expect(res.json).toHaveBeenCalled();

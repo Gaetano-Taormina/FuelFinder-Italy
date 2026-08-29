@@ -1,9 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+
+const maskStyle = { maskImage: 'radial-gradient(circle at center, black 0%, transparent 80%)', WebkitMaskImage: 'radial-gradient(circle at center, black 0%, transparent 80%)' };
 
 export default function NotFoundPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const navigate = useNavigate();
+    const { i18n } = useTranslation();
     const [theme] = useState(localStorage.getItem('theme') || 'dark');
 
     useEffect(() => {
@@ -14,20 +18,23 @@ export default function NotFoundPage() {
         }
     }, [theme]);
 
-    const handleSearch = (e) => {
+    const handleSearch = useCallback((e) => {
         e.preventDefault();
         if (searchQuery.trim()) {
             const lang = (i18n.resolvedLanguage || 'it').split('-')[0];
             const pathSegment = lang === 'it' ? 'citta' : 'city';
             navigate(`/${lang}/${pathSegment}/${encodeURIComponent(searchQuery.trim())}`);
         }
-    };
+    }, [searchQuery, navigate, i18n.resolvedLanguage]);
+
+    const handleInputChange = useCallback((e) => setSearchQuery(e.target.value), []);
+    const goHome = useCallback(() => navigate('/it'), [navigate]);
 
     return (
         <div className="bg-slate-50 dark:bg-slate-900 transition-colors duration-300 min-h-screen font-sans flex flex-col relative overflow-hidden">
             
             {/* Sfondo Bandiera a tutto schermo, sfumato */}
-            <div className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-20 dark:opacity-15" style={{ maskImage: 'radial-gradient(circle at center, black 0%, transparent 80%)', WebkitMaskImage: 'radial-gradient(circle at center, black 0%, transparent 80%)' }}>
+            <div className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-20 dark:opacity-15" style={maskStyle}>
                 <div className="absolute inset-0 flex skew-x-[-30deg] scale-[1.5] origin-center">
                     <div className="flex-1 bg-[#009246]"></div>
                     <div className="flex-1 bg-white"></div>
@@ -49,7 +56,7 @@ export default function NotFoundPage() {
                         id="search-city"
                         name="search_term_string"
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={handleInputChange}
                         placeholder="Cerca una città (es. Roma)..."
                         className="w-full py-4 pl-5 pr-14 outline-none text-slate-800 dark:text-white bg-transparent font-semibold"
                     />
@@ -59,7 +66,7 @@ export default function NotFoundPage() {
                 </form>
 
                 <button 
-                    onClick={() => navigate('/it')}
+                    onClick={goHome}
                     className="mt-8 px-6 py-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shadow-sm border border-slate-200 dark:border-slate-700"
                 >
                     Torna alla Home
