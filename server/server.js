@@ -905,8 +905,12 @@ function scheduleDailySync() {
     setTimeout(async () => {
         console.log(`[Cron] Esecuzione aggiornamento programmato dei prezzi...`);
         try {
-            await sync(db);
-            console.log("[Cron] Aggiornamento completato con successo.");
+            if (process.env.MAINTENANCE_MODE === 'true') {
+                console.log("[Cron] Sito in manutenzione attiva. Salto l'aggiornamento programmato per risparmiare risorse.");
+            } else {
+                await sync(db);
+                console.log("[Cron] Aggiornamento completato con successo.");
+            }
         } catch (e) {
             console.error("[Cron] Errore durante l'aggiornamento programmato:", e);
         } finally {
