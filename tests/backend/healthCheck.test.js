@@ -1,4 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
+/* eslint-disable no-console */
+import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 

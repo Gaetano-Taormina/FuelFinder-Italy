@@ -16,8 +16,8 @@ export function useNominatim() {
                     const data = await res.json();
                     setSuggestions(data);
                     resolve(data);
-                } catch (err) {
-                    console.error("Autocomplete error:", err);
+                } catch {
+                    // Ignored error
                     setSuggestions([]);
                     resolve([]);
                 }
@@ -40,8 +40,8 @@ export function useNominatim() {
                     lng: parseFloat(data[0].lon)
                 };
             }
-        } catch (e) {
-            console.error(e);
+        } catch {
+            // Ignored error
         }
         return null;
     }, []);

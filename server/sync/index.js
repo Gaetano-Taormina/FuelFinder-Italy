@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { createClient } from "@libsql/client";
 import path from "path";
 import fs from "fs";

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { describe, it, expect } from 'vitest';
 import { formatStationName } from '../../../src/utils/formatters';
 

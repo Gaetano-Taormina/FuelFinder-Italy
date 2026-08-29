@@ -17,7 +17,7 @@ export default function LocationInput() {
         setLocationStr(val);
 
         if (val.trim().length > 2 && val !== t('dyn_current_pos') && val !== t('dyn_map_point')) {
-            fetchSuggestions(val).then((data) => {
+            fetchSuggestions(val).then(() => {
                 setShowSuggestions(true);
             });
         } else {

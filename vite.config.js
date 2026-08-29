@@ -4,7 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { compression } from "vite-plugin-compression2";
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(() => ({
   plugins: [
     react(),
     tailwindcss(),

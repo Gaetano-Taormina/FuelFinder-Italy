@@ -22,6 +22,7 @@
     "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build --emptyOutDir",
     "preview": "vite preview",
     "stats": "node server/stats-cli.js",
+    "lint": "oxlint -c .oxlintrc.json",
     "test": "vitest",
     "test:frontend": "vitest run --project frontend",
     "test:backend": "vitest run --project backend",

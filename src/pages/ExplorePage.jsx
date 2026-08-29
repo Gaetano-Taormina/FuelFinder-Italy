@@ -30,8 +30,8 @@ export default function ExplorePage() {
                 setCities(data);
                 setLoading(false);
             })
-            .catch(err => {
-                console.error('Failed to fetch cities:', err);
+            .catch(() => {
+                // Ignored to keep console clean
                 setLoading(false);
             });
     }, []);
@@ -79,7 +79,7 @@ export default function ExplorePage() {
         }
 
         return { groupedCities: groups, sortedKeys: keys };
-    }, [viewMode, sortOrder, currentLang, cities]);
+    }, [viewMode, sortOrder, currentLang, cities, t]);
 
     const getCityStyle = (city) => {
         if (city.isRegionalCapital) {

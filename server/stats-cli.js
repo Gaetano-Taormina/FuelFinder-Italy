@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import * as readline from 'node:readline/promises';
 import crypto from 'crypto';
 import 'dotenv/config';
@@ -30,7 +31,7 @@ const rl = readline.createInterface({
             console.error("\n[Error] Accesso Negato: Passkey errata.\n");
             process.exit(1);
         }
-    } catch (e) {
+    } catch {
         console.error("\n[Error] Accesso Negato: Errore di validazione.\n");
         process.exit(1);
     }

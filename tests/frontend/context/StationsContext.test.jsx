@@ -1,7 +1,7 @@
 import { render, screen, act, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { StationsProvider, useStations } from '../../../src/context/StationsContext';
-import { MemoryRouter, useSearchParams, useLocation, Routes, Route, useNavigate } from 'react-router-dom';
+import { MemoryRouter, useLocation, Routes, Route, useNavigate } from 'react-router-dom';
 import { SWRConfig } from 'swr';
 
 // Salva le properties originali di window
@@ -11,15 +11,13 @@ const originalOpen = window.open;
 // Componente fittizio per leggere e scrivere nel Context
 const TestConsumer = () => {
   const {
-    stations, totalStations, loading, isFetchingBackground, error,
-    locationStr, setLocationStr, radius, setRadius,
-    fuelType, setFuelType, serviceType, setServiceType,
-    userPos, setUserPos, selectedStation, setSelectedStation,
+    stations, totalStations,
+    fuelType, setFuelType,
+    setUserPos, setSelectedStation,
     routeData, handleNavigation
   } = useStations();
 
   // Test usiamo un URL search param per mostrare come interagisce setFuelType
-  const [searchParams] = useSearchParams();
   const location = useLocation();
 
   return (

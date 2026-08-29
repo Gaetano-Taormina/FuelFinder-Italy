@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import express from 'express';
 import compression from 'compression';
 import cors from 'cors';
@@ -12,7 +13,7 @@ process.on('uncaughtException', (err) => {
     process.exit(1);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason, _promise) => {
     console.error('[FATAL] Unhandled Rejection:', reason);
     process.exit(1);
 });
@@ -205,7 +206,7 @@ async function setupDatabase() {
             console.warn("[WARN] Rilevata corruzione o stato inconsistente del database locale. Tento il ripristino automatico...");
             try {
                 if (db) db.close();
-            } catch (e) {} // Ignora errori di chiusura
+            } catch {} // Ignora errori di chiusura
             
             // Elimina i file corrotti
             const filesToDelete = [localDbPath, `${localDbPath}-shm`, `${localDbPath}-wal`, `${localDbPath}-info`];

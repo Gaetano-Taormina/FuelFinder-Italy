@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 export const globalErrorHandler = (err, req, res, next) => {
     // 1. Log the error (with stack trace in development)
     /* v8 ignore start */

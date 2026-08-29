@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 export const BATCH_SIZE = 2500;
 
 export async function initSchema(db) {
@@ -34,7 +35,7 @@ export async function getLastModified(db) {
     try {
         const lastSync = await db.execute(`SELECT value FROM sync_meta WHERE key = 'URL_PREZZI'`);
         return lastSync.rows.length > 0 ? lastSync.rows[0].value : null;
-    } catch (e) {
+    } catch {
         // Table might not exist yet
         return null;
     }
@@ -55,13 +56,13 @@ export async function loadExistingData(db) {
   try {
       const stRes = await db.execute("SELECT id, gestore, bandiera, tipo_impianto, nome_impianto, indirizzo, comune, provincia, latitudine, longitudine FROM stations");
       for (const r of stRes.rows) existingStations.set(r.id, r);
-  } catch(e) {}
+  } catch {}
   
   const existingPrices = new Map();
   try {
       const prRes = await db.execute("SELECT id_impianto, desc_carburante, prezzo, is_self, dt_comunicazione FROM prices");
       for (const r of prRes.rows) existingPrices.set(`${r.id_impianto}_${r.desc_carburante}_${r.is_self}`, r);
-  } catch(e) {}
+  } catch {}
 
   console.log(`Dati caricati: ${existingStations.size} stazioni, ${existingPrices.size} prezzi.`);
   return { existingStations, existingPrices };

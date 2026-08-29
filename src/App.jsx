@@ -41,8 +41,8 @@ const getRealCityName = async (slug, lang) => {
         if (data.valid) {
             return data.city.name;
         }
-    } catch (e) {
-        console.error("Errore validazione città:", e);
+    } catch {
+        // Error ignored to keep console clean
     }
     return (slug.charAt(0).toUpperCase() + slug.slice(1).toLowerCase());
 };
@@ -52,7 +52,7 @@ function LayoutContent() {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
-    const { stations, fuelType, setLocationStr, setUserPos, userPos, selectedStation, setSelectedStation } = useStations();
+    const { stations, fuelType, setLocationStr, setUserPos, userPos, setSelectedStation } = useStations();
     const [viewMode, setViewMode] = useState('map');
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
     const [mapInteractive, setMapInteractive] = useState(false);
@@ -111,7 +111,7 @@ function LayoutContent() {
 
     // Traccia la visita al caricamento dell'app
     useEffect(() => {
-        fetch('/api/visit').catch(e => console.error('Errore tracciamento visita:', e));
+        fetch('/api/visit').catch(() => {});
     }, []);
 
     // Auto-search for city from URL
@@ -134,7 +134,7 @@ function LayoutContent() {
                             setUserPos({ lat: parseFloat(lat), lng: parseFloat(lon) });
                         }
                     })
-                    .catch(err => console.error("Geocoding error for city route:", err));
+                    .catch(() => {});
             });
         }
     }, [city, setLocationStr, setUserPos, location.state, currLang]);
@@ -177,7 +177,7 @@ function LayoutContent() {
                                     if (validateData.valid) {
                                         let targetCitySlug = searchSlug;
                                         if (currLang === 'en' && Object.values(enToItCities).includes(searchSlug)) {
-                                             const enEntry = Object.entries(enToItCities).find(([en, it]) => it === searchSlug);
+                                             const enEntry = Object.entries(enToItCities).find(([, it]) => it === searchSlug);
                                              if (enEntry) targetCitySlug = enEntry[0];
                                         }
                                         
@@ -202,11 +202,11 @@ function LayoutContent() {
                                             lastGeocodedPos.current = posKey;
                                         }
                                     }
-                                }).catch(err => console.error("Validation error:", err));
+                                }).catch(() => {});
                         }
                     }
                 })
-                .catch(err => console.error("Reverse geocoding error:", err));
+                .catch(() => {});
         }
     }, [userPos, currLang, location.pathname, location.search, navigate, fuelType]);
 
@@ -223,7 +223,7 @@ function LayoutContent() {
             }
             let targetCitySlug = searchSlug;
             if (nextLang === 'en') {
-                const enEntry = Object.entries(enToItCities).find(([en, it]) => it === targetCitySlug);
+                const enEntry = Object.entries(enToItCities).find(([, it]) => it === targetCitySlug);
                 if (enEntry) targetCitySlug = enEntry[0];
             }
             

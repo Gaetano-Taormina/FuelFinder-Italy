@@ -9,7 +9,7 @@ export default function GPSButton({ onLocationFound }) {
         try {
             const coords = await locate();
             onLocationFound(coords);
-        } catch (err) {
+        } catch {
             alert(t('dyn_gps_error'));
         }
     };

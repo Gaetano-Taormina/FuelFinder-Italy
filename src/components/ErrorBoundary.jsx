@@ -6,7 +6,7 @@ export class ErrorBoundary extends React.Component {
         this.state = { hasError: false, error: null, errorInfo: null };
     }
 
-    static getDerivedStateFromError(error) {
+    static getDerivedStateFromError(_error) {
         return { hasError: true };
     }
 
@@ -15,6 +15,7 @@ export class ErrorBoundary extends React.Component {
             error: error,
             errorInfo: errorInfo
         });
+        // eslint-disable-next-line no-console
         console.error("ErrorBoundary caught an error:", error, errorInfo);
     }
 

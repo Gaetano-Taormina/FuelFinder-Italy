@@ -1,9 +1,10 @@
 import { createContext, useState, useEffect, useContext } from 'react';
-import { useSearchParams, useParams, useNavigate, useLocation, matchPath } from 'react-router-dom';
+import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
 
 const StationsContext = createContext();
 
+// eslint-disable-next-line react/only-export-components
 export const useStations = () => useContext(StationsContext);
 
 const fetcher = async (url) => {
@@ -13,10 +14,9 @@ const fetcher = async (url) => {
 };
 
 export const StationsProvider = ({ children }) => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const { fuel, lang, city } = useParams();
+  const [searchParams] = useSearchParams();
+  const { fuel, city } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
 
   // Mapping for URL translation
   const fuelToEn = { 'Benzina': 'Petrol', 'Gasolio': 'Diesel', 'GPL': 'LPG', 'Metano': 'CNG' };
@@ -36,14 +36,9 @@ export const StationsProvider = ({ children }) => {
   const [serviceType, setServiceType] = useState('1'); // '1' = self, '0' = served, 'entrambi' = both
 
   // Sync state if URL changes (e.g. back button)
-  useEffect(() => {
-    if (rawFuel) {
-      const normalized = enToFuel[rawFuel.toLowerCase()] || rawFuel;
-      if (normalized !== fuelType) {
-        setFuelTypeInternal(normalized);
-      }
-    }
-  }, [rawFuel, fuelType]);
+  if (initialFuel !== fuelType) {
+    setFuelTypeInternal(initialFuel);
+  }
 
   const setFuelType = (type) => {
     setFuelTypeInternal(type);
@@ -72,8 +67,13 @@ export const StationsProvider = ({ children }) => {
   const [userPos, setUserPos] = useState(null); // { lat, lng }
   
   // Selected Station State
-  const [selectedStation, setSelectedStation] = useState(null);
+  const [selectedStation, setSelectedStationInternal] = useState(null);
   const [routeData, setRouteData] = useState(null);
+
+  const setSelectedStation = (station) => {
+    setSelectedStationInternal(station);
+    if (!station) setRouteData(null);
+  };
 
   // SWR Fetch for Stations (Caching & Optimistic UI)
   const stationsUrl = userPos 
@@ -96,10 +96,7 @@ export const StationsProvider = ({ children }) => {
 
   // Fetch route when a station is selected
   useEffect(() => {
-    if (!selectedStation || !userPos) {
-      setRouteData(null);
-      return;
-    }
+    if (!selectedStation || !userPos) return;
 
     const fetchRoute = async () => {
       try {
@@ -113,8 +110,8 @@ export const StationsProvider = ({ children }) => {
             duration: data.routes[0].duration
           });
         }
-      } catch (err) {
-        console.error("OSRM Route Error", err);
+      } catch {
+        // Error ignored to keep console clean
       }
     };
     fetchRoute();

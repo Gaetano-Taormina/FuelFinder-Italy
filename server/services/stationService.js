@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { StationRepository } from '../repositories/stationRepository.js';
 
 export class StationService {

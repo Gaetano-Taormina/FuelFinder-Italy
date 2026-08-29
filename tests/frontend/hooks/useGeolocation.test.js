@@ -1,4 +1,5 @@
-import { renderHook, act } from '@testing-library/react';
+/* eslint-disable no-console */
+import { act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useGeolocation } from '../../../src/hooks/useGeolocation';
 

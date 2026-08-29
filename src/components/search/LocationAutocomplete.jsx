@@ -10,7 +10,7 @@ export default function LocationAutocomplete({
     setShowSuggestions, 
     onSuggestionClick 
 }) {
-    const { t } = fromTranslation();
+    const { t } = useTranslation();
     const wrapperRef = useRef(null);
 
     useEffect(() => {
@@ -54,8 +54,4 @@ export default function LocationAutocomplete({
             )}
         </div>
     );
-}
-
-function fromTranslation() {
-    return useTranslation();
 }

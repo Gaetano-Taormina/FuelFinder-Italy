@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+
 import { describe, it, expect, vi } from 'vitest';
 
 // Mocks to prevent issues with complex contexts or third party libraries during basic render tests

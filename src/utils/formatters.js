@@ -10,7 +10,7 @@ export const formatStationName = (name) => {
         .replace(/\s+/g, ' ')
         .trim();
 
-    cleanName = cleanName.replace(/[,.\-]$/, '').trim();
+    cleanName = cleanName.replace(/[,.-]$/, '').trim();
 
     if (cleanName === cleanName.toUpperCase() && cleanName.length > 4) {
         cleanName = cleanName.split(' ').map(word => {

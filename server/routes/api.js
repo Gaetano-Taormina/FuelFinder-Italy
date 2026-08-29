@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { ApiController } from '../controllers/apiController.js';
 
 export function setupApiRoutes(app, db) {
