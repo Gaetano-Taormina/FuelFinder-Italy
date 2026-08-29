@@ -54,6 +54,12 @@ app.use((req, res, next) => {
     if (process.env.MAINTENANCE_MODE === 'true') {
         res.status(503);
         res.set('Retry-After', '259200'); // 3 giorni in secondi, fondamentale per non perdere posizionamento SEO su Google
+        
+        // Se la richiesta è per un'API (es. dalla PWA cachata), restituiamo JSON
+        if (req.path.startsWith('/api/')) {
+            return res.json({ success: false, error: 'FuelFinder Italy è in manutenzione. Riprova tra qualche giorno.' });
+        }
+
         return res.send(`
             <!DOCTYPE html>
             <html lang="it">
