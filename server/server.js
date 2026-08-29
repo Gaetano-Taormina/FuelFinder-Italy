@@ -201,7 +201,7 @@ async function setupDatabase() {
         }
     } catch (err) {
         const errMsg = err.message || err.toString();
-        if (errMsg.includes('SQLITE_CORRUPT') || errMsg.includes('malformed') || errMsg.includes('invalid local state')) {
+        if (errMsg.includes('SQLITE_CORRUPT') || errMsg.includes('malformed') || errMsg.includes('invalid local state') || errMsg.includes('WalConflict')) {
             console.warn("[WARN] Rilevata corruzione o stato inconsistente del database locale. Tento il ripristino automatico...");
             try {
                 if (db) db.close();
