@@ -1,7 +1,7 @@
 # FuelFinder Italia
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Click_Here-blue?style=for-the-badge)](https://fuelfinder-msn8.onrender.com)
-[![Version](https://img.shields.io/badge/version-1.1.0-brightgreen?style=for-the-badge)](https://github.com/Gaetano-Taormina/FuelFinder-Italy/releases)
+[![Version](https://img.shields.io/badge/version-1.2.0-brightgreen?style=for-the-badge)](https://github.com/Gaetano-Taormina/FuelFinder-Italy/releases)
 
 **Choose your language / Scegli la tua lingua:**
 
@@ -33,6 +33,7 @@ The data shown is real and based on official Open Data from the Italian Ministry
 - **Admin Dashboard:** Secure passkey-protected panel at `/admin-stats` for visualizing site traffic and usage stats.
 - **Lighthouse Optimized:** Next-gen image formats (WebP) and optimized React chunks for maximum speed.
 - **Robust Testing (v1.1):** 100% Code Coverage achieved through Vitest and Happy-DOM, ensuring enterprise-grade stability.
+- **Maintenance & Linting (v1.2):** Switched to Oxlint for lightning-fast linting, dynamic maintenance countdowns, and clean, English-only synthetic logging.
 
 ### Architecture and Structure
 
@@ -86,6 +87,7 @@ I dati mostrati sono reali e basati sugli Open Data ufficiali del Ministero.
 - **Dashboard Admin:** Pannello protetto da passkey sicura alla rotta `/admin-stats` per monitorare il traffico e l'utilizzo del sito.
 - **Ottimizzazione Lighthouse:** Immagini in formato WebP e caricamenti separati per massimizzare le prestazioni del browser.
 - **Test Robusti (v1.1):** 100% di Code Coverage raggiunto tramite Vitest e Happy-DOM, per garantire una stabilità di livello enterprise.
+- **Manutenzione e Linting (v1.2):** Passaggio a Oxlint per un linting fulmineo, countdown di manutenzione dinamico e log testuali ottimizzati, sintetici ed interamente in lingua inglese.
 
 ### Architettura e Struttura
 
