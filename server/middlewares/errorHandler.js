@@ -11,11 +11,19 @@ export const globalErrorHandler = (err, req, res, next) => {
 
     const errMsg = err.message || err.toString();
     
-    // 2. Critical errors that require process restart
+    // 2. Critical errors that require process restart or maintenance
     /* v8 ignore start */
     if (errMsg.includes('SQLITE_CORRUPT') || errMsg.includes('malformed')) {
         console.error("[FATAL] Corrupted database detected. Closing process to trigger auto-recovery.");
         process.exit(1); // This will force PM2 / Render / Nodemon to restart the app
+    }
+    
+    // Rilevamento Quota Turso esaurita
+    const errString = errMsg.toLowerCase();
+    if (errString.includes('quota') || errString.includes('billing') || errString.includes('exceeded') || errString.includes('payment required') || errString.includes('resource_exhausted')) {
+        console.warn("[WARN] Rilevato esaurimento crediti Turso! Attivazione automatica Maintenance Mode.");
+        process.env.MAINTENANCE_MODE = 'true';
+        // Il prossimo request sarà intercettato dal middleware di manutenzione in server.js
     }
 
     // 3. Check if HTTP headers are already sent

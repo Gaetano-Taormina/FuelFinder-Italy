@@ -17,6 +17,14 @@ export async function sync(dbClient, retries = 8) {
   try {
     await doSync(dbClient);
   } catch (error) {
+    const errMsg = (error.message || '').toLowerCase();
+    
+    // Rilevamento Quota Turso esaurita anche durante il sync in background
+    if (errMsg.includes('quota') || errMsg.includes('billing') || errMsg.includes('exceeded') || errMsg.includes('payment required') || errMsg.includes('resource_exhausted')) {
+        console.warn("[WARN] Rilevato esaurimento crediti Turso durante il Sync! Attivazione automatica Maintenance Mode.");
+        process.env.MAINTENANCE_MODE = 'true';
+    }
+
     console.error(`[Sync] Errore durante la sincronizzazione:`, error.message);
     if (retries > 0) {
       console.log(`[Sync] Ritento tra 5 minuti... (Tentativi rimasti: ${retries})`);
