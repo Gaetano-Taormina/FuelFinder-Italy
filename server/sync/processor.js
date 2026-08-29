@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+/* oxlint-disable no-console */
 import fs from "fs";
 import { parse } from "csv-parse";
 
@@ -15,15 +15,13 @@ const parseOptions = {
 async function parseCsv(filePath, rowProcessor) {
     const fileStream = fs.createReadStream(filePath);
     const parser = fileStream.pipe(parse(parseOptions));
-
+    
     let count = 0;
     for await (const record of parser) {
         rowProcessor(record);
         count++;
         
-        // Yield al Node.js Event Loop ogni 500 righe
-        // Questo è CRITICO per permettere ad Express di rispondere agli Health Check di Render
-        // durante il parsing massivo dei CSV, altrimenti Render crederà che l'app sia morta e la riavvierà.
+        // Yield all'event loop per non bloccare Express
         if (count % 500 === 0) {
             await new Promise(resolve => setImmediate(resolve));
         }

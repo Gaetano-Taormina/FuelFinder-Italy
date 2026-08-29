@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+/* oxlint-disable no-console */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ApiController } from '../../server/controllers/apiController.js';
 

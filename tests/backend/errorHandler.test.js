@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+/* oxlint-disable no-console */
 import { describe, it, expect, vi } from 'vitest';
 import { globalErrorHandler } from '../../server/middlewares/errorHandler.js';
 

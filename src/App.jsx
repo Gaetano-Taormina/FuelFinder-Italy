@@ -331,7 +331,7 @@ function LayoutContent() {
             
             {(viewMode === 'map' || viewMode === 'both') && (
                 <main className="p-0 sm:p-4 relative flex flex-col max-w-7xl mx-auto w-full grow">
-                    {/* eslint-disable-next-line react-perf/jsx-no-jsx-as-prop */}
+                    {/* oxlint-disable-next-line react-perf/jsx-no-jsx-as-prop */}
                     <Suspense fallback={<MapLoadingSkeleton />}>
                         {mapInteractive ? <MapArea /> : <MapWaitingSkeleton />}
                         <RoutePanel />

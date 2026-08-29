@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+/* oxlint-disable no-console */
 export const timeoutMiddleware = (ms = 10000) => {
     return (req, res, next) => {
         // Express non ha un timeout nativo che interrompe l'esecuzione lato server,

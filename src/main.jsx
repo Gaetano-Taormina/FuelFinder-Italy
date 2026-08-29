@@ -1,4 +1,4 @@
-/* eslint-disable react/only-export-components */
+/* oxlint-disable react/only-export-components */
 import { StrictMode, lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'

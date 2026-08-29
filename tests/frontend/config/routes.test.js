@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+/* oxlint-disable no-console */
 import { describe, it, expect } from 'vitest';
 import { ROUTES, getCityPath, getExplorePath } from '../../../src/config/routes';
 

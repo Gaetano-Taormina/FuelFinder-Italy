@@ -8,7 +8,7 @@ const StationsContext = createContext();
 const fuelToEn = { 'Benzina': 'Petrol', 'Gasolio': 'Diesel', 'GPL': 'LPG', 'Metano': 'CNG' };
 const enToFuel = { 'petrol': 'Benzina', 'diesel': 'Gasolio', 'lpg': 'GPL', 'cng': 'Metano', 'benzina': 'Benzina', 'gasolio': 'Gasolio', 'gpl': 'GPL', 'metano': 'Metano' };
 
-// eslint-disable-next-line react/only-export-components
+// oxlint-disable-next-line react/only-export-components
 export const useStations = () => useContext(StationsContext);
 
 const fetcher = async (url) => {
@@ -83,22 +83,22 @@ export const StationsProvider = ({ children }) => {
     : null;
 
   const { data: stationsData, error, isLoading, isValidating } = useSWR(stationsUrl, fetcher, {
-    keepPreviousData: true, // Abilita Optimistic UI (mostra i vecchi dati mentre carica i nuovi)
-    revalidateOnFocus: false, // Evita chiamate inutili tornando alla tab
-    dedupingInterval: 10000 // Cache le richieste identiche per 10 secondi
+    keepPreviousData: true, // Optimistic UI
+    revalidateOnFocus: false,
+    dedupingInterval: 10000
   });
 
   const stations = useMemo(() => stationsData?.stations || (Array.isArray(stationsData) ? stationsData : []), [stationsData]);
   const totalStations = stationsData?.totalCount || stations.length || 0;
   
-  // Usiamo isValidating per capire se SWR sta facendo un fetch in background,
-  // così possiamo mostrare uno skeleton o dimming senza far sparire la tabella.
+  // Utilizza isValidating per skeleton non distruttivo in background
   const loading = isLoading;
   const isFetchingBackground = isValidating && !isLoading;
 
   // Fetch route when a station is selected
   useEffect(() => {
     if (!selectedStation || !userPos) {
+        // oxlint-disable-next-line react/set-state-in-effect
         setRouteData(null);
         return;
     }
@@ -116,6 +116,7 @@ export const StationsProvider = ({ children }) => {
           });
         }
       } catch (err) {
+        // oxlint-disable-next-line no-console
         console.error('OSRM Fetch Error:', err);
       }
     };
@@ -128,13 +129,13 @@ export const StationsProvider = ({ children }) => {
     const stationName = encodeURIComponent(station.brand || station.name);
 
     if (isAndroid) {
-        // Su Android, geo: triggera il menu nativo del sistema operativo (es. Maps, Waze, ecc.)
+        // Triggera menu nativo (Maps, Waze)
         window.location.href = `geo:${station.lat},${station.lng}?q=${station.lat},${station.lng}(${stationName})`;
     } else if (isIOS) {
-        // Su iOS, aprirà Mappe nativamente
+        // Apre Mappe nativamente
         window.location.href = `maps://?q=${stationName}&ll=${station.lat},${station.lng}`;
     } else {
-        // Su PC/Desktop va dritto a Google Maps nel browser
+        // Desktop
         window.open(`https://www.google.com/maps/dir/?api=1&destination=${station.lat},${station.lng}`, '_blank');
     }
   }, []);

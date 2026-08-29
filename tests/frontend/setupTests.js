@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+/* oxlint-disable no-console */
 import '@testing-library/jest-dom/vitest';
 import { vi } from 'vitest';
 

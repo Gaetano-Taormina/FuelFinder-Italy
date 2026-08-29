@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+/* oxlint-disable no-console */
 import express from 'express';
 import compression from 'compression';
 import cors from 'cors';
@@ -7,7 +7,7 @@ import path from 'path';
 import fs from 'fs';
 import 'dotenv/config';
 
-// --- GESTIONE DEGLI ERRORI DI SISTEMA (es. Render timeout/kill) ---
+// --- GESTIONE ERRORI DI SISTEMA ---
 process.on('uncaughtException', (err) => {
     console.error('[FATAL] Uncaught Exception:', err);
     process.exit(1);
@@ -39,7 +39,7 @@ const slugify = (text) => {
         .replace(/-+$/, '');
 };
 
-import { sync } from './sync.js';
+import { sync } from './sync/index.js';
 import { cities } from './cities.js';
 import { securityHeaders, rateLimiter } from './middlewares/security.js';
 import { analyticsMiddleware, trackStaticVisit, setAnalyticsDb } from './middlewares/analytics.js';
@@ -50,10 +50,8 @@ import { setupApiRoutes } from './routes/api.js';
 let isReady = false;
 const app = express();
 
-// --- 1. HEALTHCHECK AUTOMATICO & UNIVERSALE (RENDER / GITHUB / TURSO) ---
-// Questo blocco deve rimanere IN CIMA a tutto (prima di body parser, timeout, cors, ecc.).
-// Garantisce che Render riceva sempre un 200 OK istantaneo, indipendentemente 
-// da quanto tempo impiega Turso a sincronizzarsi all'avvio. Non dovrai più toccarlo.
+// --- 1. HEALTHCHECK ---
+// Risponde subito 200 OK a Render per evitare timeout all'avvio.
 app.use((req, res, next) => {
     const ua = (req.headers['user-agent'] || '').toLowerCase();
     
@@ -81,9 +79,7 @@ app.use((req, res, next) => {
         return res.status(200).send('OK');
     }
     
-    // 3. Se l'app sta ancora inizializzando il database Turso (isReady = false), 
-    // mettiamo in attesa le chiamate degli utenti, ma rispondiamo OK sulla root 
-    // nel caso in cui un check automatico punti lì.
+    // 3. Durante l'inizializzazione DB, metti in attesa gli utenti ma rispondi OK sulla root.
     if (!isReady) {
         if (req.path === '/') return res.status(200).send('OK - Inizializzazione in corso');
         return res.status(503).send('Servizio in fase di avvio, riprova tra qualche secondo...');
@@ -122,9 +118,32 @@ app.use((req, res, next) => {
                 <div class="container">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     <h1>Sito in Manutenzione</h1>
-                    <p>FuelFinder Italy è temporaneamente offline per un aggiornamento dei servizi infrastrutturali.</p>
-                    <p>Torneremo online nei prossimi giorni. Grazie per la pazienza!</p>
+                    <p>FuelFinder Italy è temporaneamente offline per manutenzione programmata.</p>
+                    <p>Il servizio tornerà online al termine del seguente conto alla rovescia. Grazie per la pazienza!</p>
+                    <div id="countdown" style="font-size: 2.2rem; font-weight: bold; margin-top: 30px; color: #38bdf8; font-variant-numeric: tabular-nums; letter-spacing: 2px;"></div>
                 </div>
+                <script>
+                    function updateCountdown() {
+                        const now = new Date();
+                        // Il prossimo avvio previsto è il 1° giorno del mese successivo
+                        const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+                        const diff = nextMonth - now;
+                        
+                        const isNegative = diff < 0;
+                        const absDiff = Math.abs(diff);
+
+                        const d = Math.floor(absDiff / (1000 * 60 * 60 * 24));
+                        const h = String(Math.floor((absDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+                        const m = String(Math.floor((absDiff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+                        const s = String(Math.floor((absDiff % (1000 * 60)) / 1000)).padStart(2, '0');
+
+                        const sign = isNegative ? "-" : "";
+                        document.getElementById('countdown').innerHTML = sign + d + "g " + h + ":" + m + ":" + s;
+                    }
+                    
+                    updateCountdown();
+                    setInterval(updateCountdown, 1000);
+                </script>
             </body>
             </html>
         `);
@@ -161,11 +180,10 @@ app.use(analyticsMiddleware);
 const DB_TOKEN = process.env.TURSO_AUTH_TOKEN;
 const syncUrl = process.env.TURSO_DATABASE_URL;
 
-// Percorso per il database locale (Embedded Replica)
+// DB locale (Embedded Replica)
 const localDbPath = path.join(process.env.DATA_DIR || path.join(process.cwd(), 'server'), 'database.sqlite');
 
 let db;
-// (isReady e healthchecks sono gestiti in cima al file per prevenire i timeout di Render)
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, '0.0.0.0', () => {
@@ -183,13 +201,12 @@ async function setupDatabase() {
     try {
         db = createClient(clientOptions);
         
-        // Eseguiamo query più profonde per verificare se il file è corrotto internamente
+        // Query profonda per verificare corruzione
         try {
             await db.execute('SELECT COUNT(*) FROM stations');
             await db.execute('SELECT COUNT(*) FROM prices');
         } catch (e) {
-            // Se le tabelle non esistono ancora (primo avvio), va bene. 
-            // Se è corrotto, lancerà l'errore che verrà catturato dal catch principale
+            // Ignora se le tabelle non esistono (primo avvio). L'errore corruzione verrà rilanciato.
             if (e.message && (e.message.includes('SQLITE_CORRUPT') || e.message.includes('malformed'))) {
                 throw e;
             }
@@ -527,23 +544,22 @@ app.use(async (req, res) => {
             let originalSlug = cityMatch[3].toLowerCase();
             let citySlug = originalSlug;
             
-            // Se in inglese, cerchiamo se c'è una traduzione verso l'italiano per la ricerca
+            // Fallback ITA per ricerca in EN
             if (lang === 'en') {
                 citySlug = enToItCities[citySlug] || citySlug; 
             }
             
-            // Normalizziamo l'input (rimuove gli spazi, es. per "mercato saraceno" -> "mercato-saraceno")
+            // Normalizza input
             const normalizedSlug = slugify(citySlug);
             const realCityObj = cities.find(c => slugify(c) === normalizedSlug);
             
             if (!realCityObj) {
-                // Città non valida, ritorna 404 per evitare Soft 404
+                // 404 per evitare soft-404 su città non valide
                 return res.status(404).sendFile(indexPath);
             }
             
-            // Controlla se l'URL ha spazi o non è formattato correttamente come slug
+            // Redirect slug mal formattati
             const expectedOriginalSlug = lang === 'en' ? slugify(itToEnCities[normalizedSlug] || normalizedSlug) : normalizedSlug;
-            // Usa decodeURIComponent nel caso in cui req.path contenga '%20' originale
             if (decodeURIComponent(originalSlug) !== expectedOriginalSlug) {
                 const searchParams = req.url.substring(req.path.length);
                 return res.redirect(301, `/${lang}/${lang === 'it' ? 'citta' : 'city'}/${expectedOriginalSlug}${searchParams}`);

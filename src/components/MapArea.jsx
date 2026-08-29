@@ -173,8 +173,7 @@ function MapFixer() {
   const { selectedStation } = useStations();
 
   useEffect(() => {
-    // Forza il ricalcolo delle dimensioni della mappa dopo il mount 
-    // e l'applicazione delle classi CSS per evitare glitch visivi
+    // Evita glitch visivi al mount
     const timer = setTimeout(() => {
       map.invalidateSize();
     }, 300);
