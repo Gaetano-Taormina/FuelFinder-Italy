@@ -195,7 +195,9 @@ async function setupDatabase() {
     if (syncUrl && syncUrl.startsWith('libsql://')) {
         clientOptions.syncUrl = syncUrl;
         clientOptions.authToken = DB_TOKEN;
-        clientOptions.syncInterval = 60;
+        // Ridotto a 43200s (12 ore) per avere un check di sicurezza a metà giornata.
+        // L'app fa una sincronizzazione forzata (db.sync()) ogni volta che il cron job giornaliero scrive dati.
+        clientOptions.syncInterval = 43200;
     }
 
     try {
@@ -902,3 +904,18 @@ function scheduleDailySync() {
         }
     }, delay);
 }
+
+// --- AUTO-RECOVERY DA MAINTENANCE MODE ---
+// Controlla ogni 30 minuti se la quota di Turso è tornata disponibile
+setInterval(async () => {
+    if (process.env.MAINTENANCE_MODE === 'true' && db) {
+        try {
+            await db.execute("SELECT 1");
+            console.log("[INFO] Turso quota restored! Disabling Maintenance Mode automatically.");
+            process.env.MAINTENANCE_MODE = 'false';
+        } catch {
+            // Quota ancora esaurita, la manutenzione resta attiva silenziosamente
+        }
+    }
+}, 1000 * 60 * 30);
+
