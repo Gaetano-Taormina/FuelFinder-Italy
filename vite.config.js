@@ -47,6 +47,8 @@ export default defineConfig(({ mode }) => ({
     coverage: {
       provider: "v8",
       reportsDirectory: "tests/coverage",
+      clean: true,
+      cleanOnRerun: true,
       exclude: ["server/middlewares/analytics.js", "server/stats-cli.js"],
       reporter: [
         ["text", { maxCols: 80 }]
