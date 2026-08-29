@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      react-ecosystem:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "react-router-dom"
+      vite-ecosystem:
+        patterns:
+          - "vite"
+          - "@vitejs/*"
+          - "vitest"
+    commit-message:
+      prefix: "chore(deps)"
