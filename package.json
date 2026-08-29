@@ -19,7 +19,7 @@
     "dev": "concurrently \"vite --host\" \"node server/server.js\"",
     "start": "node server/server.js",
     "sync": "node -e \"import('./server/sync.js').then(m => m.sync())\"",
-    "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build --emptyOutDir",
+    "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build --emptyOutDir --logLevel warn",
     "preview": "vite preview",
     "stats": "node server/stats-cli.js",
     "lint": "oxlint -c .oxlintrc.json",
