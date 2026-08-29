@@ -34,14 +34,6 @@ export default defineConfig(({ mode }) => ({
       ignored: ["**/server/**"],
     },
   },
-  esbuild:
-    mode === "test"
-      ? undefined
-      : {
-          drop: ["console", "debugger"],
-          legalComments: "none",
-          treeShaking: true,
-        },
   test: {
     slowTestThreshold: 1000,
     coverage: {
