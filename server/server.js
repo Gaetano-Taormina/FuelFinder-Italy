@@ -247,6 +247,10 @@ async function setupDatabase() {
                     console.log("[INFO] Database ripristinato e sincronizzato con successo!");
                 }).catch(e => console.error("Errore sync di ripristino:", e));
             }
+        } else if (errMsg.includes('403') || errMsg.includes('quota') || errMsg.includes('blocked') || errMsg.includes('Forbidden')) {
+            console.warn("[WARN] Turso Quota Exceeded during init! Attivazione automatica Maintenance Mode.");
+            process.env.MAINTENANCE_MODE = 'true';
+            db = null;
         } else {
             console.error("ERRORE FATALE durante l'inizializzazione di Turso:", err);
             process.exit(1);

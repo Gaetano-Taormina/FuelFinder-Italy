@@ -5,6 +5,7 @@ let dailyStats = {};
 let dbClient = null;
 
 export const setAnalyticsDb = async (db) => {
+    if (!db) return;
     dbClient = db;
     // Crea la tabella se non esiste
     await db.execute(`
