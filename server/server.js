@@ -195,9 +195,11 @@ async function setupDatabase() {
     if (syncUrl && syncUrl.startsWith('libsql://')) {
         clientOptions.syncUrl = syncUrl;
         clientOptions.authToken = DB_TOKEN;
-        // Ridotto a 43200s (12 ore) per avere un check di sicurezza a metà giornata.
-        // L'app fa una sincronizzazione forzata (db.sync()) ogni volta che il cron job giornaliero scrive dati.
-        clientOptions.syncInterval = 43200;
+        
+        // Se la manutenzione è attiva, non pianificare i sync automatici in background
+        if (process.env.MAINTENANCE_MODE !== 'true') {
+            clientOptions.syncInterval = 43200;
+        }
     }
 
     try {
@@ -214,10 +216,12 @@ async function setupDatabase() {
             }
         }
 
-        if (clientOptions.syncUrl) {
+        if (clientOptions.syncUrl && process.env.MAINTENANCE_MODE !== 'true') {
             db.sync().then(() => {
                 console.log("[INFO] Local DB synced.");
             }).catch(e => console.error("Background sync error:", e));
+        } else if (process.env.MAINTENANCE_MODE === 'true') {
+            console.log("[INFO] Maintenance Mode is active. Skipping initial DB sync.");
         }
     } catch (err) {
         const errMsg = err.message || err.toString();
