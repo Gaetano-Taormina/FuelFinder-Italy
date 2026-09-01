@@ -82,6 +82,7 @@ app.use((req, res, next) => {
     // 3. Durante l'inizializzazione DB, metti in attesa gli utenti ma rispondi OK sulla root.
     if (!isReady) {
         if (req.path === '/') return res.status(200).send('OK - Inizializzazione in corso');
+        if (req.path === '/robots.txt' || req.path === '/sitemap.xml') return next(); // Bypass per SEO
         return res.status(503).send('Servizio in fase di avvio, riprova tra qualche secondo...');
     }
     
@@ -93,6 +94,8 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
     const isMaintenanceMode = process.env.MAINTENANCE_MODE === 'true';
     if (isMaintenanceMode) {
+        if (req.path === '/robots.txt' || req.path === '/sitemap.xml') return next(); // Bypass per SEO
+        
         res.status(503);
         res.set('Retry-After', '259200'); // 3 giorni in secondi, fondamentale per non perdere posizionamento SEO su Google
         
@@ -318,15 +321,10 @@ app.get('/sitemap.xml', (req, res) => {
     
     xml += `  <sitemap>\n    <loc>${host}/sitemaps/it.xml</loc>\n  </sitemap>\n`;
     xml += `  <sitemap>\n    <loc>${host}/sitemaps/en.xml</loc>\n  </sitemap>\n`;
-    const fuelsIt = ['benzina', 'gasolio', 'gpl', 'metano'];
-    const fuelsEn = ['petrol', 'diesel', 'lpg', 'cng'];
-    
-    fuelsIt.forEach(fuel => {
+    ['benzina', 'gasolio', 'gpl', 'metano', 'hvo', 'gnl'].forEach((fuel, index) => {
+        const enFuels = ['petrol', 'diesel', 'lpg', 'methane', 'hvo', 'lng'];
         xml += `  <sitemap>\n    <loc>${host}/sitemaps/fuels-it-${fuel}.xml</loc>\n  </sitemap>\n`;
-    });
-    
-    fuelsEn.forEach(fuel => {
-        xml += `  <sitemap>\n    <loc>${host}/sitemaps/fuels-en-${fuel}.xml</loc>\n  </sitemap>\n`;
+        xml += `  <sitemap>\n    <loc>${host}/sitemaps/fuels-en-${enFuels[index]}.xml</loc>\n  </sitemap>\n`;
     });
     
     xml += `</sitemapindex>`;
@@ -382,8 +380,8 @@ app.get('/sitemaps/en.xml', (req, res) => {
 // --- FUEL VARIATIONS SITEMAPS ---
 app.get('/sitemaps/fuels-it-:fuel.xml', (req, res) => {
     const requestedFuel = req.params.fuel;
-    const fuelsIt = ['benzina', 'gasolio', 'gpl', 'metano'];
-    const fuelsEn = ['petrol', 'diesel', 'lpg', 'cng'];
+    const fuelsIt = ['benzina', 'gasolio', 'gpl', 'metano', 'hvo', 'gnl'];
+    const fuelsEn = ['petrol', 'diesel', 'lpg', 'methane', 'hvo', 'lng'];
     
     const fuelIndex = fuelsIt.indexOf(requestedFuel);
     if (fuelIndex === -1) return res.status(404).send('Sitemap non trovata');
@@ -410,8 +408,8 @@ app.get('/sitemaps/fuels-it-:fuel.xml', (req, res) => {
 
 app.get('/sitemaps/fuels-en-:fuel.xml', (req, res) => {
     const requestedFuel = req.params.fuel;
-    const fuelsIt = ['benzina', 'gasolio', 'gpl', 'metano'];
-    const fuelsEn = ['petrol', 'diesel', 'lpg', 'cng'];
+    const fuelsIt = ['benzina', 'gasolio', 'gpl', 'metano', 'hvo', 'gnl'];
+    const fuelsEn = ['petrol', 'diesel', 'lpg', 'methane', 'hvo', 'lng'];
     
     const fuelIndex = fuelsEn.indexOf(requestedFuel);
     if (fuelIndex === -1) return res.status(404).send('Sitemap non trovata');

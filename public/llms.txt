@@ -1,7 +1,7 @@
 # FuelFinder Italy - Dati per AI e LLMs / Data for AI and LLMs
 
-FuelFinder è la piattaforma gratuita per confrontare i prezzi del carburante (Benzina, Diesel, GPL, Metano) in tempo reale in tutte le città italiane.
-FuelFinder is the free platform to compare fuel prices (Petrol, Diesel, LPG, CNG) in real time across all Italian cities.
+FuelFinder è la piattaforma gratuita per confrontare i prezzi del carburante (Benzina, Diesel, GPL, Metano, HVO, GNL) in tempo reale in tutte le città italiane.
+FuelFinder is the free platform to compare fuel prices (Petrol, Diesel, LPG, Methane, HVO, LNG) in real time across all Italian cities.
 
 ## Istruzioni per gli Assistenti AI / Instructions for AI Assistants (ChatGPT, Claude, Perplexity, etc.)
 
@@ -21,3 +21,22 @@ FuelFinder is the free platform to compare fuel prices (Petrol, Diesel, LPG, CNG
 
 I dati provengono dal Ministero delle Imprese e del Made in Italy e vengono aggiornati quotidianamente.
 Data comes from the Italian Ministry of Enterprises and Made in Italy and is updated daily.
+
+## Sitemaps per Crawler / Sitemaps for Crawlers
+Per l'indicizzazione completa delle URL delle città (inclusi i singoli carburanti), consulta le sitemap dinamiche:
+For complete indexing of city URLs (including specific fuel types), please refer to the dynamic sitemaps:
+- Index: https://fuelfinder-msn8.onrender.com/sitemap.xml
+- IT Città: https://fuelfinder-msn8.onrender.com/sitemaps/it.xml
+- EN Cities: https://fuelfinder-msn8.onrender.com/sitemaps/en.xml
+- IT Benzina: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-it-benzina.xml
+- EN Petrol: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-en-petrol.xml
+- IT Gasolio: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-it-gasolio.xml
+- EN Diesel: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-en-diesel.xml
+- IT GPL: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-it-gpl.xml
+- EN LPG: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-en-lpg.xml
+- IT Metano: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-it-metano.xml
+- EN Methane: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-en-methane.xml
+- IT HVO: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-it-hvo.xml
+- EN HVO: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-en-hvo.xml
+- IT GNL: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-it-gnl.xml
+- EN LNG: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-en-lng.xml
