@@ -82,7 +82,7 @@ app.use((req, res, next) => {
     // 3. Durante l'inizializzazione DB, metti in attesa gli utenti ma rispondi OK sulla root.
     if (!isReady) {
         if (req.path === '/') return res.status(200).send('OK - Inizializzazione in corso');
-        if (req.path === '/robots.txt' || req.path === '/sitemap.xml') return next(); // Bypass per SEO
+        if (req.path === '/robots.txt' || req.path === '/sitemap.xml' || req.path.startsWith('/sitemaps/')) return next(); // Bypass per SEO
         return res.status(503).send('Servizio in fase di avvio, riprova tra qualche secondo...');
     }
     
@@ -94,7 +94,7 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
     const isMaintenanceMode = process.env.MAINTENANCE_MODE === 'true';
     if (isMaintenanceMode) {
-        if (req.path === '/robots.txt' || req.path === '/sitemap.xml') return next(); // Bypass per SEO
+        if (req.path === '/robots.txt' || req.path === '/sitemap.xml' || req.path.startsWith('/sitemaps/')) return next(); // Bypass per SEO
         
         res.status(503);
         res.set('Retry-After', '259200'); // 3 giorni in secondi, fondamentale per non perdere posizionamento SEO su Google
