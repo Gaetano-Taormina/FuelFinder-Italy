@@ -89,8 +89,10 @@ app.use((req, res, next) => {
 });
 
 // --- 0. MAINTENANCE MODE (SEO FRIENDLY) ---
+// Note: MAINTENANCE_MODE is managed via Render Environment Variables.
 app.use((req, res, next) => {
-    if (process.env.MAINTENANCE_MODE === 'true') {
+    const isMaintenanceMode = process.env.MAINTENANCE_MODE === 'true';
+    if (isMaintenanceMode) {
         res.status(503);
         res.set('Retry-After', '259200'); // 3 giorni in secondi, fondamentale per non perdere posizionamento SEO su Google
         
