@@ -8,7 +8,7 @@ import { URL_ANAGRAFICA, URL_PREZZI, checkUpdates, downloadFile } from "./networ
 import { initSchema, getLastModified, loadExistingData, applyChanges, setLastModified } from "./database.js";
 import { processStationsDiff, processPricesDiff, processDeletions } from "./processor.js";
 
-export async function sync(dbClient, retries = 8) {
+export async function sync(dbClient, retries = 8, options = {}) {
   if (!dbClient) {
     const DB_URL = process.env.TURSO_DATABASE_URL || "file:" + path.join(process.env.DATA_DIR || path.join(process.cwd(), "server"), "database.sqlite");
     const DB_TOKEN = process.env.TURSO_AUTH_TOKEN;
@@ -16,7 +16,7 @@ export async function sync(dbClient, retries = 8) {
   }
 
   try {
-    await doSync(dbClient);
+    await doSync(dbClient, options);
   } catch (error) {
     const errMsg = (error.message || '').toLowerCase();
     
@@ -36,7 +36,7 @@ export async function sync(dbClient, retries = 8) {
   }
 }
 
-async function doSync(db) {
+async function doSync(db, options = {}) {
   console.log("Starting MIMIT sync to Turso...");
 
   await initSchema(db);
@@ -59,13 +59,19 @@ async function doSync(db) {
   try {
       console.log(`Downloading ${URL_ANAGRAFICA}...`);
       anagraficaFile = await downloadFile(URL_ANAGRAFICA);
-      await processStationsDiff(anagraficaFile, existingStations, syncOperations, seenStationIds);
+      await processStationsDiff(anagraficaFile, existingStations, syncOperations, seenStationIds, options);
 
       console.log(`Downloading ${URL_PREZZI}...`);
       prezziFile = await downloadFile(URL_PREZZI);
-      await processPricesDiff(prezziFile, existingPrices, syncOperations, seenPriceIds);
+      await processPricesDiff(prezziFile, existingPrices, syncOperations, seenPriceIds, options);
 
       processDeletions(existingStations, existingPrices, seenStationIds, seenPriceIds, syncOperations);
+      
+      if (options.dryRun) {
+          console.log(`\n[DRY RUN] Sincronizzazione simulata completata.`);
+          console.log(`[DRY RUN] Query totali calcolate che sarebbero state inviate: ${syncOperations.length}`);
+          return;
+      }
       
       await applyChanges(db, syncOperations);
       

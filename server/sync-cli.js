@@ -1,3 +1,4 @@
+/* oxlint-disable no-console */
 import 'dotenv/config';
 import { createClient } from '@libsql/client';
 import { sync } from './sync/index.js';
@@ -15,8 +16,11 @@ const db = createClient({
     authToken: DB_TOKEN
 });
 
-console.log("Starting manual sync...");
-sync(db).then(() => {
+const args = process.argv.slice(2);
+const isDryRun = args.includes('--dry-run');
+
+console.log("Starting manual sync" + (isDryRun ? " (DRY-RUN MODE)" : "") + "...");
+sync(db, 8, { dryRun: isDryRun, showProgress: true }).then(() => {
     console.log("Manual sync finished.");
     process.exit(0);
 }).catch(err => {

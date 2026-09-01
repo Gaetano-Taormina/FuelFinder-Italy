@@ -154,7 +154,7 @@ export const StationsProvider = ({ children }) => {
   }), [
       stations, totalStations, loading, isFetchingBackground, error,
       locationStr, radius, fuelType, serviceType, userPos, selectedStation, routeData,
-      setFuelType, handleNavigation
+      setFuelType, handleNavigation, setSelectedStation
   ]);
 
   return (

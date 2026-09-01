@@ -12,7 +12,8 @@ const parseOptions = {
     from_line: 3,
 };
 
-async function parseCsv(filePath, rowProcessor) {
+async function parseCsv(filePath, rowProcessor, options) {
+    const fileSize = fs.statSync(filePath).size;
     const fileStream = fs.createReadStream(filePath);
     const parser = fileStream.pipe(parse(parseOptions));
     
@@ -21,14 +22,24 @@ async function parseCsv(filePath, rowProcessor) {
         rowProcessor(record);
         count++;
         
+        if (options?.showProgress && count % 2000 === 0) {
+            const percent = Math.min(100, Math.round((fileStream.bytesRead / fileSize) * 100));
+            const bar = '█'.repeat(Math.floor(percent / 5)) + '░'.repeat(20 - Math.floor(percent / 5));
+            process.stdout.write(`\r  [${bar}] ${percent}% `);
+        }
+        
         // Yield all'event loop per non bloccare Express
         if (count % 500 === 0) {
             await new Promise(resolve => setImmediate(resolve));
         }
     }
+    
+    if (options?.showProgress) {
+        process.stdout.write(`\r  [${'█'.repeat(20)}] 100%\n`);
+    }
 }
 
-export async function processStationsDiff(filePath, existingStations, syncOperations, seenStationIds) {
+export async function processStationsDiff(filePath, existingStations, syncOperations, seenStationIds, options) {
     console.log(`Parsing stations...`);
     await parseCsv(filePath, (r) => {
         if (r.length < 10) return;
@@ -61,10 +72,10 @@ export async function processStationsDiff(filePath, existingStations, syncOperat
                 args: [gestore, bandiera, tipo_impianto, nome_impianto, indirizzo, comune, provincia, latitudine, longitudine, id]
             });
         }
-    });
+    }, options);
 }
 
-export async function processPricesDiff(filePath, existingPrices, syncOperations, seenPriceIds) {
+export async function processPricesDiff(filePath, existingPrices, syncOperations, seenPriceIds, options) {
     console.log(`Parsing prices...`);
     await parseCsv(filePath, (r) => {
         if (r.length < 5) return;
@@ -89,7 +100,7 @@ export async function processPricesDiff(filePath, existingPrices, syncOperations
                 args: [prezzo, dt_comunicazione, id_impianto, desc_carburante, is_self]
             });
         }
-    });
+    }, options);
 }
 
 export function processDeletions(existingStations, existingPrices, seenStationIds, seenPriceIds, syncOperations) {
