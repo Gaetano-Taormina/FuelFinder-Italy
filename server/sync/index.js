@@ -49,7 +49,12 @@ async function doSync(db, options = {}) {
 
   const { existingStations, existingPrices } = await loadExistingData(db);
 
-  const syncOperations = [];
+  const syncOps = {
+      upsertStations: [],
+      upsertPrices: [],
+      deleteStations: [],
+      deletePrices: []
+  };
   const seenStationIds = new Set();
   const seenPriceIds = new Set();
 
@@ -59,21 +64,22 @@ async function doSync(db, options = {}) {
   try {
       console.log(`Downloading ${URL_ANAGRAFICA}...`);
       anagraficaFile = await downloadFile(URL_ANAGRAFICA);
-      await processStationsDiff(anagraficaFile, existingStations, syncOperations, seenStationIds, options);
+      await processStationsDiff(anagraficaFile, existingStations, syncOps, seenStationIds, options);
 
       console.log(`Downloading ${URL_PREZZI}...`);
       prezziFile = await downloadFile(URL_PREZZI);
-      await processPricesDiff(prezziFile, existingPrices, syncOperations, seenPriceIds, options);
+      await processPricesDiff(prezziFile, existingPrices, syncOps, seenPriceIds, options);
 
-      processDeletions(existingStations, existingPrices, seenStationIds, seenPriceIds, syncOperations);
+      processDeletions(existingStations, existingPrices, seenStationIds, seenPriceIds, syncOps);
       
       if (options.dryRun) {
+          const totalQueries = syncOps.upsertStations.length + syncOps.upsertPrices.length + syncOps.deleteStations.length + syncOps.deletePrices.length;
           console.log(`\n[DRY RUN] Sincronizzazione simulata completata.`);
-          console.log(`[DRY RUN] Query totali calcolate che sarebbero state inviate: ${syncOperations.length}`);
+          console.log(`[DRY RUN] Righe totali calcolate che sarebbero state inviate: ${totalQueries}`);
           return;
       }
       
-      await applyChanges(db, syncOperations);
+      await applyChanges(db, syncOps);
       
       await setLastModified(db, updateCheck.newLastModified);
       

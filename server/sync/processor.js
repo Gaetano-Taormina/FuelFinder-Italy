@@ -58,19 +58,13 @@ export async function processStationsDiff(filePath, existingStations, syncOperat
 
         const old = existingStations.get(id);
         if (!old) {
-            syncOperations.push({
-                sql: `INSERT INTO stations (id, gestore, bandiera, tipo_impianto, nome_impianto, indirizzo, comune, provincia, latitudine, longitudine) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                args: [id, gestore, bandiera, tipo_impianto, nome_impianto, indirizzo, comune, provincia, latitudine, longitudine]
-            });
+            syncOps.upsertStations.push([id, gestore, bandiera, tipo_impianto, nome_impianto, indirizzo, comune, provincia, latitudine, longitudine]);
         } else if (
             old.gestore !== gestore || old.bandiera !== bandiera || old.tipo_impianto !== tipo_impianto ||
             old.nome_impianto !== nome_impianto || old.indirizzo !== indirizzo || old.comune !== comune ||
             old.provincia !== provincia || old.latitudine !== latitudine || old.longitudine !== longitudine
         ) {
-            syncOperations.push({
-                sql: `UPDATE stations SET gestore=?, bandiera=?, tipo_impianto=?, nome_impianto=?, indirizzo=?, comune=?, provincia=?, latitudine=?, longitudine=? WHERE id=?`,
-                args: [gestore, bandiera, tipo_impianto, nome_impianto, indirizzo, comune, provincia, latitudine, longitudine, id]
-            });
+            syncOps.upsertStations.push([id, gestore, bandiera, tipo_impianto, nome_impianto, indirizzo, comune, provincia, latitudine, longitudine]);
         }
     }, options);
 }
@@ -90,30 +84,24 @@ export async function processPricesDiff(filePath, existingPrices, syncOperations
 
         const old = existingPrices.get(key);
         if (!old) {
-            syncOperations.push({
-                sql: `INSERT INTO prices (id_impianto, desc_carburante, prezzo, is_self, dt_comunicazione) VALUES (?, ?, ?, ?, ?)`,
-                args: [id_impianto, desc_carburante, prezzo, is_self, dt_comunicazione]
-            });
+            syncOps.upsertPrices.push([id_impianto, desc_carburante, prezzo, is_self, dt_comunicazione]);
         } else if (old.prezzo !== prezzo || old.dt_comunicazione !== dt_comunicazione) {
-            syncOperations.push({
-                sql: `UPDATE prices SET prezzo=?, dt_comunicazione=? WHERE id_impianto=? AND desc_carburante=? AND is_self=?`,
-                args: [prezzo, dt_comunicazione, id_impianto, desc_carburante, is_self]
-            });
+            syncOps.upsertPrices.push([id_impianto, desc_carburante, prezzo, is_self, dt_comunicazione]);
         }
     }, options);
 }
 
-export function processDeletions(existingStations, existingPrices, seenStationIds, seenPriceIds, syncOperations) {
+export function processDeletions(existingStations, existingPrices, seenStationIds, seenPriceIds, syncOps) {
     console.log("Calculating deletions...");
     for (const id of existingStations.keys()) {
         if (!seenStationIds.has(id)) {
-            syncOperations.push({ sql: `DELETE FROM stations WHERE id=?`, args: [id] });
+            syncOps.deleteStations.push([id]);
         }
     }
     for (const key of existingPrices.keys()) {
         if (!seenPriceIds.has(key)) {
             const old = existingPrices.get(key);
-            syncOperations.push({ sql: `DELETE FROM prices WHERE id_impianto=? AND desc_carburante=? AND is_self=?`, args: [old.id_impianto, old.desc_carburante, old.is_self] });
+            syncOps.deletePrices.push([old.id_impianto, old.desc_carburante, old.is_self]);
         }
     }
 }

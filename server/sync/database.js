@@ -68,14 +68,51 @@ export async function loadExistingData(db) {
   return { existingStations, existingPrices };
 }
 
-export async function applyChanges(db, syncOperations) {
-  console.log(`SQL queries for Turso: ${syncOperations.length}`);
-  if (syncOperations.length > 0) {
-      for (let i = 0; i < syncOperations.length; i += BATCH_SIZE) {
-          const chunk = syncOperations.slice(i, i + BATCH_SIZE);
-          // oxlint-disable-next-line no-await-in-loop
-          await db.batch(chunk, "write");
-      }
-      console.log(`Saved in batches of ${BATCH_SIZE}.`);
-  }
+export async function applyChanges(db, syncOps) {
+    const batchedQueries = [];
+
+    // Stations UPSERT (10 vars per row, max 90 rows per query = 900 vars)
+    const stationsChunkSize = 90;
+    const stationsSqlBase = `INSERT INTO stations (id, gestore, bandiera, tipo_impianto, nome_impianto, indirizzo, comune, provincia, latitudine, longitudine) VALUES `;
+    const stationsOnConflict = ` ON CONFLICT(id) DO UPDATE SET gestore=excluded.gestore, bandiera=excluded.bandiera, tipo_impianto=excluded.tipo_impianto, nome_impianto=excluded.nome_impianto, indirizzo=excluded.indirizzo, comune=excluded.comune, provincia=excluded.provincia, latitudine=excluded.latitudine, longitudine=excluded.longitudine`;
+
+    for (let i = 0; i < syncOps.upsertStations.length; i += stationsChunkSize) {
+        const chunk = syncOps.upsertStations.slice(i, i + stationsChunkSize);
+        const placeholders = chunk.map(() => `(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).join(", ");
+        const args = chunk.flat();
+        batchedQueries.push({ sql: stationsSqlBase + placeholders + stationsOnConflict, args });
+    }
+
+    // Prices UPSERT (5 vars per row, max 180 rows per query = 900 vars)
+    const pricesChunkSize = 180;
+    const pricesSqlBase = `INSERT INTO prices (id_impianto, desc_carburante, prezzo, is_self, dt_comunicazione) VALUES `;
+    const pricesOnConflict = ` ON CONFLICT(id_impianto, desc_carburante, is_self) DO UPDATE SET prezzo=excluded.prezzo, dt_comunicazione=excluded.dt_comunicazione`;
+
+    for (let i = 0; i < syncOps.upsertPrices.length; i += pricesChunkSize) {
+        const chunk = syncOps.upsertPrices.slice(i, i + pricesChunkSize);
+        const placeholders = chunk.map(() => `(?, ?, ?, ?, ?)`).join(", ");
+        const args = chunk.flat();
+        batchedQueries.push({ sql: pricesSqlBase + placeholders + pricesOnConflict, args });
+    }
+
+    // Stations DELETE
+    for (const idArr of syncOps.deleteStations) {
+        batchedQueries.push({ sql: `DELETE FROM stations WHERE id=?`, args: idArr });
+    }
+
+    // Prices DELETE
+    for (const args of syncOps.deletePrices) {
+        batchedQueries.push({ sql: `DELETE FROM prices WHERE id_impianto=? AND desc_carburante=? AND is_self=?`, args });
+    }
+
+    console.log(`Sending ${batchedQueries.length} highly-optimized bulk queries to Turso...`);
+    if (batchedQueries.length > 0) {
+        const TURSO_BATCH_SIZE = 50; 
+        for (let i = 0; i < batchedQueries.length; i += TURSO_BATCH_SIZE) {
+            const chunk = batchedQueries.slice(i, i + TURSO_BATCH_SIZE);
+            // oxlint-disable-next-line no-await-in-loop
+            await db.batch(chunk, "write");
+        }
+        console.log(`Saved successfully.`);
+    }
 }
