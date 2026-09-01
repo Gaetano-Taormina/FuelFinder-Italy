@@ -139,6 +139,7 @@ export class ApiController {
 
             const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&email=contact@fuelfinder.it`;
             const fetchRes = await fetch(url, {
+                signal: AbortSignal.timeout(3500),
                 headers: {
                     'User-Agent': 'FuelFinderItaly/1.0 (contact@fuelfinder.it)'
                 }

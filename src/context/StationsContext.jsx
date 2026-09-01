@@ -72,10 +72,10 @@ export const StationsProvider = ({ children }) => {
   const [selectedStation, setSelectedStationInternal] = useState(null);
   const [routeData, setRouteData] = useState(null);
 
-  const setSelectedStation = (station) => {
+  const setSelectedStation = useCallback((station) => {
     setSelectedStationInternal(station);
     if (!station) setRouteData(null);
-  };
+  }, []);
 
   // SWR Fetch for Stations (Caching & Optimistic UI)
   const stationsUrl = userPos 
