@@ -39,21 +39,21 @@ export class ApiController {
         try {
             const clientPasskey = req.headers['x-admin-passkey'];
             const adminPasskey = process.env.ADMIN_PASSKEY;
-            
+
             if (!clientPasskey || !adminPasskey || clientPasskey.length !== adminPasskey.length) {
                 const err = new Error('Accesso Negato: Passkey mancante o di lunghezza non valida.');
                 err.status = 403;
                 err.expose = true;
                 throw err;
             }
-            
+
             if (!crypto.timingSafeEqual(Buffer.from(clientPasskey), Buffer.from(adminPasskey))) {
                 const err = new Error('Accesso Negato: Passkey non valida.');
                 err.status = 403;
                 err.expose = true;
                 throw err;
             }
-            
+
             const dailyStats = getDailyStats();
             const report = {};
             for (const [date, data] of Object.entries(dailyStats)) {
@@ -63,7 +63,7 @@ export class ApiController {
                     uniqueUsers: data.uniqueIps ? data.uniqueIps.length : 0
                 };
             }
-            
+
             res.json(report);
         } catch (error) {
             next(error);
@@ -75,7 +75,7 @@ export class ApiController {
         try {
             const validatedInput = validateStationsInput(req.query);
             const cacheKey = JSON.stringify(validatedInput);
-            
+
             if (apiCache.has(cacheKey)) {
                 const cached = apiCache.get(cacheKey);
                 if (Date.now() - cached.timestamp < CACHE_TTL) {
@@ -86,7 +86,7 @@ export class ApiController {
             }
 
             const results = await this.stationService.getStationsNearby(validatedInput);
-            
+
             if (apiCache.size >= MAX_CACHE_SIZE) {
                 // Svuota mezza cache se è troppo grande
                 const keys = Array.from(apiCache.keys());
@@ -94,7 +94,7 @@ export class ApiController {
                     apiCache.delete(keys[i]);
                 }
             }
-            
+
             apiCache.set(cacheKey, { data: results, timestamp: Date.now() });
             res.json(results);
         } catch (error) {
@@ -118,7 +118,7 @@ export class ApiController {
                 }
             });
             if (!fetchRes.ok) throw new Error(`Nominatim API error: ${fetchRes.status}`);
-            
+
             const data = await fetchRes.json();
             apiCache.set(cacheKey, { data, timestamp: Date.now() });
             res.json(data);
@@ -144,8 +144,17 @@ export class ApiController {
                     'User-Agent': 'FuelFinderItaly/1.0 (contact@fuelfinder.it)'
                 }
             });
-            if (!fetchRes.ok) throw new Error(`Nominatim API error: ${fetchRes.status}`);
-            
+            if (fetchRes.status === 429) {
+                const err = new Error('Too Many Requests');
+                err.status = 429;
+                throw err;
+            }
+            if (!fetchRes.ok) {
+                const err = new Error(`Nominatim API error: ${fetchRes.status}`);
+                err.status = fetchRes.status === 403 ? 403 : 502;
+                throw err;
+            }
+
             const data = await fetchRes.json();
             apiCache.set(cacheKey, { data, timestamp: Date.now() });
             res.json(data);
@@ -154,7 +163,7 @@ export class ApiController {
         }
     }
 
-    getCities = (req, res, next) => {
+    getCities = (_req, res, next) => {
         try {
             res.json(getCityData());
         } catch (error) {
@@ -166,11 +175,11 @@ export class ApiController {
         try {
             const { slug } = req.query;
             if (!slug) return res.status(400).json({ error: 'Missing slug parameter' });
-            
+
             const cities = getCityData();
             const normalizedSlug = slugify(slug);
             const realCityObj = cities.find(c => slugify(c.name) === normalizedSlug);
-            
+
             if (realCityObj) {
                 res.json({ valid: true, city: realCityObj });
             } else {
