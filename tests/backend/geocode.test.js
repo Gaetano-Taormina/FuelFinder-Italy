@@ -29,6 +29,8 @@ beforeAll(() => {
         }
         if (url.includes('/reverse')) {
             if (url.includes('error')) return Promise.resolve({ ok: false, status: 500 });
+            if (url.includes('lat=429')) return Promise.resolve({ ok: false, status: 429 });
+            if (url.includes('lat=403')) return Promise.resolve({ ok: false, status: 403 });
             return Promise.resolve({
                 ok: true,
                 json: () => Promise.resolve({ address: { city: "Roma" } })
@@ -80,6 +82,16 @@ describe('Backend Server API - Geocode', () => {
 
     it('dovrebbe gestire errori da Nominatim in /api/reverse-geocode', async () => {
         const res = await request(app).get('/api/reverse-geocode?lat=error&lon=error');
-        expect(res.status).toBe(500);
+        expect(res.status).toBe(502);
+    });
+
+    it('dovrebbe gestire Too Many Requests (429) da Nominatim in /api/reverse-geocode', async () => {
+        const res = await request(app).get('/api/reverse-geocode?lat=429&lon=429');
+        expect(res.status).toBe(429);
+    });
+
+    it('dovrebbe gestire Forbidden (403) da Nominatim in /api/reverse-geocode', async () => {
+        const res = await request(app).get('/api/reverse-geocode?lat=403&lon=403');
+        expect(res.status).toBe(403);
     });
 });
