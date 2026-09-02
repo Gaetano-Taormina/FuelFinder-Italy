@@ -30,6 +30,15 @@ describe('Sidebar Component', () => {
     const homeLink = screen.getByText('sidebar_home');
     fireEvent.click(homeLink);
     expect(handleClose).toHaveBeenCalledTimes(2);
+
+    // Testa la chiusura tramite tastiera sull'overlay
+    const overlay = document.querySelector('.fixed.inset-0.bg-slate-900\\/60');
+    fireEvent.keyDown(overlay, { key: 'Enter', code: 'Enter' });
+    expect(handleClose).toHaveBeenCalledTimes(3);
+    
+    // Testa un tasto ignorato (es. 'A')
+    fireEvent.keyDown(overlay, { key: 'A', code: 'KeyA' });
+    expect(handleClose).toHaveBeenCalledTimes(3); // Nessuna chiamata extra
   });
 
   it('dovrebbe renderizzare chiusa e con città di default (Italia) e lingua inglese', () => {

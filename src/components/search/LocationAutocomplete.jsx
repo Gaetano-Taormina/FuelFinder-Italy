@@ -4,11 +4,14 @@ import { useTranslation } from 'react-i18next';
 const SuggestionItem = memo(function SuggestionItem({ suggestion, onSuggestionClick }) {
     const handleClick = useCallback(() => onSuggestionClick(suggestion), [onSuggestionClick, suggestion]);
     return (
-        <li 
-            onClick={handleClick}
-            className="px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-600 cursor-pointer text-sm sm:text-base text-slate-800 dark:text-slate-200 border-b last:border-b-0 border-slate-200 dark:border-slate-600 truncate"
-        >
-            {suggestion.display_name}
+        <li>
+            <button
+                type="button"
+                onClick={handleClick}
+                className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-600 cursor-pointer text-sm sm:text-base text-slate-800 dark:text-slate-200 border-b last:border-b-0 border-slate-200 dark:border-slate-600 truncate"
+            >
+                {suggestion.display_name}
+            </button>
         </li>
     );
 });

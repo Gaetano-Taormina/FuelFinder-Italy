@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '../config/routes.js';
@@ -6,12 +6,20 @@ import { ROUTES } from '../config/routes.js';
 const Sidebar = memo(function Sidebar({ isOpen, onClose, cityName, langPrefix }) {
     const { t } = useTranslation();
 
+    const handleOverlayKeyDown = useCallback((e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            onClose();
+        }
+    }, [onClose]);
+
     return (
         <>
             {/* Sidebar Overlay */}
             <div 
+                aria-hidden="true"
                 className={`fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 transition-opacity duration-200 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
                 onClick={onClose}
+                onKeyDown={handleOverlayKeyDown}
             />
 
             {/* Sidebar Drawer */}

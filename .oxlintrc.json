@@ -6,7 +6,8 @@
     "react",
     "oxc",
     "react-perf",
-    "unicorn"
+    "unicorn",
+    "jsx-a11y"
   ],
   "rules": {
     "react-perf/jsx-no-jsx-as-prop": "off",
