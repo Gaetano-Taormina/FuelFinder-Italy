@@ -39,7 +39,7 @@ async function parseCsv(filePath, rowProcessor, options) {
     }
 }
 
-export async function processStationsDiff(filePath, existingStations, syncOperations, seenStationIds, options) {
+export async function processStationsDiff(filePath, existingStations, syncOps, seenStationIds, options) {
     console.log(`Parsing stations...`);
     await parseCsv(filePath, (r) => {
         if (r.length < 10) return;
@@ -69,7 +69,7 @@ export async function processStationsDiff(filePath, existingStations, syncOperat
     }, options);
 }
 
-export async function processPricesDiff(filePath, existingPrices, syncOperations, seenPriceIds, options) {
+export async function processPricesDiff(filePath, existingPrices, syncOps, seenPriceIds, options) {
     console.log(`Parsing prices...`);
     await parseCsv(filePath, (r) => {
         if (r.length < 5) return;
@@ -85,7 +85,7 @@ export async function processPricesDiff(filePath, existingPrices, syncOperations
         const old = existingPrices.get(key);
         if (!old) {
             syncOps.upsertPrices.push([id_impianto, desc_carburante, prezzo, is_self, dt_comunicazione]);
-        } else if (old.prezzo !== prezzo || old.dt_comunicazione !== dt_comunicazione) {
+        } else if (old.prezzo !== prezzo) {
             syncOps.upsertPrices.push([id_impianto, desc_carburante, prezzo, is_self, dt_comunicazione]);
         }
     }, options);
