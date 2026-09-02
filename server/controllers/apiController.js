@@ -101,67 +101,7 @@ export class ApiController {
             next(error);
         }
     }
-    getGeocode = async (req, res, next) => {
-        try {
-            const { q } = req.query;
-            if (!q) return res.status(400).json({ error: 'Missing query parameter q' });
 
-            const cacheKey = `geo_${q}`;
-            if (apiCache.has(cacheKey)) {
-                return res.json(apiCache.get(cacheKey).data);
-            }
-
-            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&email=contact@fuelfinder.it`;
-            const fetchRes = await fetch(url, {
-                headers: {
-                    'User-Agent': 'FuelFinderItaly/1.0 (contact@fuelfinder.it)'
-                }
-            });
-            if (!fetchRes.ok) throw new Error(`Nominatim API error: ${fetchRes.status}`);
-
-            const data = await fetchRes.json();
-            apiCache.set(cacheKey, { data, timestamp: Date.now() });
-            res.json(data);
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    getReverseGeocode = async (req, res, next) => {
-        try {
-            const { lat, lon } = req.query;
-            if (!lat || !lon) return res.status(400).json({ error: 'Missing lat or lon parameters' });
-
-            const cacheKey = `revgeo_${lat}_${lon}`;
-            if (apiCache.has(cacheKey)) {
-                return res.json(apiCache.get(cacheKey).data);
-            }
-
-            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&email=contact@fuelfinder.it`;
-            const fetchRes = await fetch(url, {
-                signal: AbortSignal.timeout(3500),
-                headers: {
-                    'User-Agent': 'FuelFinderItaly/1.0 (contact@fuelfinder.it)'
-                }
-            });
-            if (fetchRes.status === 429) {
-                const err = new Error('Too Many Requests');
-                err.status = 429;
-                throw err;
-            }
-            if (!fetchRes.ok) {
-                const err = new Error(`Nominatim API error: ${fetchRes.status}`);
-                err.status = fetchRes.status === 403 ? 403 : 502;
-                throw err;
-            }
-
-            const data = await fetchRes.json();
-            apiCache.set(cacheKey, { data, timestamp: Date.now() });
-            res.json(data);
-        } catch (error) {
-            next(error);
-        }
-    }
 
     getCities = (_req, res, next) => {
         try {

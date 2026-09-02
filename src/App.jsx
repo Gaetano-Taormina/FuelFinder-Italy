@@ -134,8 +134,7 @@ function LayoutContent() {
                     return;
                 }
                 
-                // Geocode the city
-                const geocodeUrl = `/api/geocode?q=${encodeURIComponent(cityName + ', Italia')}`;
+                const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cityName + ', Italia')}&email=contact@fuelfinder.it`;
                 fetch(geocodeUrl)
                     .then(res => res.json())
                     .then(data => {
@@ -171,8 +170,7 @@ function LayoutContent() {
         if (userPos && (userPos.type === 'click' || userPos.type === 'gps')) {
             const posKey = `${userPos.lat},${userPos.lng}`;
             if (lastGeocodedPos.current === posKey) return;
-            
-            const reverseUrl = `/api/reverse-geocode?lat=${userPos.lat}&lon=${userPos.lng}`;
+            const reverseUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${userPos.lat}&lon=${userPos.lng}&email=contact@fuelfinder.it`;
             fetch(reverseUrl)
                 .then(res => res.json())
                 .then(data => {
