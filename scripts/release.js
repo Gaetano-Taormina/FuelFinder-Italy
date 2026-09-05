@@ -37,10 +37,9 @@ const tagName = `v${newVersion}`;
 console.log(`\n🚀 Preparing release ${tagName}...\n`);
 
 try {
-    // Run linter and tests before tagging
-    console.log('📦 Running linter and tests...');
+    // Fast pre-release checks (full test suite runs in GitHub Actions CI)
+    console.log('📦 Running fast linter check...');
     execSync('pnpm run lint', { stdio: 'inherit' });
-    execSync('pnpm run test:coverage', { stdio: 'inherit' });
 
     // Stage package.json and commit
     execSync('git add package.json', { stdio: 'inherit' });

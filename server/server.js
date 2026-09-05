@@ -196,73 +196,34 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 async function setupDatabase() {
-    const clientOptions = { url: `file:${localDbPath}` };
-    if (syncUrl && syncUrl.startsWith('libsql://')) {
-        clientOptions.syncUrl = syncUrl;
-        clientOptions.authToken = DB_TOKEN;
-        // Sync guidato chirurgicamente via eventi/cron: disabilitato il timer automatico periodico per preservare la quota
+    let clientOptions;
+    if (syncUrl && (syncUrl.startsWith('libsql://') || syncUrl.startsWith('https://'))) {
+        // Direct Remote Client: queries Turso directly over HTTPS/WebSocket without downloading 23MB database on startup
+        clientOptions = {
+            url: syncUrl,
+            authToken: DB_TOKEN
+        };
+        console.log("[INFO] Connecting directly to Turso Cloud Database (Direct Remote Mode)...");
+    } else {
+        // Local SQLite fallback for offline / local testing
+        clientOptions = { url: `file:${localDbPath}` };
+        console.log(`[INFO] Using local SQLite database at ${localDbPath}`);
     }
 
     try {
         db = createClient(clientOptions);
         
-        // Query profonda per verificare corruzione
-        try {
-            await db.execute('SELECT COUNT(*) FROM stations');
-            await db.execute('SELECT COUNT(*) FROM prices');
-        } catch (e) {
-            // Ignora se le tabelle non esistono (primo avvio). L'errore corruzione verrà rilanciato.
-            if (e.message && (e.message.includes('SQLITE_CORRUPT') || e.message.includes('malformed'))) {
-                throw e;
-            }
-        }
-
-        if (clientOptions.syncUrl && process.env.MAINTENANCE_MODE !== 'true') {
-            const isLocalEmpty = !fs.existsSync(localDbPath) || fs.statSync(localDbPath).size < 1024 * 50;
-            if (isLocalEmpty || process.env.FORCE_SYNC === 'true') {
-                db.sync().then(() => {
-                    console.log("[INFO] Local DB initial sync completed.");
-                }).catch(e => console.error("Initial sync error:", e));
-            } else {
-                console.log("[INFO] Local database found. Skipping initial sync to save Turso quota.");
-            }
-        } else if (process.env.MAINTENANCE_MODE === 'true') {
-            console.log("[INFO] Maintenance Mode is active. Skipping initial DB sync.");
-        }
+        // Connectivity check
+        await db.execute('SELECT 1');
+        console.log("[INFO] Database connected successfully.");
     } catch (err) {
         const errMsg = err.message || err.toString();
-        if (errMsg.includes('SQLITE_CORRUPT') || errMsg.includes('malformed') || errMsg.includes('invalid local state') || errMsg.includes('WalConflict')) {
-            console.warn("[WARN] Local DB corrupted. Attempting recovery...");
-            try {
-                if (db) db.close();
-            } catch {} // Ignora errori di chiusura
-            
-            // Elimina i file corrotti
-            const filesToDelete = [localDbPath, `${localDbPath}-shm`, `${localDbPath}-wal`, `${localDbPath}-info`];
-            for (const file of filesToDelete) {
-                if (fs.existsSync(file)) {
-                    try {
-                        fs.unlinkSync(file);
-                    } catch (e) {
-                        console.error(`Failed to delete ${file}:`, e);
-                    }
-                }
-            }
-            
-            console.log("[INFO] Local files deleted. Resyncing from scratch...");
-            db = createClient(clientOptions);
-            
-            if (clientOptions.syncUrl) {
-                db.sync().then(() => {
-                    console.log("[INFO] Database ripristinato e sincronizzato con successo!");
-                }).catch(e => console.error("Errore sync di ripristino:", e));
-            }
-        } else if (errMsg.includes('403') || errMsg.includes('quota') || errMsg.includes('blocked') || errMsg.includes('Forbidden')) {
-            console.warn("[WARN] Turso Quota Exceeded during init! Attivazione automatica Maintenance Mode.");
+        if (errMsg.includes('403') || errMsg.includes('quota') || errMsg.includes('blocked') || errMsg.includes('Forbidden')) {
+            console.warn("[WARN] Turso Quota Exceeded during init! Enabling Maintenance Mode.");
             process.env.MAINTENANCE_MODE = 'true';
             db = null;
         } else {
-            console.error("ERRORE FATALE durante l'inizializzazione di Turso:", err);
+            console.error("[FATAL] Database initialization error:", err);
             process.exit(1);
         }
     }
