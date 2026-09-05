@@ -1,4 +1,4 @@
-name: CI Checks
+name: CI Pipeline
 
 on:
   push:
@@ -7,20 +7,20 @@ on:
     branches: [ main ]
 
 jobs:
-  test-and-lint:
+  validate-and-build:
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v7
+      uses: actions/checkout@v4
 
     - name: Install pnpm
-      uses: pnpm/action-setup@v6
+      uses: pnpm/action-setup@v4
       with:
-        version: 9
+        version: 11
 
     - name: Setup Node.js
-      uses: actions/setup-node@v7
+      uses: actions/setup-node@v4
       with:
         node-version: '24'
         cache: 'pnpm'
@@ -28,24 +28,25 @@ jobs:
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
 
-    - name: Run Linter
+    - name: Run Linter (Oxlint)
       run: pnpm run lint
 
-    - name: Run Tests
+    - name: Run Tests & Coverage
       run: pnpm run test:coverage
 
-    - name: Run Build
+    - name: Run Production Build
       run: pnpm run build
 
     - name: Upload Coverage Report
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@v4
+      if: always()
       with:
         name: coverage-report
         path: tests/coverage/
         retention-days: 7
 
     - name: Upload Build Artifacts
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@v4
       with:
         name: build-dist
         path: dist/

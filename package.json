@@ -28,6 +28,9 @@
     "test:integration": "node scripts/test-runner.js integration",
     "test:e2e": "node scripts/test-runner.js e2e",
     "test:coverage": "node scripts/test-runner.js coverage",
+    "release": "node scripts/release.js",
+    "release:minor": "node scripts/release.js minor",
+    "release:major": "node scripts/release.js major",
     "prepare": "husky"
   },
   "engines": {

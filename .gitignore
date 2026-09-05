@@ -25,6 +25,7 @@ dist-ssr
 *.sqlite-wal
 *.sqlite-shm
 *.sqlite-info
+database.sqlite*
 .tmp.*
 .env
 .env.local
@@ -40,18 +41,18 @@ server/storico.sqlite*
 server/storico_csv/
 server/anagrafica_impianti_attivi.csv
 
-# Test Scripts
+# Test & Coverage Outputs
 test-error.js
-coverage
 coverage/
 tests/coverage/
 test-results/
 playwright-report/
+.playwright/
 
-# Linting
+# Linting & Caches
 .lint_logs/
 .lint_logs
+.vite/
 
-# Git Hooks
-.husky/
-.husky
+# Git Hooks (ignore temporary husky internal cache, track hook scripts)
+.husky/_
