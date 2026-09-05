@@ -36,11 +36,12 @@ export default defineConfig(() => ({
   },
   test: {
     slowTestThreshold: 1000,
+    fileParallelism: true,
     coverage: {
       provider: "v8",
       reportsDirectory: "tests/coverage",
-      clean: true,
-      cleanOnRerun: true,
+      clean: false,
+      cleanOnRerun: false,
       exclude: ["server/middlewares/analytics.js", "server/stats-cli.js"],
       reporter: [
         ["text", { maxCols: 80 }]
@@ -50,19 +51,25 @@ export default defineConfig(() => ({
       {
         extends: true,
         test: {
-          name: 'frontend',
+          name: 'unit',
           environment: 'happy-dom',
           globals: true,
+          isolate: false,
           slowTestThreshold: 1000,
           setupFiles: ['./tests/frontend/setupTests.js'],
-          include: ['tests/frontend/**/*.{test,spec}.{js,jsx}'],
+          include: ['tests/frontend/**/*.{test,spec}.{js,jsx}', 'tests/backend/**/*.{test,spec}.{js,jsx}'],
         }
       },
       {
+        extends: true,
         test: {
-          name: 'backend',
-          environment: 'node',
-          include: ['tests/backend/**/*.{test,spec}.{js,jsx}'],
+          name: 'integration',
+          environment: 'happy-dom',
+          globals: true,
+          isolate: false,
+          slowTestThreshold: 1000,
+          setupFiles: ['./tests/frontend/setupTests.js'],
+          include: ['tests/integration/**/*.{test,spec}.{js,jsx}'],
         }
       }
     ]

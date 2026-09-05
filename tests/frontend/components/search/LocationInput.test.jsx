@@ -41,14 +41,14 @@ describe('LocationInput Component', () => {
         );
     };
 
-    it('dovrebbe renderizzare tutti i sotto-componenti', () => {
+    it('renders all sub-components and inputs', () => {
         renderComponent();
         expect(screen.getByPlaceholderText('ph_location')).toBeInTheDocument();
         expect(screen.getAllByRole('button', { name: /search/i }).length).toBeGreaterThan(0);
         expect(screen.getByRole('button', { name: 'title_gps' })).toBeInTheDocument();
     });
 
-    it('dovrebbe chiamare fetchSuggestions quando si digita testo lungo', async () => {
+    it('invokes fetchSuggestions when typing queries', async () => {
         renderComponent();
         const input = screen.getByPlaceholderText('ph_location');
         
@@ -56,10 +56,10 @@ describe('LocationInput Component', () => {
         
         await waitFor(() => {
             expect(mockFetchSuggestions).toHaveBeenCalledWith('Roma');
-        });
+        }, { interval: 5 });
     });
 
-    it('dovrebbe cancellare i suggerimenti se il testo è corto', () => {
+    it('clears suggestions when input text is too short', () => {
         renderComponent();
         const input = screen.getByPlaceholderText('ph_location');
         
@@ -67,7 +67,7 @@ describe('LocationInput Component', () => {
         expect(mockClearSuggestions).toHaveBeenCalled();
     });
 
-    it('dovrebbe eseguire la ricerca su click del bottone search', async () => {
+    it('executes coordinate search on search button click', async () => {
         renderComponent();
         const input = screen.getByPlaceholderText('ph_location');
         fireEvent.change(input, { target: { value: 'Milano' } });
@@ -77,10 +77,10 @@ describe('LocationInput Component', () => {
 
         await waitFor(() => {
             expect(mockSearchCoords).toHaveBeenCalledWith('Milano');
-        });
+        }, { interval: 5 });
     });
 
-    it('dovrebbe mostrare un alert se la ricerca fallisce', async () => {
+    it('displays an alert when location search fails', async () => {
         mockSearchCoords.mockResolvedValueOnce(null);
         window.alert = vi.fn();
         
@@ -93,11 +93,11 @@ describe('LocationInput Component', () => {
 
         await waitFor(() => {
             expect(window.alert).toHaveBeenCalledWith('dyn_not_found');
-        });
+        }, { interval: 5 });
         delete window.alert;
     });
 
-    it('dovrebbe gestire la selezione di un suggerimento', async () => {
+    it('handles suggestion selection and updates input value', async () => {
         useNominatim.mockReturnValue({
             suggestions: [{ place_id: 1, display_name: 'Torino', lat: '45.0', lon: '7.6' }],
             fetchSuggestions: mockFetchSuggestions,
@@ -115,10 +115,10 @@ describe('LocationInput Component', () => {
         
         await waitFor(() => {
             expect(input.value).toBe('Torino');
-        });
+        }, { interval: 5 });
     });
 
-    it('dovrebbe impostare dyn_current_pos al completamento del GPS', async () => {
+    it('sets dyn_current_pos on successful GPS location retrieval', async () => {
         const mockGeolocation = {
             getCurrentPosition: vi.fn().mockImplementation((success) => 
                 success({ coords: { latitude: 45, longitude: 9 } })
@@ -136,10 +136,10 @@ describe('LocationInput Component', () => {
         await waitFor(() => {
             const input = screen.getByPlaceholderText('ph_location');
             expect(input.value).toBe('dyn_current_pos');
-        });
+        }, { interval: 5 });
     });
 
-    it('non dovrebbe eseguire la ricerca se l\'input è vuoto', () => {
+    it('does not trigger search when input is empty or whitespace', () => {
         renderComponent();
         const input = screen.getByPlaceholderText('ph_location');
         fireEvent.change(input, { target: { value: '   ' } });
@@ -150,7 +150,7 @@ describe('LocationInput Component', () => {
         expect(mockSearchCoords).not.toHaveBeenCalled();
     });
 
-    it('non dovrebbe eseguire la ricerca se l\'input è dyn_current_pos', () => {
+    it('does not trigger search when input is dyn_current_pos', () => {
         renderComponent();
         const input = screen.getByPlaceholderText('ph_location');
         fireEvent.change(input, { target: { value: 'dyn_current_pos' } });

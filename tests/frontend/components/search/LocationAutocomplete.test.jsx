@@ -19,13 +19,13 @@ describe('LocationAutocomplete Component', () => {
         onSuggestionClick: vi.fn()
     };
 
-    it('dovrebbe renderizzare l\'input', () => {
+    it('renders text input with placeholder', () => {
         render(<LocationAutocomplete {...mockProps} />);
         expect(screen.getByPlaceholderText('ph_location')).toBeInTheDocument();
     });
 
-    it('dovrebbe gestire il focus e onKeyDown', () => {
-        render(<LocationAutocomplete {...mockProps} suggestions={[{place_id: 1}]} />);
+    it('handles input focus and keyboard navigation', () => {
+        render(<LocationAutocomplete {...mockProps} suggestions={[{ place_id: 1 }]} />);
         const input = screen.getByPlaceholderText('ph_location');
         
         fireEvent.focus(input);
@@ -38,7 +38,7 @@ describe('LocationAutocomplete Component', () => {
         expect(mockProps.onSearch).toHaveBeenCalled();
     });
 
-    it('dovrebbe renderizzare i suggerimenti e gestire il click', () => {
+    it('renders suggestions and handles click event', () => {
         const suggestions = [{ place_id: '1', display_name: 'Roma' }];
         render(<LocationAutocomplete {...mockProps} suggestions={suggestions} showSuggestions={true} />);
         
@@ -49,11 +49,11 @@ describe('LocationAutocomplete Component', () => {
         expect(mockProps.onSuggestionClick).toHaveBeenCalledWith(suggestions[0]);
     });
 
-    it('dovrebbe chiudere i suggerimenti cliccando fuori', () => {
+    it('closes suggestions when clicking outside', () => {
         render(
             <div>
                 <div data-testid="outside">Outside</div>
-                <LocationAutocomplete {...mockProps} suggestions={[{place_id: 1}]} showSuggestions={true} />
+                <LocationAutocomplete {...mockProps} suggestions={[{ place_id: 1 }]} showSuggestions={true} />
             </div>
         );
         
@@ -61,9 +61,9 @@ describe('LocationAutocomplete Component', () => {
         expect(mockProps.setShowSuggestions).toHaveBeenCalledWith(false);
     });
 
-    it('non dovrebbe chiudere i suggerimenti cliccando dentro', () => {
+    it('keeps suggestions open when clicking inside', () => {
         mockProps.setShowSuggestions.mockClear();
-        render(<LocationAutocomplete {...mockProps} suggestions={[{place_id: 1}]} showSuggestions={true} />);
+        render(<LocationAutocomplete {...mockProps} suggestions={[{ place_id: 1 }]} showSuggestions={true} />);
         
         fireEvent.mouseDown(screen.getByPlaceholderText('ph_location'));
         expect(mockProps.setShowSuggestions).not.toHaveBeenCalledWith(false);

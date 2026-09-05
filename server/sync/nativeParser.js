@@ -12,8 +12,12 @@ import readline from "node:readline";
  * @param {object} [options] - Opzioni (showProgress, skipLines)
  */
 export async function parsePipeDelimitedStream(filePath, rowProcessor, options = {}) {
+    if (!fs.existsSync(filePath)) {
+        return 0;
+    }
+
     const skipLines = options.skipLines ?? 2; // Default MIMIT: prime 2 righe di intestazione
-    const fileSize = fs.existsSync(filePath) ? fs.statSync(filePath).size : 0;
+    const fileSize = fs.statSync(filePath).size;
     const fileStream = fs.createReadStream(filePath, { encoding: "utf8", highWaterMark: 64 * 1024 });
 
     const rl = readline.createInterface({
@@ -36,13 +40,12 @@ export async function parsePipeDelimitedStream(filePath, rowProcessor, options =
         processedCount++;
 
         if (options.showProgress && processedCount % 2500 === 0 && fileSize > 0) {
-            const bytesRead = fileStream.bytesRead || 0;
-            const percent = Math.min(100, Math.round((bytesRead / fileSize) * 100));
+            const percent = Math.min(100, Math.round((fileStream.bytesRead / fileSize) * 100));
             const bar = "█".repeat(Math.floor(percent / 5)) + "░".repeat(20 - Math.floor(percent / 5));
             process.stdout.write(`\r  [${bar}] ${percent}% `);
         }
 
-        // Cede il controllo all'event loop periodicamente per mantenere reattivo il processo
+        // Cede il controllo all'event loop periodicamente per non bloccare Express
         if (processedCount % 1000 === 0) {
             await new Promise((resolve) => setImmediate(resolve));
         }

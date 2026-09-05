@@ -8,7 +8,7 @@ vi.mock('react-i18next', () => ({
 }));
 
 describe('Sidebar Component', () => {
-  it('dovrebbe renderizzare aperta con città specificata e chiudersi al click', () => {
+  it('renders open state with specified city and closes on click / keyboard', () => {
     const handleClose = vi.fn();
     render(
       <BrowserRouter>
@@ -19,44 +19,37 @@ describe('Sidebar Component', () => {
     expect(screen.getByText('Milano')).toBeInTheDocument();
     expect(screen.getByText('FuelFinder')).toBeInTheDocument();
 
-    // Trova il bottone di chiusura
     const closeBtn = screen.getByLabelText('Chiudi menu');
     fireEvent.click(closeBtn);
     expect(handleClose).toHaveBeenCalledTimes(1);
 
-    // Clicca l'overlay
-    // L'overlay non ha ruolo semantico facilmente accessibile se non è un button, ma possiamo prenderlo verificando la presenza della classe
-    // Più facile: cliccare un link che ha onClick={onClose}
     const homeLink = screen.getByText('sidebar_home');
     fireEvent.click(homeLink);
     expect(handleClose).toHaveBeenCalledTimes(2);
 
-    // Testa la chiusura tramite tastiera sull'overlay
     const overlay = document.querySelector('.fixed.inset-0.bg-slate-900\\/60');
     fireEvent.keyDown(overlay, { key: 'Enter', code: 'Enter' });
     expect(handleClose).toHaveBeenCalledTimes(3);
     
-    // Testa un tasto ignorato (es. 'A')
+    // Ignored key does not trigger close
     fireEvent.keyDown(overlay, { key: 'A', code: 'KeyA' });
-    expect(handleClose).toHaveBeenCalledTimes(3); // Nessuna chiamata extra
+    expect(handleClose).toHaveBeenCalledTimes(3);
   });
 
-  it('dovrebbe renderizzare chiusa e con città di default (Italia) e lingua inglese', () => {
+  it('renders closed state with default city (Italia) and English language', () => {
     render(
       <BrowserRouter>
         <Sidebar isOpen={false} onClose={vi.fn()} cityName="" langPrefix="en" />
       </BrowserRouter>
     );
 
-    // Quando non c'è cityName, usa "Italia" come fallback
     expect(screen.getByText('Italia')).toBeInTheDocument();
     
-    // Il link explore dovrebbe puntare a /en/explore quando langPrefix è en
     const exploreLink = screen.getByText('sidebar_explore');
     expect(exploreLink.getAttribute('href')).toBe('/en/explore');
   });
 
-  it('dovrebbe usare il fallback IT per explore se langPrefix è sconosciuto', () => {
+  it('falls back to IT explore route if langPrefix is not English', () => {
     render(
       <BrowserRouter>
         <Sidebar isOpen={false} onClose={vi.fn()} cityName="" langPrefix="fr" />

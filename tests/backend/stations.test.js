@@ -95,13 +95,13 @@ afterAll(() => {
 });
 
 describe('Backend Server API - GET /api/stations', () => {
-    it('dovrebbe ritornare 400 se mancano i parametri obbligatori (lat, lng, fuel)', async () => {
+    it('returns 400 when required parameters are missing (lat, lng, fuel)', async () => {
         const res = await request(app).get('/api/stations');
         expect(res.status).toBe(400);
         expect(res.body.success).toBe(false);
     });
 
-    it('dovrebbe ritornare i distributori vicini correttamente (geolocalizzazione)', async () => {
+    it('returns nearby stations correctly based on geolocation', async () => {
         const res = await request(app).get('/api/stations?lat=41.9&lng=12.5&radius=10&fuel=Benzina');
         expect(res.status).toBe(200);
         expect(res.body.stations).toBeDefined();
@@ -116,19 +116,19 @@ describe('Backend Server API - GET /api/stations', () => {
         expect(milanStation).toBeUndefined();
     });
     
-    it('dovrebbe ritornare array vuoto se non ci sono distributori nel raggio', async () => {
+    it('returns empty array when no stations are found within radius', async () => {
         const res = await request(app).get('/api/stations?lat=40.8&lng=14.2&radius=10&fuel=Benzina');
         expect(res.status).toBe(200);
         expect(res.body.stations).toEqual([]);
         expect(res.body.totalCount).toBe(0);
     });
 
-    it('dovrebbe testare validazioni di fallback per fuel e serviceType', async () => {
+    it('tests fallback validation for fuel and serviceType', async () => {
         const res = await request(app).get('/api/stations?lat=41.9&lng=12.5&radius=10&serviceType=entrambi');
         expect(res.status).toBe(200);
     });
 
-    it('dovrebbe testare validazioni fallite per lat/lng e raggio errati', async () => {
+    it('tests validation errors for invalid lat, lng, radius, and serviceType', async () => {
         let res = await request(app).get('/api/stations?lat=100&lng=12.5'); // lat > 90
         expect(res.status).toBe(400);
 
@@ -145,7 +145,7 @@ describe('Backend Server API - GET /api/stations', () => {
         expect(res.status).toBe(400);
     });
 
-    it('dovrebbe testare filtro serviceType = 0 (servito)', async () => {
+    it('tests serviceType filter = 0 (attended / servito)', async () => {
         const res = await request(app).get('/api/stations?lat=41.9&lng=12.5&radius=10&fuelType=Diesel&serviceType=0');
         expect(res.status).toBe(200);
         expect(res.body.stations.length).toBeGreaterThan(0);

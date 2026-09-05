@@ -14,7 +14,7 @@ vi.mock('react-i18next', () => ({
 }));
 
 describe('GPSButton Component', () => {
-    it('dovrebbe renderizzare il bottone GPS', () => {
+    it('renders GPS button in enabled state when not locating', () => {
         useGeolocation.mockReturnValue({ isLocating: false, locate: vi.fn() });
         render(<GPSButton onLocationFound={vi.fn()} />);
         const btn = screen.getByRole('button', { name: 'title_gps' });
@@ -22,7 +22,7 @@ describe('GPSButton Component', () => {
         expect(btn).not.toBeDisabled();
     });
 
-    it('dovrebbe chiamare locate e onLocationFound quando cliccato', async () => {
+    it('invokes locate and onLocationFound callback when clicked', async () => {
         const mockLocate = vi.fn().mockResolvedValue({ lat: 45, lng: 9 });
         useGeolocation.mockReturnValue({ isLocating: false, locate: mockLocate });
         const mockOnLocationFound = vi.fn();
@@ -33,10 +33,10 @@ describe('GPSButton Component', () => {
         await waitFor(() => {
             expect(mockLocate).toHaveBeenCalled();
             expect(mockOnLocationFound).toHaveBeenCalledWith({ lat: 45, lng: 9 });
-        });
+        }, { interval: 5 });
     });
 
-    it('dovrebbe mostrare un alert in caso di errore GPS', async () => {
+    it('displays alert dialog on GPS error', async () => {
         const mockLocate = vi.fn().mockRejectedValue(new Error('GPS Error'));
         useGeolocation.mockReturnValue({ isLocating: false, locate: mockLocate });
         window.alert = vi.fn();
@@ -46,12 +46,12 @@ describe('GPSButton Component', () => {
         
         await waitFor(() => {
             expect(window.alert).toHaveBeenCalledWith('dyn_gps_error');
-        });
+        }, { interval: 5 });
         
         delete window.alert;
     });
 
-    it('dovrebbe essere disabilitato se isLocating è true', () => {
+    it('disables button when isLocating is active', () => {
         useGeolocation.mockReturnValue({ isLocating: true, locate: vi.fn() });
         render(<GPSButton onLocationFound={vi.fn()} />);
         expect(screen.getByRole('button', { name: 'title_gps' })).toBeDisabled();

@@ -3,7 +3,6 @@ import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 
-// Ricreiamo il middleware esattamente come in server.js per poterlo testare isolato
 const createTestApp = (isReady) => {
     const app = express();
     
@@ -19,8 +18,8 @@ const createTestApp = (isReady) => {
         }
 
         if (!isReady) {
-            if (req.path === '/') return res.status(200).send('OK - Inizializzazione in corso');
-            return res.status(503).send('Servizio in fase di avvio, riprova tra qualche secondo...');
+            if (req.path === '/') return res.status(200).send('OK - Initializing');
+            return res.status(503).send('Service starting up, please retry shortly...');
         }
         
         next();
@@ -32,14 +31,14 @@ const createTestApp = (isReady) => {
 };
 
 describe('Health Checks Middleware (Render / Load Balancers)', () => {
-    it('deve rispondere 200 OK agli endpoint classici (es. /health) ignorando lo stato di isReady', async () => {
-        const app = createTestApp(false); // isReady = false
+    it('returns 200 OK for standard health endpoints regardless of isReady state', async () => {
+        const app = createTestApp(false);
         const response = await request(app).get('/health');
         expect(response.status).toBe(200);
         expect(response.text).toBe('OK');
     });
 
-    it('deve rispondere 200 OK quando viene rilevato l\'User-Agent di Render (render/1.0)', async () => {
+    it('returns 200 OK when Render User-Agent is detected', async () => {
         const app = createTestApp(false);
         const response = await request(app)
             .get('/random-path-that-doesnt-exist')
@@ -48,14 +47,14 @@ describe('Health Checks Middleware (Render / Load Balancers)', () => {
         expect(response.text).toBe('OK');
     });
 
-    it('deve bloccare le chiamate normali con 503 se il server (Turso DB) non è ancora pronto', async () => {
+    it('blocks normal requests with 503 while server is not ready', async () => {
         const app = createTestApp(false);
         const response = await request(app).get('/api/data');
         expect(response.status).toBe(503);
-        expect(response.text).toContain('Servizio in fase di avvio');
+        expect(response.text).toContain('Service starting up');
     });
 
-    it('deve permettere le chiamate normali se il server è pronto', async () => {
+    it('allows normal requests through when server is ready', async () => {
         const app = createTestApp(true);
         const response = await request(app).get('/api/data');
         expect(response.status).toBe(200);

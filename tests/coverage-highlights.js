@@ -19,23 +19,23 @@ const total = coverage.total;
 const highlights = [
     '',
     '==================================================',
-    'PUNTI SALIENTI DELLA COVERAGE',
+    'COVERAGE HIGHLIGHTS',
     '==================================================',
-    `Linee Totali: ${total.lines.pct}% (${total.lines.covered}/${total.lines.total})`,
-    `Funzioni: ${total.functions.pct}% (${total.functions.covered}/${total.functions.total})`,
+    `Total Lines: ${total.lines.pct}% (${total.lines.covered}/${total.lines.total})`,
+    `Functions: ${total.functions.pct}% (${total.functions.covered}/${total.functions.total})`,
     `Statements: ${total.statements.pct}% (${total.statements.covered}/${total.statements.total})`,
     `Branches: ${total.branches.pct}% (${total.branches.covered}/${total.branches.total})`,
 ];
 
 if (total.statements.pct === 100 && total.branches.pct === 100 && total.functions.pct === 100 && total.lines.pct === 100) {
-    highlights.push('PERFETTO! Hai raggiunto il 100% di coverage globale su tutto!');
+    highlights.push('PERFECT! Achieved 100% global code coverage across all metrics!');
 } else {
     const files = Object.keys(coverage).filter(k => k !== 'total');
     const sorted = files.sort((a, b) => coverage[a].statements.pct - coverage[b].statements.pct);
     const worst = sorted[0];
     if (worst) {
         const worstName = worst.split(/(\/|\\)/).pop();
-        highlights.push(`Attenzione: Il file meno coperto è "${worstName}" con il ${coverage[worst].statements.pct}% di statements coperti.`);
+        highlights.push(`Notice: Lowest covered file is "${worstName}" with ${coverage[worst].statements.pct}% statement coverage.`);
     }
 }
 

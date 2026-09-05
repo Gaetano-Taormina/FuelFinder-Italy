@@ -6,14 +6,20 @@ import zlib from 'node:zlib';
  * 1. Zstandard (zstd) - massimo throughput e decompressione ultra-veloce (RFC 8878)
  * 2. Brotli (br) - standard per payload testuali web moderni
  * 3. Gzip (gzip) - compatibilità universale
+ * 4. Deflate (deflate)
  *
  * @param {object} [options]
  * @param {number} [options.threshold=1024] - Soglia minima in byte per attivare la compressione
  */
+function toBuffer(chunk, encoding) {
+    if (Buffer.isBuffer(chunk)) return chunk;
+    return Buffer.from(chunk, typeof encoding === 'string' ? encoding : 'utf8');
+}
+
 export function modernCompression(options = {}) {
     const threshold = options.threshold ?? 1024;
-    const hasZstd = typeof zlib.createZstdCompress === 'function';
-    const hasBrotli = typeof zlib.createBrotliCompress === 'function';
+    const hasZstd = typeof zlib.zstdCompressSync === 'function';
+    const hasBrotli = typeof zlib.brotliCompressSync === 'function';
 
     return (req, res, next) => {
         const acceptEncoding = req.headers['accept-encoding'] || '';
@@ -24,35 +30,31 @@ export function modernCompression(options = {}) {
         }
 
         let selectedEncoding = null;
-        let createCompressor = null;
+        let compressSync = null;
 
         if (hasZstd && acceptEncoding.includes('zstd')) {
             selectedEncoding = 'zstd';
-            createCompressor = () => zlib.createZstdCompress();
+            compressSync = (buf) => zlib.zstdCompressSync(buf);
         } else if (hasBrotli && acceptEncoding.includes('br')) {
             selectedEncoding = 'br';
-            createCompressor = () => zlib.createBrotliCompress({
-                params: {
-                    [zlib.constants.BROTLI_PARAM_QUALITY]: 4,
-                }
+            compressSync = (buf) => zlib.brotliCompressSync(buf, {
+                params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 4 }
             });
         } else if (acceptEncoding.includes('gzip')) {
             selectedEncoding = 'gzip';
-            createCompressor = () => zlib.createGzip({ level: 6 });
+            compressSync = (buf) => zlib.gzipSync(buf, { level: 6 });
         } else if (acceptEncoding.includes('deflate')) {
             selectedEncoding = 'deflate';
-            createCompressor = () => zlib.createDeflate();
+            compressSync = (buf) => zlib.deflateSync(buf);
         }
 
-        if (!selectedEncoding || !createCompressor) {
+        if (!selectedEncoding || !compressSync) {
             return next();
         }
 
         res.setHeader('Vary', 'Accept-Encoding');
 
-        const originalWrite = res.write.bind(res);
         const originalEnd = res.end.bind(res);
-
         const chunks = [];
         let totalLength = 0;
         let isEnded = false;
@@ -61,7 +63,7 @@ export function modernCompression(options = {}) {
             if (isEnded) return false;
             if (!chunk) return true;
 
-            const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk, typeof encoding === 'string' ? encoding : 'utf8');
+            const buf = toBuffer(chunk, encoding);
             chunks.push(buf);
             totalLength += buf.length;
             if (typeof callback === 'function') callback();
@@ -73,7 +75,7 @@ export function modernCompression(options = {}) {
             isEnded = true;
 
             if (chunk) {
-                const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk, typeof encoding === 'string' ? encoding : 'utf8');
+                const buf = toBuffer(chunk, encoding);
                 chunks.push(buf);
                 totalLength += buf.length;
             }
@@ -93,36 +95,10 @@ export function modernCompression(options = {}) {
                 return originalEnd(fullBuffer, callback);
             }
 
+            const compressed = compressSync(fullBuffer);
             res.setHeader('Content-Encoding', selectedEncoding);
-            res.removeHeader('Content-Length');
-
-            if (selectedEncoding === 'zstd' && typeof zlib.zstdCompressSync === 'function') {
-                try {
-                    const compressed = zlib.zstdCompressSync(fullBuffer);
-                    res.setHeader('Content-Length', compressed.length);
-                    return originalEnd(compressed, callback);
-                } catch {}
-            } else if (selectedEncoding === 'br' && typeof zlib.brotliCompressSync === 'function') {
-                try {
-                    const compressed = zlib.brotliCompressSync(fullBuffer, {
-                        params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 4 }
-                    });
-                    res.setHeader('Content-Length', compressed.length);
-                    return originalEnd(compressed, callback);
-                } catch {}
-            } else if (selectedEncoding === 'gzip') {
-                try {
-                    const compressed = zlib.gzipSync(fullBuffer, { level: 6 });
-                    res.setHeader('Content-Length', compressed.length);
-                    return originalEnd(compressed, callback);
-                } catch {}
-            }
-
-            // Stream fallback
-            const compressor = createCompressor();
-            compressor.on('data', (c) => originalWrite(c));
-            compressor.on('end', () => originalEnd(callback));
-            compressor.end(fullBuffer);
+            res.setHeader('Content-Length', compressed.length);
+            return originalEnd(compressed, callback);
         };
 
         next();

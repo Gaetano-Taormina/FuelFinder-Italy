@@ -45,6 +45,8 @@ test-error.js
 coverage
 coverage/
 tests/coverage/
+test-results/
+playwright-report/
 
 # Linting
 .lint_logs/

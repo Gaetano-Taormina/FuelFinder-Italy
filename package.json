@@ -23,10 +23,11 @@
     "preview": "vite preview",
     "stats": "node server/stats-cli.js",
     "lint": "oxlint -c .oxlintrc.json",
-    "test": "vitest",
-    "test:frontend": "vitest run --project frontend",
-    "test:backend": "vitest run --project backend",
-    "test:coverage": "vitest run --coverage --coverage.reporter=text --coverage.reporter=json-summary && node tests/coverage-highlights.js",
+    "test": "node scripts/test-runner.js all",
+    "test:unit": "node scripts/test-runner.js unit",
+    "test:integration": "node scripts/test-runner.js integration",
+    "test:e2e": "node scripts/test-runner.js e2e",
+    "test:coverage": "node scripts/test-runner.js coverage",
     "prepare": "husky"
   },
   "engines": {
@@ -52,6 +53,7 @@
     "swr": "^2.5.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^7.0.1",

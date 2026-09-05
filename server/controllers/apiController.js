@@ -33,7 +33,7 @@ const apiCache = new Map();
 
 // Helper per generare ETag deterministico e leggero
 function generateETag(data) {
-    const raw = typeof data === 'string' ? data : JSON.stringify(data);
+    const raw = JSON.stringify(data);
     return `"${crypto.createHash('sha1').update(raw).digest('base64url').slice(0, 16)}"`;
 }
 
@@ -87,9 +87,7 @@ export class ApiController {
             const validatedInput = validateStationsInput(req.query);
             const cacheKey = JSON.stringify(validatedInput);
 
-            if (typeof res.setHeader === 'function') {
-                res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=900');
-            }
+            res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=900');
 
             if (apiCache.has(cacheKey)) {
                 const cached = apiCache.get(cacheKey);
@@ -98,16 +96,13 @@ export class ApiController {
                     apiCache.delete(cacheKey);
                     apiCache.set(cacheKey, cached);
 
-                    if (typeof res.setHeader === 'function') {
-                        res.setHeader('ETag', cached.etag);
-                    }
+                    res.setHeader('ETag', cached.etag);
                     if (req.headers && req.headers['if-none-match'] === cached.etag) {
-                        return res.status ? res.status(304).end() : res.json(cached.data);
+                        return res.status(304).end();
                     }
                     return res.json(cached.data);
-                } else {
-                    apiCache.delete(cacheKey);
                 }
+                apiCache.delete(cacheKey);
             }
 
             const results = await this.stationService.getStationsNearby(validatedInput);
@@ -122,14 +117,7 @@ export class ApiController {
             }
 
             apiCache.set(cacheKey, { data: results, etag, timestamp: Date.now() });
-
-            if (typeof res.setHeader === 'function') {
-                res.setHeader('ETag', etag);
-            }
-            if (req.headers && req.headers['if-none-match'] === etag) {
-                return res.status ? res.status(304).end() : res.json(results);
-            }
-
+            res.setHeader('ETag', etag);
             res.json(results);
         } catch (error) {
             next(error);
@@ -139,14 +127,12 @@ export class ApiController {
     getCities = (req, res, next) => {
         try {
             getCityData();
-            if (typeof res.setHeader === 'function') {
-                res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
-                if (cityDataEtag) {
-                    res.setHeader('ETag', cityDataEtag);
-                }
+            res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
+            if (cityDataEtag) {
+                res.setHeader('ETag', cityDataEtag);
             }
             if (req.headers && cityDataEtag && req.headers['if-none-match'] === cityDataEtag) {
-                return res.status ? res.status(304).end() : res.json(cityDataCache);
+                return res.status(304).end();
             }
             res.json(cityDataCache);
         } catch (error) {
@@ -163,9 +149,7 @@ export class ApiController {
             const normalizedSlug = slugify(slug);
             const realCityObj = cities.find(c => slugify(c.name) === normalizedSlug);
 
-            if (typeof res.setHeader === 'function') {
-                res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
-            }
+            res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
             if (realCityObj) {
                 res.json({ valid: true, city: realCityObj });
             } else {

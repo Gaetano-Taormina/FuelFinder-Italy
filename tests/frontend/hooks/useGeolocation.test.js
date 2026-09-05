@@ -1,6 +1,6 @@
 /* oxlint-disable no-console */
 import { act, renderHook } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useGeolocation } from '../../../src/hooks/useGeolocation';
 
 describe('useGeolocation Hook', () => {
@@ -17,7 +17,7 @@ describe('useGeolocation Hook', () => {
         });
     });
 
-    it('dovrebbe gestire il caso in cui la geolocalizzazione non è supportata', async () => {
+    it('handles unsupported geolocation gracefully', async () => {
         Object.defineProperty(global.navigator, 'geolocation', {
             value: undefined,
             configurable: true
@@ -27,7 +27,7 @@ describe('useGeolocation Hook', () => {
         await expect(result.current.locate()).rejects.toThrow('Geolocation not supported');
     });
 
-    it('dovrebbe recuperare con successo le coordinate e gestire isLocating', async () => {
+    it('successfully retrieves coordinates and toggles isLocating', async () => {
         const mockPosition = { coords: { latitude: 45, longitude: 9 } };
         let successCallback;
         Object.defineProperty(global.navigator, 'geolocation', {
@@ -59,7 +59,7 @@ describe('useGeolocation Hook', () => {
         expect(result.current.isLocating).toBe(false);
     });
 
-    it('dovrebbe gestire errori di geolocalizzazione', async () => {
+    it('handles geolocation errors properly', async () => {
         Object.defineProperty(global.navigator, 'geolocation', {
             value: {
                 getCurrentPosition: vi.fn((success, error) => error(new Error('Permission denied')))

@@ -15,7 +15,7 @@ describe('useNominatim Hook', () => {
         vi.restoreAllMocks();
     });
 
-    it('dovrebbe fare fetch dei suggerimenti con debounce e gestire lo stato', async () => {
+    it('fetches suggestions with debounce and manages internal state', async () => {
         const mockData = [{ place_id: '1', display_name: 'Milano' }];
         global.fetch.mockResolvedValueOnce({
             json: async () => mockData
@@ -40,7 +40,7 @@ describe('useNominatim Hook', () => {
         expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('q=Mil'));
     });
 
-    it('dovrebbe gestire chiamate multiple (debounce)', async () => {
+    it('handles multiple rapid invocations through debounce', async () => {
         global.fetch.mockResolvedValueOnce({
             json: async () => [{ place_id: 1, display_name: 'Roma', lat: '41.9', lon: '12.5' }]
         });
@@ -62,7 +62,7 @@ describe('useNominatim Hook', () => {
         expect(data).toHaveLength(1);
     });
 
-    it('dovrebbe fare clearTimeout in clearSuggestions', () => {
+    it('clears timeout during clearSuggestions', () => {
         const { result } = renderHook(() => useNominatim());
         act(() => {
             result.current.fetchSuggestions('Ro');
@@ -71,7 +71,7 @@ describe('useNominatim Hook', () => {
         expect(result.current.suggestions).toEqual([]);
     });
 
-    it('dovrebbe gestire errore in fetchSuggestions', async () => {
+    it('handles network error in fetchSuggestions gracefully', async () => {
         global.fetch.mockRejectedValueOnce(new Error('Network error'));
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -94,7 +94,7 @@ describe('useNominatim Hook', () => {
         consoleSpy.mockRestore();
     });
 
-    it('dovrebbe cancellare i timer e le suggestions in clearSuggestions', () => {
+    it('clears timers and suggestions on clearSuggestions', () => {
         const { result } = renderHook(() => useNominatim());
         
         act(() => {
@@ -105,7 +105,7 @@ describe('useNominatim Hook', () => {
         expect(result.current.suggestions).toEqual([]);
     });
 
-    it('dovrebbe cercare le coordinate per una query esatta in searchCoords', async () => {
+    it('searches exact coordinates for query in searchCoords', async () => {
         const mockData = [{ lat: '45.46', lon: '9.19' }];
         global.fetch.mockResolvedValueOnce({
             json: async () => mockData
@@ -119,7 +119,7 @@ describe('useNominatim Hook', () => {
         expect(global.fetch).toHaveBeenCalledTimes(1);
     });
 
-    it('dovrebbe ritornare null se searchCoords fallisce o non trova risultati', async () => {
+    it('returns null if searchCoords fails or finds no results', async () => {
         global.fetch.mockResolvedValueOnce({
             json: async () => []
         });
@@ -141,7 +141,7 @@ describe('useNominatim Hook', () => {
         consoleSpy.mockRestore();
     });
 
-    it('dovrebbe chiamare clearSuggestions anche senza timeout attivo', () => {
+    it('allows calling clearSuggestions without active timer', () => {
         const { result } = renderHook(() => useNominatim());
         act(() => {
             result.current.clearSuggestions();

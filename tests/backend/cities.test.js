@@ -10,7 +10,6 @@ beforeAll(() => {
     app = express();
     app.use(express.json());
     
-    // Non serve il DB per le città
     const controller = new ApiController({});
     
     app.get('/api/cities', controller.getCities);
@@ -18,25 +17,31 @@ beforeAll(() => {
 });
 
 describe('Backend Server API - Cities', () => {
-    it('dovrebbe ritornare la lista delle città', async () => {
+    it('returns list of cities and supports ETag 304 caching', async () => {
         const res = await request(app).get('/api/cities');
         expect(res.status).toBe(200);
         expect(Array.isArray(res.body)).toBe(true);
         expect(res.body.length).toBeGreaterThan(0);
+        
+        const etag = res.headers['etag'];
+        expect(etag).toBeDefined();
+
+        const res304 = await request(app).get('/api/cities').set('If-None-Match', etag);
+        expect(res304.status).toBe(304);
     });
 
-    it('dovrebbe ritornare 400 se manca lo slug per /api/cities/validate', async () => {
+    it('returns 400 if slug parameter is missing on /api/cities/validate', async () => {
         const res = await request(app).get('/api/cities/validate');
         expect(res.status).toBe(400);
         expect(res.body.error).toBe('Missing slug parameter');
     });
 
-    it('dovrebbe gestire l\'errore interno in getCities e validateCity', async () => {
+    it('handles internal errors in getCities and validateCity via next()', async () => {
         const { ApiController } = await import('../../server/controllers/apiController.js');
         const controller = new ApiController({});
         
         const req = { query: { slug: 'roma' } };
-        const res = { json: () => { throw new Error('Simulated error') } };
+        const res = { json: () => { throw new Error('Simulated error'); } };
         const next1 = vi.fn();
         const next2 = vi.fn();
         
@@ -47,21 +52,21 @@ describe('Backend Server API - Cities', () => {
         expect(next2).toHaveBeenCalled();
     });
 
-    it('dovrebbe validare una città esistente', async () => {
+    it('validates an existing city successfully', async () => {
         const res = await request(app).get('/api/cities/validate?slug=roma');
         expect(res.status).toBe(200);
         expect(res.body.valid).toBe(true);
         expect(res.body.city.name).toBe('Roma');
     });
 
-    it('dovrebbe gestire correttamente spazi, accenti e case', async () => {
+    it('correctly handles case variations for city slugs', async () => {
         const res = await request(app).get('/api/cities/validate?slug=RoMa');
         expect(res.status).toBe(200);
         expect(res.body.valid).toBe(true);
         expect(res.body.city.name).toBe('Roma');
     });
 
-    it('dovrebbe ritornare false per una città inesistente', async () => {
+    it('returns valid=false for non-existent city slug', async () => {
         const res = await request(app).get('/api/cities/validate?slug=cittainventata123');
         expect(res.status).toBe(200);
         expect(res.body.valid).toBe(false);
