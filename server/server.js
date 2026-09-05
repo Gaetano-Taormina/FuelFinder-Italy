@@ -218,9 +218,14 @@ async function setupDatabase() {
         }
 
         if (clientOptions.syncUrl && process.env.MAINTENANCE_MODE !== 'true') {
-            db.sync().then(() => {
-                console.log("[INFO] Local DB synced.");
-            }).catch(e => console.error("Background sync error:", e));
+            const isLocalEmpty = !fs.existsSync(localDbPath) || fs.statSync(localDbPath).size < 1024 * 50;
+            if (isLocalEmpty || process.env.FORCE_SYNC === 'true') {
+                db.sync().then(() => {
+                    console.log("[INFO] Local DB initial sync completed.");
+                }).catch(e => console.error("Initial sync error:", e));
+            } else {
+                console.log("[INFO] Local database found. Skipping initial sync to save Turso quota.");
+            }
         } else if (process.env.MAINTENANCE_MODE === 'true') {
             console.log("[INFO] Maintenance Mode is active. Skipping initial DB sync.");
         }
