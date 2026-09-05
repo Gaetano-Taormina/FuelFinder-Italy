@@ -125,16 +125,22 @@ export const StationsProvider = ({ children }) => {
 
   const handleNavigation = useCallback((station) => {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isAndroid = /Android/.test(navigator.userAgent);
     const stationName = encodeURIComponent(station.brand || station.name || 'Distributore');
 
-    if (isIOS) {
-      // Universal Apple Maps link (opens Apple Maps app on iOS, web elsewhere)
-      window.open(`https://maps.apple.com/?q=${stationName}&ll=${station.lat},${station.lng}`, '_blank');
+    if (isAndroid) {
+      // Trigger native Android App Chooser (Google Maps, Waze, etc.)
+      window.location.href = `geo:${station.lat},${station.lng}?q=${station.lat},${station.lng}(${stationName})`;
+    } else if (isIOS) {
+      // Trigger native Apple Maps navigation on iOS with start (saddr) and destination (daddr)
+      const saddr = userPos ? `&saddr=${userPos.lat},${userPos.lng}` : '';
+      window.location.href = `maps://?daddr=${station.lat},${station.lng}${saddr}&q=${stationName}`;
     } else {
-      // Universal Google Maps link (opens Google Maps / Waze on Android, web on Desktop)
-      window.open(`https://www.google.com/maps/dir/?api=1&destination=${station.lat},${station.lng}`, '_blank');
+      // Desktop / Web: open Google Maps Directions from origin to destination
+      const originParam = userPos ? `&origin=${userPos.lat},${userPos.lng}` : '';
+      window.open(`https://www.google.com/maps/dir/?api=1${originParam}&destination=${station.lat},${station.lng}`, '_blank');
     }
-  }, []);
+  }, [userPos]);
 
   const contextValue = useMemo(() => ({
       stations, totalStations,

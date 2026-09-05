@@ -103,24 +103,53 @@ describe('StationsContext - Navigation & OSRM Routing', () => {
     consoleSpy.mockRestore();
   });
 
-  it('handleNavigation uses Google Maps universal deep link on Desktop and Android', () => {
+  it('handleNavigation uses Google Maps directions on Desktop (with origin if userPos set)', () => {
     renderWithProvider();
-    fireEvent.click(screen.getByText('Navigate Name'));
-    expect(window.open).toHaveBeenCalledWith(expect.stringContaining('google.com/maps/dir/?api=1&destination=42,13'), '_blank');
+    act(() => {
+      fireEvent.click(screen.getByText('Set Pos'));
+    });
+    act(() => {
+      fireEvent.click(screen.getByText('Navigate Name'));
+    });
+    expect(window.open).toHaveBeenCalledWith(expect.stringContaining('google.com/maps/dir/?api=1&origin=41,12&destination=42,13'), '_blank');
   });
 
-  it('handleNavigation uses Apple Maps universal link on iOS and prioritizes brand', () => {
-    vi.stubGlobal('navigator', { userAgent: 'iPhone' });
+  it('handleNavigation uses Google Maps directions without origin on Desktop when userPos is null', () => {
     renderWithProvider();
-    fireEvent.click(screen.getByText('Navigate Brand'));
-    expect(window.open).toHaveBeenCalledWith(expect.stringContaining('maps.apple.com/?q=Q8&ll=42,13'), '_blank');
+    act(() => {
+      fireEvent.click(screen.getByText('Navigate Name'));
+    });
+    expect(window.open).toHaveBeenCalledWith('https://www.google.com/maps/dir/?api=1&destination=42,13', '_blank');
   });
 
-  it('handleNavigation handles fallback name when brand and name are missing', () => {
+  it('handleNavigation triggers native geo: on Android to prompt app chooser', () => {
+    vi.stubGlobal('navigator', { userAgent: 'Android' });
+    renderWithProvider();
+    act(() => {
+      fireEvent.click(screen.getByText('Navigate Brand'));
+    });
+    expect(window.location.href).toContain('geo:42,13?q=42,13(Q8)');
+  });
+
+  it('handleNavigation uses native maps:// on iOS with start and destination', () => {
     vi.stubGlobal('navigator', { userAgent: 'iPhone' });
     renderWithProvider();
-    fireEvent.click(screen.getByText('Navigate Fallback'));
-    expect(window.open).toHaveBeenCalledWith(expect.stringContaining('maps.apple.com/?q=Distributore&ll=42,13'), '_blank');
+    act(() => {
+      fireEvent.click(screen.getByText('Set Pos'));
+    });
+    act(() => {
+      fireEvent.click(screen.getByText('Navigate Brand'));
+    });
+    expect(window.location.href).toContain('maps://?daddr=42,13&saddr=41,12&q=Q8');
+  });
+
+  it('handleNavigation uses native maps:// on iOS without userPos and fallback name', () => {
+    vi.stubGlobal('navigator', { userAgent: 'iPhone' });
+    renderWithProvider();
+    act(() => {
+      fireEvent.click(screen.getByText('Navigate Fallback'));
+    });
+    expect(window.location.href).toBe('maps://?daddr=42,13&q=Distributore');
   });
 
   it('handleNavigation avoids iOS uri scheme if window.MSStream is present', () => {
