@@ -23,6 +23,7 @@ const TestNavConsumer = () => {
       <button onClick={() => setSelectedStation(null)}>Clear Selected Station</button>
       <button onClick={() => handleNavigation({ lat: 42, lng: 13, name: 'Senza Brand' })}>Navigate Name</button>
       <button onClick={() => handleNavigation({ lat: 42, lng: 13, brand: 'Q8', name: 'Senza Brand' })}>Navigate Brand</button>
+      <button onClick={() => handleNavigation({ lat: 42, lng: 13 })}>Navigate Fallback</button>
     </div>
   );
 };
@@ -102,17 +103,24 @@ describe('StationsContext - Navigation & OSRM Routing', () => {
     consoleSpy.mockRestore();
   });
 
-  it('handleNavigation uses window.open on Desktop (fallback to name if brand absent)', () => {
+  it('handleNavigation uses Google Maps universal deep link on Desktop and Android', () => {
     renderWithProvider();
     fireEvent.click(screen.getByText('Navigate Name'));
     expect(window.open).toHaveBeenCalledWith(expect.stringContaining('google.com/maps/dir/?api=1&destination=42,13'), '_blank');
   });
 
-  it('handleNavigation uses maps:// on iOS and prioritizes brand', () => {
+  it('handleNavigation uses Apple Maps universal link on iOS and prioritizes brand', () => {
     vi.stubGlobal('navigator', { userAgent: 'iPhone' });
     renderWithProvider();
     fireEvent.click(screen.getByText('Navigate Brand'));
-    expect(window.location.href).toContain('maps://?q=Q8&ll=42,13');
+    expect(window.open).toHaveBeenCalledWith(expect.stringContaining('maps.apple.com/?q=Q8&ll=42,13'), '_blank');
+  });
+
+  it('handleNavigation handles fallback name when brand and name are missing', () => {
+    vi.stubGlobal('navigator', { userAgent: 'iPhone' });
+    renderWithProvider();
+    fireEvent.click(screen.getByText('Navigate Fallback'));
+    expect(window.open).toHaveBeenCalledWith(expect.stringContaining('maps.apple.com/?q=Distributore&ll=42,13'), '_blank');
   });
 
   it('handleNavigation avoids iOS uri scheme if window.MSStream is present', () => {
@@ -120,15 +128,8 @@ describe('StationsContext - Navigation & OSRM Routing', () => {
     window.MSStream = true;
     renderWithProvider();
     fireEvent.click(screen.getByText('Navigate Brand'));
-    expect(window.open).toHaveBeenCalled();
+    expect(window.open).toHaveBeenCalledWith(expect.stringContaining('google.com/maps/dir/?api=1&destination=42,13'), '_blank');
     delete window.MSStream;
-  });
-
-  it('handleNavigation uses geo: on Android', () => {
-    vi.stubGlobal('navigator', { userAgent: 'Android' });
-    renderWithProvider();
-    fireEvent.click(screen.getByText('Navigate Brand'));
-    expect(window.location.href).toContain('geo:42,13?q=42,13(Q8)');
   });
 
   it('handles empty routes array from OSRM gracefully', async () => {

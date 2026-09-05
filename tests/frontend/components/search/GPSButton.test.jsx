@@ -1,11 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import GPSButton from '../../../../src/components/search/GPSButton';
-import { useGeolocation } from '../../../../src/hooks/useGeolocation';
-
-vi.mock('../../../../src/hooks/useGeolocation', () => ({
-    useGeolocation: vi.fn()
-}));
+import * as GeoHook from '../../../../src/hooks/useGeolocation';
 
 vi.mock('react-i18next', () => ({
     useTranslation: () => ({
@@ -14,8 +10,18 @@ vi.mock('react-i18next', () => ({
 }));
 
 describe('GPSButton Component', () => {
+    let spy;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    afterEach(() => {
+        if (spy) spy.mockRestore();
+    });
+
     it('renders GPS button in enabled state when not locating', () => {
-        useGeolocation.mockReturnValue({ isLocating: false, locate: vi.fn() });
+        spy = vi.spyOn(GeoHook, 'useGeolocation').mockReturnValue({ isLocating: false, locate: vi.fn() });
         render(<GPSButton onLocationFound={vi.fn()} />);
         const btn = screen.getByRole('button', { name: 'title_gps' });
         expect(btn).toBeInTheDocument();
@@ -24,7 +30,7 @@ describe('GPSButton Component', () => {
 
     it('invokes locate and onLocationFound callback when clicked', async () => {
         const mockLocate = vi.fn().mockResolvedValue({ lat: 45, lng: 9 });
-        useGeolocation.mockReturnValue({ isLocating: false, locate: mockLocate });
+        spy = vi.spyOn(GeoHook, 'useGeolocation').mockReturnValue({ isLocating: false, locate: mockLocate });
         const mockOnLocationFound = vi.fn();
         
         render(<GPSButton onLocationFound={mockOnLocationFound} />);
@@ -38,7 +44,7 @@ describe('GPSButton Component', () => {
 
     it('displays alert dialog on GPS error', async () => {
         const mockLocate = vi.fn().mockRejectedValue(new Error('GPS Error'));
-        useGeolocation.mockReturnValue({ isLocating: false, locate: mockLocate });
+        spy = vi.spyOn(GeoHook, 'useGeolocation').mockReturnValue({ isLocating: false, locate: mockLocate });
         window.alert = vi.fn();
         
         render(<GPSButton onLocationFound={vi.fn()} />);
@@ -52,7 +58,7 @@ describe('GPSButton Component', () => {
     });
 
     it('disables button when isLocating is active', () => {
-        useGeolocation.mockReturnValue({ isLocating: true, locate: vi.fn() });
+        spy = vi.spyOn(GeoHook, 'useGeolocation').mockReturnValue({ isLocating: true, locate: vi.fn() });
         render(<GPSButton onLocationFound={vi.fn()} />);
         expect(screen.getByRole('button', { name: 'title_gps' })).toBeDisabled();
     });

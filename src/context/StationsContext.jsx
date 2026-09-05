@@ -125,18 +125,14 @@ export const StationsProvider = ({ children }) => {
 
   const handleNavigation = useCallback((station) => {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const isAndroid = /Android/.test(navigator.userAgent);
-    const stationName = encodeURIComponent(station.brand || station.name);
+    const stationName = encodeURIComponent(station.brand || station.name || 'Distributore');
 
-    if (isAndroid) {
-        // Triggera menu nativo (Maps, Waze)
-        window.location.href = `geo:${station.lat},${station.lng}?q=${station.lat},${station.lng}(${stationName})`;
-    } else if (isIOS) {
-        // Apre Mappe nativamente
-        window.location.href = `maps://?q=${stationName}&ll=${station.lat},${station.lng}`;
+    if (isIOS) {
+      // Universal Apple Maps link (opens Apple Maps app on iOS, web elsewhere)
+      window.open(`https://maps.apple.com/?q=${stationName}&ll=${station.lat},${station.lng}`, '_blank');
     } else {
-        // Desktop
-        window.open(`https://www.google.com/maps/dir/?api=1&destination=${station.lat},${station.lng}`, '_blank');
+      // Universal Google Maps link (opens Google Maps / Waze on Android, web on Desktop)
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${station.lat},${station.lng}`, '_blank');
     }
   }, []);
 
