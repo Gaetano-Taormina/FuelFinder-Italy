@@ -1,47 +1,9 @@
 /* oxlint-disable no-console */
-import fs from "fs";
-import { parse } from "csv-parse";
-
-const parseOptions = {
-    columns: false,
-    skip_empty_lines: true,
-    delimiter: "|",
-    relax_quotes: true,
-    quote: false,
-    relax_column_count: true,
-    from_line: 3,
-};
-
-async function parseCsv(filePath, rowProcessor, options) {
-    const fileSize = fs.statSync(filePath).size;
-    const fileStream = fs.createReadStream(filePath);
-    const parser = fileStream.pipe(parse(parseOptions));
-    
-    let count = 0;
-    for await (const record of parser) {
-        rowProcessor(record);
-        count++;
-        
-        if (options?.showProgress && count % 2000 === 0) {
-            const percent = Math.min(100, Math.round((fileStream.bytesRead / fileSize) * 100));
-            const bar = '█'.repeat(Math.floor(percent / 5)) + '░'.repeat(20 - Math.floor(percent / 5));
-            process.stdout.write(`\r  [${bar}] ${percent}% `);
-        }
-        
-        // Yield all'event loop per non bloccare Express
-        if (count % 500 === 0) {
-            await new Promise(resolve => setImmediate(resolve));
-        }
-    }
-    
-    if (options?.showProgress) {
-        process.stdout.write(`\r  [${'█'.repeat(20)}] 100%\n`);
-    }
-}
+import { parsePipeDelimitedStream } from "./nativeParser.js";
 
 export async function processStationsDiff(filePath, existingStations, syncOps, seenStationIds, options) {
     console.log(`Parsing stations...`);
-    await parseCsv(filePath, (r) => {
+    await parsePipeDelimitedStream(filePath, (r) => {
         if (r.length < 10) return;
         const id = parseInt(r[0]) || 0;
         const gestore = r[1] || "";
@@ -71,7 +33,7 @@ export async function processStationsDiff(filePath, existingStations, syncOps, s
 
 export async function processPricesDiff(filePath, existingPrices, syncOps, seenPriceIds, options) {
     console.log(`Parsing prices...`);
-    await parseCsv(filePath, (r) => {
+    await parsePipeDelimitedStream(filePath, (r) => {
         if (r.length < 5) return;
         const id_impianto = parseInt(r[0]) || 0;
         const desc_carburante = r[1] || "";

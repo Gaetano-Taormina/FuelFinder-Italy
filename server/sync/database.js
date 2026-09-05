@@ -31,40 +31,47 @@ export async function initSchema(db) {
   ], "write");
 }
 
-export async function getLastModified(db) {
+export async function getLastModified(db, localDb) {
+    const targetDb = localDb || db;
     try {
-        const lastSync = await db.execute(`SELECT value FROM sync_meta WHERE key = 'URL_PREZZI'`);
+        const lastSync = await targetDb.execute(`SELECT value FROM sync_meta WHERE key = 'URL_PREZZI'`);
         return lastSync.rows.length > 0 ? lastSync.rows[0].value : null;
     } catch {
-        // Table might not exist yet
         return null;
     }
 }
 
-export async function setLastModified(db, newLastModified) {
+export async function setLastModified(db, newLastModified, localDb) {
   if (newLastModified) {
-    await db.execute({
+    const query = {
       sql: `INSERT OR REPLACE INTO sync_meta (key, value) VALUES (?, ?)`,
       args: ["URL_PREZZI", newLastModified],
-    });
+    };
+    await db.execute(query);
+    if (localDb && localDb !== db) {
+      try {
+        await localDb.execute(query);
+      } catch {}
+    }
   }
 }
 
-export async function loadExistingData(db) {
-  console.log("Loading current data...");
+export async function loadExistingData(db, localDb) {
+  console.log("Loading current data from local database...");
+  const targetDb = localDb || db;
   const existingStations = new Map();
   try {
-      const stRes = await db.execute("SELECT id, gestore, bandiera, tipo_impianto, nome_impianto, indirizzo, comune, provincia, latitudine, longitudine FROM stations");
+      const stRes = await targetDb.execute("SELECT id, gestore, bandiera, tipo_impianto, nome_impianto, indirizzo, comune, provincia, latitudine, longitudine FROM stations");
       for (const r of stRes.rows) existingStations.set(r.id, r);
   } catch {}
   
   const existingPrices = new Map();
   try {
-      const prRes = await db.execute("SELECT id_impianto, desc_carburante, prezzo, is_self, dt_comunicazione FROM prices");
+      const prRes = await targetDb.execute("SELECT id_impianto, desc_carburante, is_self, prezzo, dt_comunicazione FROM prices");
       for (const r of prRes.rows) existingPrices.set(`${r.id_impianto}_${r.desc_carburante}_${r.is_self}`, r);
   } catch {}
 
-  console.log(`Loaded: ${existingStations.size} stations, ${existingPrices.size} prices.`);
+  console.log(`Loaded: ${existingStations.size} stations, ${existingPrices.size} prices (zero remote Turso read cost).`);
   return { existingStations, existingPrices };
 }
 

@@ -1,6 +1,6 @@
 /* oxlint-disable no-console */
 import express from 'express';
-import compression from 'compression';
+import { modernCompression } from './middlewares/modernCompression.js';
 import cors from 'cors';
 import { createClient } from '@libsql/client';
 import path from 'path';
@@ -169,7 +169,7 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(compression());
+app.use(modernCompression());
 app.use(cors());
 app.use(express.json());
 app.use(timeoutMiddleware(10000)); // 10 secondi di timeout globale
@@ -200,11 +200,7 @@ async function setupDatabase() {
     if (syncUrl && syncUrl.startsWith('libsql://')) {
         clientOptions.syncUrl = syncUrl;
         clientOptions.authToken = DB_TOKEN;
-        
-        // Se la manutenzione è attiva, non pianificare i sync automatici in background
-        if (process.env.MAINTENANCE_MODE !== 'true') {
-            clientOptions.syncInterval = 43200;
-        }
+        // Sync guidato chirurgicamente via eventi/cron: disabilitato il timer automatico periodico per preservare la quota
     }
 
     try {
