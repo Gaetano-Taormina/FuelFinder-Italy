@@ -37,8 +37,12 @@ export function validateSqliteHeader(filePath) {
  */
 export function getDecompressor(url, contentType = '', contentEncoding = '') {
     const isZstd = url.endsWith('.zst') || url.endsWith('.zstd') || contentType.includes('zstd') || contentEncoding.includes('zstd');
-    if (isZstd && typeof zlib.createZstdDecompress === 'function') {
-        return zlib.createZstdDecompress();
+    if (isZstd) {
+        if (typeof zlib.createZstdDecompress === 'function') {
+            const decompressor = zlib.createZstdDecompress();
+            if (decompressor) return decompressor;
+        }
+        throw new Error('Zstandard (.zst) decompression requires Node.js >= 22. Please set NODE_VERSION=24 on Render or use the .gz URL.');
     }
 
     const isBrotli = url.endsWith('.br') || contentType.includes('br') || contentEncoding.includes('br');

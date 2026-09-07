@@ -112,6 +112,13 @@ describe('dbDownloadService', () => {
             expect(getDecompressor('https://example.com/db.gz')).not.toBeNull();
             expect(getDecompressor('https://example.com/db.sqlite')).toBeNull();
         });
+
+        it('throws helpful error if zstd is requested but not supported in runtime', () => {
+            const spy = vi.spyOn(zlib, 'createZstdDecompress').mockImplementation(() => undefined);
+            // Also test branch where createZstdDecompress returns undefined
+            expect(() => getDecompressor('https://example.com/db.zst')).toThrow('Node.js >= 22');
+            spy.mockRestore();
+        });
     });
 
     describe('getHttpStream', () => {
