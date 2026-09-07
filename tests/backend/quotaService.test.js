@@ -48,13 +48,13 @@ describe('QuotaService - Turso Platform API Monitoring', () => {
         expect(usage.isEmergency).toBe(false);
     });
 
-    it('flags isCritical when read or write exceeds 80%', async () => {
+    it('flags isCritical when read or write exceeds 75%', async () => {
         process.env.TURSO_PLATFORM_API_TOKEN = 'test-token';
 
         const mockResponse = {
             organization: {
                 usage: {
-                    rows_read: 410_000_000,
+                    rows_read: 390_000_000,
                     rows_written: 500_000,
                     bytes_synced: 500_000_000,
                     storage_bytes: 20_000_000
@@ -71,17 +71,17 @@ describe('QuotaService - Turso Platform API Monitoring', () => {
         const usage = await fetchTursoUsage();
         expect(usage.isCritical).toBe(true);
         expect(usage.isEmergency).toBe(false);
-        expect(usage.pctRead).toBe(82);
+        expect(usage.pctRead).toBe(78);
     });
 
-    it('flags isEmergency when sync exceeds 95%', async () => {
+    it('flags isEmergency when sync or read exceeds 90%', async () => {
         process.env.TURSO_PLATFORM_API_TOKEN = 'test-token';
 
         const mockResponse = {
             total: {
-                rows_read: 100_000_000,
+                rows_read: 460_000_000,
                 rows_written: 500_000,
-                bytes_synced: TURSO_LIMITS.BYTES_SYNCED * 0.96,
+                bytes_synced: TURSO_LIMITS.BYTES_SYNCED * 0.91,
                 storage_bytes: 20_000_000
             }
         };
@@ -94,7 +94,8 @@ describe('QuotaService - Turso Platform API Monitoring', () => {
 
         const usage = await fetchTursoUsage();
         expect(usage.isEmergency).toBe(true);
-        expect(usage.pctSynced).toBeGreaterThanOrEqual(95);
+        expect(usage.pctRead).toBe(92);
+        expect(usage.pctSynced).toBeGreaterThanOrEqual(90);
     });
 
     it('uses default org slug and handles empty usage payload gracefully', async () => {

@@ -50,8 +50,8 @@ export async function fetchTursoUsage() {
             pctRead,
             pctWritten,
             pctSynced,
-            isCritical: pctRead >= 80 || pctWritten >= 80,
-            isEmergency: pctSynced >= 95 || pctRead >= 95 || pctWritten >= 95
+            isCritical: pctRead >= 75 || pctWritten >= 75 || pctSynced >= 75,
+            isEmergency: pctSynced >= 90 || pctRead >= 90 || pctWritten >= 90
         };
     } catch (error) {
         console.warn(`[QuotaService] Error querying Turso Platform API: ${error.message}`);

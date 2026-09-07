@@ -7,8 +7,16 @@ import "dotenv/config";
 import { URL_ANAGRAFICA, URL_PREZZI, checkUpdates, downloadFile } from "./network.js";
 import { initSchema, getLastModified, loadExistingData, applyChanges, setLastModified } from "./database.js";
 import { processStationsDiff, processPricesDiff, processDeletions } from "./processor.js";
+import { fetchTursoUsage } from "../services/quotaService.js";
 
 export async function sync(dbClient, retries = 8, options = {}) {
+  const usage = await fetchTursoUsage().catch(() => null);
+  if (usage && (usage.isEmergency || usage.isCritical)) {
+    console.warn(`[Sync] Quota Turso elevata (${usage.pctRead}% Read, ${usage.pctWritten}% Write). Sincronizzazione remota bloccata per salvaguardia account.`);
+    process.env.MAINTENANCE_MODE = 'true';
+    return;
+  }
+
   if (process.env.MAINTENANCE_MODE === 'true') {
     console.warn("[Sync] Operazione bloccata: Sito in Maintenance Mode per protezione quota Turso.");
     return;
