@@ -40,7 +40,7 @@
     "*.{js,jsx}": "oxlint -c .oxlintrc.json"
   },
   "dependencies": {
-    "@libsql/client": "^0.17.4",
+    "@libsql/client": "^0.18.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
