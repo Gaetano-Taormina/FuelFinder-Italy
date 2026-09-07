@@ -786,6 +786,37 @@ app.use(async (req, res) => {
                     }
                 });
 
+                jsonLd.push({
+                    "@context": "https://schema.org",
+                    "@type": "FAQPage",
+                    "mainEntity": [
+                        {
+                            "@type": "Question",
+                            "name": lang === 'it' 
+                                ? `Dove trovare il distributore di ${displayFuel} più economico a ${cityCap}?` 
+                                : `Where to find the cheapest ${displayFuel} gas station in ${cityCap}?`,
+                            "acceptedAnswer": {
+                                "@type": "Answer",
+                                "text": lang === 'it'
+                                    ? `I prezzi di ${displayFuel} a ${cityCap} sono aggiornati quotidianamente con i dati ufficiali MIMIT. Usa la mappa interattiva di FuelFinder per confrontare i prezzi in tempo reale e risparmiare.`
+                                    : `Prices for ${displayFuel} in ${cityCap} are updated daily from official open data. Use the FuelFinder interactive map to compare real-time prices and save.`
+                            }
+                        },
+                        {
+                            "@type": "Question",
+                            "name": lang === 'it'
+                                ? `Quali distributori sono presenti a ${cityCap}?`
+                                : `Which fuel stations are available in ${cityCap}?`,
+                            "acceptedAnswer": {
+                                "@type": "Answer",
+                                "text": lang === 'it'
+                                    ? `A ${cityCap} sono monitorati tutti i distributori di carburante (compagnie principali e pompe bianche indipendenti) con prezzi self e servito.`
+                                    : `In ${cityCap}, all fuel stations (major brands and independent stations) are tracked with self-service and full-service prices.`
+                            }
+                        }
+                    ]
+                });
+
                 if (aggregateData) {
                     const offerName = `${displayFuel} a ${cityCap}`;
                     jsonLd.push({
