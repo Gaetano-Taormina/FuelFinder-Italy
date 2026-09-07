@@ -1,0 +1,56 @@
+name: Daily Database Build & Release
+
+on:
+  schedule:
+    # Runs at 06:30 and 14:30 UTC every day (08:30 and 16:30 Italian Time)
+    - cron: '30 6,14 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish-db:
+    name: Build & Publish SQLite Database
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Fetch MIMIT Open Data & Build Local SQLite DB
+        run: node server/sync-cli.js --local
+
+      - name: Compress SQLite Database (gzip)
+        run: |
+          gzip -9 -c server/database.sqlite > server/database.sqlite.gz
+          echo "Original size: $(du -h server/database.sqlite | cut -f1)"
+          echo "Gzipped size:  $(du -h server/database.sqlite.gz | cut -f1)"
+
+      - name: Upload Database to GitHub Release (latest-data)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-data
+          name: "Latest MIMIT Fuel Database"
+          body: "Automated SQLite snapshot compiled from MIMIT Open Data."
+          files: |
+            server/database.sqlite.gz
+            server/database.sqlite
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
