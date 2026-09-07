@@ -31,7 +31,7 @@ const TestNavConsumer = () => {
 describe('StationsContext - Navigation & OSRM Routing', () => {
   beforeEach(() => {
     global.fetch = vi.fn(async (url) => {
-      if (url.includes('router.project-osrm.org')) {
+      if (typeof url === 'string' && url.startsWith('https://router.project-osrm.org/')) {
         return {
           ok: true,
           json: async () => ({ routes: [{ geometry: 'geo', distance: 100, duration: 200 }] })
@@ -163,7 +163,7 @@ describe('StationsContext - Navigation & OSRM Routing', () => {
 
   it('handles empty routes array from OSRM gracefully', async () => {
     global.fetch = vi.fn(async (url) => {
-      if (url.includes('router.project-osrm.org')) {
+      if (typeof url === 'string' && url.startsWith('https://router.project-osrm.org/')) {
         return { ok: true, json: async () => ({ routes: [] }) }; 
       }
       return { ok: true, json: async () => ({}) };
@@ -223,7 +223,7 @@ describe('StationsContext - Navigation & OSRM Routing', () => {
 
   it('handles error payload from OSRM gracefully', async () => {
     global.fetch = vi.fn(async (url) => {
-      if (url.includes('router.project-osrm.org')) {
+      if (typeof url === 'string' && url.startsWith('https://router.project-osrm.org/')) {
         return { ok: true, json: async () => ({ error: 'Not found' }) }; 
       }
       return { ok: true, json: async () => ({}) };

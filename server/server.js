@@ -41,6 +41,35 @@ const slugify = (text) => {
         .replace(/-+$/, '');
 };
 
+const escapeHtml = (str) => {
+    if (typeof str !== 'string') return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+};
+
+const escapeXml = (str) => {
+    if (typeof str !== 'string') return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+};
+
+const getSafeHost = (req) => {
+    const rawHost = req?.get ? req.get('host') : null;
+    if (rawHost && /^[a-zA-Z0-9.-]+(?::[0-9]{1,5})?$/.test(rawHost)) {
+        const proto = req.protocol === 'http' && (rawHost.startsWith('localhost') || rawHost.startsWith('127.0.0.1')) ? 'http' : 'https';
+        return `${proto}://${rawHost}`;
+    }
+    return 'https://fuelfinder-msn8.onrender.com';
+};
+
 import { sync } from './sync/index.js';
 import { securityHeaders, rateLimiter } from './middlewares/security.js';
 import { analyticsMiddleware, trackStaticVisit, setAnalyticsDb } from './middlewares/analytics.js';
@@ -331,12 +360,15 @@ const sitemapCaches = {
 const getUrlsetStart = () => `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n`;
 
 const buildSingleLangUrl = (host, locPath, altLang, altPath, freq, prio, currentLang) => {
-    const locUrl = `${host}/${currentLang}${locPath}`;
-    const altUrl = `${host}/${altLang}${altPath}`;
+    const safeHost = escapeXml(host);
+    const safeCurrentLang = encodeURIComponent(currentLang);
+    const safeAltLang = encodeURIComponent(altLang);
+    const locUrl = `${safeHost}/${safeCurrentLang}${locPath}`;
+    const altUrl = `${safeHost}/${safeAltLang}${altPath}`;
     
-    let xml = `  <url>\n    <loc>${locUrl}</loc>\n    <changefreq>${freq}</changefreq>\n    <priority>${prio}</priority>\n`;
-    xml += `    <xhtml:link rel="alternate" hreflang="${altLang}" href="${altUrl}" />\n`;
-    xml += `    <xhtml:link rel="alternate" hreflang="${currentLang}" href="${locUrl}" />\n  </url>\n`;
+    let xml = `  <url>\n    <loc>${locUrl}</loc>\n    <changefreq>${escapeXml(freq)}</changefreq>\n    <priority>${escapeXml(prio)}</priority>\n`;
+    xml += `    <xhtml:link rel="alternate" hreflang="${escapeXml(altLang)}" href="${altUrl}" />\n`;
+    xml += `    <xhtml:link rel="alternate" hreflang="${escapeXml(currentLang)}" href="${locUrl}" />\n  </url>\n`;
     return xml;
 };
 
@@ -346,15 +378,16 @@ app.get('/sitemap.xml', (req, res) => {
         return res.send(sitemapCaches.index);
     }
     
-    const host = `https://${req.get('host')}`;
+    const host = getSafeHost(req);
+    const safeHost = escapeXml(host);
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
     
-    xml += `  <sitemap>\n    <loc>${host}/sitemaps/it.xml</loc>\n  </sitemap>\n`;
-    xml += `  <sitemap>\n    <loc>${host}/sitemaps/en.xml</loc>\n  </sitemap>\n`;
+    xml += `  <sitemap>\n    <loc>${safeHost}/sitemaps/it.xml</loc>\n  </sitemap>\n`;
+    xml += `  <sitemap>\n    <loc>${safeHost}/sitemaps/en.xml</loc>\n  </sitemap>\n`;
     ['benzina', 'gasolio', 'gpl', 'metano', 'hvo', 'gnl'].forEach((fuel, index) => {
         const enFuels = ['petrol', 'diesel', 'lpg', 'methane', 'hvo', 'lng'];
-        xml += `  <sitemap>\n    <loc>${host}/sitemaps/fuels-it-${fuel}.xml</loc>\n  </sitemap>\n`;
-        xml += `  <sitemap>\n    <loc>${host}/sitemaps/fuels-en-${enFuels[index]}.xml</loc>\n  </sitemap>\n`;
+        xml += `  <sitemap>\n    <loc>${safeHost}/sitemaps/fuels-it-${encodeURIComponent(fuel)}.xml</loc>\n  </sitemap>\n`;
+        xml += `  <sitemap>\n    <loc>${safeHost}/sitemaps/fuels-en-${encodeURIComponent(enFuels[index])}.xml</loc>\n  </sitemap>\n`;
     });
     
     xml += `</sitemapindex>`;
@@ -368,7 +401,7 @@ app.get('/sitemap.xml', (req, res) => {
 app.get('/sitemaps/it.xml', (req, res) => {
     if (sitemapCaches.it) return res.header('Content-Type', 'application/xml').send(sitemapCaches.it);
     
-    const host = `https://${req.get('host')}`;
+    const host = getSafeHost(req);
     let xml = getUrlsetStart();
     
     xml += buildSingleLangUrl(host, '', 'en', '', 'daily', '1.0', 'it');
@@ -378,7 +411,7 @@ app.get('/sitemaps/it.xml', (req, res) => {
         const lowerCity = city.toLowerCase();
         const citySegmentIt = slugify(lowerCity);
         const citySegmentEn = slugify(itToEnCities[lowerCity] || lowerCity);
-        xml += buildSingleLangUrl(host, `/citta/${citySegmentIt}`, 'en', `/city/${citySegmentEn}`, 'daily', '0.8', 'it');
+        xml += buildSingleLangUrl(host, `/citta/${encodeURIComponent(citySegmentIt)}`, 'en', `/city/${encodeURIComponent(citySegmentEn)}`, 'daily', '0.8', 'it');
     }
     
     xml += `</urlset>`;
@@ -389,7 +422,7 @@ app.get('/sitemaps/it.xml', (req, res) => {
 app.get('/sitemaps/en.xml', (req, res) => {
     if (sitemapCaches.en) return res.header('Content-Type', 'application/xml').send(sitemapCaches.en);
     
-    const host = `https://${req.get('host')}`;
+    const host = getSafeHost(req);
     let xml = getUrlsetStart();
     
     xml += buildSingleLangUrl(host, '', 'it', '', 'daily', '1.0', 'en');
@@ -399,7 +432,7 @@ app.get('/sitemaps/en.xml', (req, res) => {
         const lowerCity = city.toLowerCase();
         const citySegmentIt = slugify(lowerCity);
         const citySegmentEn = slugify(itToEnCities[lowerCity] || lowerCity);
-        xml += buildSingleLangUrl(host, `/city/${citySegmentEn}`, 'it', `/citta/${citySegmentIt}`, 'daily', '0.8', 'en');
+        xml += buildSingleLangUrl(host, `/city/${encodeURIComponent(citySegmentEn)}`, 'it', `/citta/${encodeURIComponent(citySegmentIt)}`, 'daily', '0.8', 'en');
     }
     
     xml += `</urlset>`;
@@ -418,17 +451,17 @@ app.get('/sitemaps/fuels-it-:fuel.xml', (req, res) => {
     
     if (sitemapCaches.fuelsIt[requestedFuel]) return res.header('Content-Type', 'application/xml').send(sitemapCaches.fuelsIt[requestedFuel]);
     
-    const host = `https://${req.get('host')}`;
+    const host = getSafeHost(req);
     let xml = getUrlsetStart();
     
-    xml += buildSingleLangUrl(host, `/${requestedFuel}`, 'en', `/${fuelsEn[fuelIndex]}`, 'daily', '0.9', 'it');
+    xml += buildSingleLangUrl(host, `/${encodeURIComponent(requestedFuel)}`, 'en', `/${encodeURIComponent(fuelsEn[fuelIndex])}`, 'daily', '0.9', 'it');
     
     for (const city of cities) {
         const lowerCity = city.toLowerCase();
         const citySegmentIt = slugify(lowerCity);
         const citySegmentEn = slugify(itToEnCities[lowerCity] || lowerCity);
         
-        xml += buildSingleLangUrl(host, `/citta/${citySegmentIt}/${requestedFuel}`, 'en', `/city/${citySegmentEn}/${fuelsEn[fuelIndex]}`, 'daily', '0.7', 'it');
+        xml += buildSingleLangUrl(host, `/citta/${encodeURIComponent(citySegmentIt)}/${encodeURIComponent(requestedFuel)}`, 'en', `/city/${encodeURIComponent(citySegmentEn)}/${encodeURIComponent(fuelsEn[fuelIndex])}`, 'daily', '0.7', 'it');
     }
     
     xml += `</urlset>`;
@@ -446,17 +479,17 @@ app.get('/sitemaps/fuels-en-:fuel.xml', (req, res) => {
     
     if (sitemapCaches.fuelsEn[requestedFuel]) return res.header('Content-Type', 'application/xml').send(sitemapCaches.fuelsEn[requestedFuel]);
     
-    const host = `https://${req.get('host')}`;
+    const host = getSafeHost(req);
     let xml = getUrlsetStart();
     
-    xml += buildSingleLangUrl(host, `/${requestedFuel}`, 'it', `/${fuelsIt[fuelIndex]}`, 'daily', '0.9', 'en');
+    xml += buildSingleLangUrl(host, `/${encodeURIComponent(requestedFuel)}`, 'it', `/${encodeURIComponent(fuelsIt[fuelIndex])}`, 'daily', '0.9', 'en');
     
     for (const city of cities) {
         const lowerCity = city.toLowerCase();
         const citySegmentIt = slugify(lowerCity);
         const citySegmentEn = slugify(itToEnCities[lowerCity] || lowerCity);
         
-        xml += buildSingleLangUrl(host, `/city/${citySegmentEn}/${requestedFuel}`, 'it', `/citta/${citySegmentIt}/${fuelsIt[fuelIndex]}`, 'daily', '0.7', 'en');
+        xml += buildSingleLangUrl(host, `/city/${encodeURIComponent(citySegmentEn)}/${encodeURIComponent(requestedFuel)}`, 'it', `/citta/${encodeURIComponent(citySegmentIt)}/${encodeURIComponent(fuelsIt[fuelIndex])}`, 'daily', '0.7', 'en');
     }
     
     xml += `</urlset>`;
@@ -479,25 +512,30 @@ app.use(express.static(distPath, {
 })); // index: false forces root to also be handled by the catch-all
 
 // --- REDIRECTS PER VECCHIE URL E QUERY PARAMS (SEO) ---
+const ALLOWED_FUELS = new Set(['benzina', 'gasolio', 'gpl', 'metano', 'hvo', 'gnl', 'petrol', 'diesel', 'lpg', 'methane', 'lng', 'cng']);
+
 app.use((req, res, next) => {
     // Redirect queries with carburante/fuel to path segment
     if (req.query.carburante || req.query.fuel) {
-        let fuelRaw = req.query.fuel || req.query.carburante;
-        const enToFuelLocal = { 'petrol': 'benzina', 'diesel': 'gasolio', 'lpg': 'gpl', 'cng': 'metano' };
-        const itToEnLocal = { 'benzina': 'petrol', 'gasolio': 'diesel', 'gpl': 'lpg', 'metano': 'cng' };
-        let normalized = fuelRaw.toLowerCase();
+        let fuelRaw = String(req.query.fuel || req.query.carburante || '').trim().toLowerCase();
+        const enToFuelLocal = { 'petrol': 'benzina', 'diesel': 'gasolio', 'lpg': 'gpl', 'cng': 'metano', 'methane': 'metano', 'lng': 'gnl' };
+        const itToEnLocal = { 'benzina': 'petrol', 'gasolio': 'diesel', 'gpl': 'lpg', 'metano': 'cng', 'gnl': 'lng' };
         
         const isEn = req.path.startsWith('/en');
         const isIt = req.path.startsWith('/it');
         
-        let urlFuel = normalized;
-        if (isEn && itToEnLocal[normalized]) {
-            urlFuel = itToEnLocal[normalized];
-        } else if (isIt && enToFuelLocal[normalized]) {
-            urlFuel = enToFuelLocal[normalized];
+        let urlFuel = fuelRaw;
+        if (isEn && itToEnLocal[fuelRaw]) {
+            urlFuel = itToEnLocal[fuelRaw];
+        } else if (isIt && enToFuelLocal[fuelRaw]) {
+            urlFuel = enToFuelLocal[fuelRaw];
         } else if (!isEn && !isIt) {
-            urlFuel = itToEnLocal[normalized] || normalized;
+            urlFuel = itToEnLocal[fuelRaw] || fuelRaw;
             urlFuel = enToFuelLocal[urlFuel] || urlFuel; // default to it
+        }
+        
+        if (!ALLOWED_FUELS.has(urlFuel)) {
+            urlFuel = isEn ? 'petrol' : 'benzina';
         }
         
         const searchParams = new URLSearchParams(req.url.substring(req.path.length));
@@ -505,22 +543,23 @@ app.use((req, res, next) => {
         searchParams.delete('carburante');
         const finalSearch = searchParams.toString() ? `?${searchParams.toString()}` : '';
         
-        // Remove trailing slash if any
-        let cleanPath = req.path;
-        if (cleanPath.endsWith('/')) cleanPath = cleanPath.slice(0, -1);
+        // Remove trailing slash if any and sanitize path
+        let cleanPath = req.path.replace(/\/+$/, '');
+        if (cleanPath === '' || cleanPath === '/') cleanPath = isEn ? '/en' : '/it';
+        if (!cleanPath.startsWith('/it') && !cleanPath.startsWith('/en')) {
+            cleanPath = isEn ? `/en${cleanPath}` : `/it${cleanPath}`;
+        }
         
-        // Se cleanPath è root o solo /it /en, appendi il carburante
-        if (cleanPath === '') cleanPath = '/it';
-        if (cleanPath === '/') cleanPath = '/it';
-        
-        return res.redirect(301, `${cleanPath}/${urlFuel}${finalSearch}`);
+        const safeCleanPath = encodeURI(cleanPath);
+        return res.redirect(301, `${safeCleanPath}/${encodeURIComponent(urlFuel)}${finalSearch}`);
     }
 
     // Redirect /citta/slug -> /it/citta/slug
-    const oldCityMatch = req.path.match(/^\/citta\/([^/]+)\/?$/);
+    const oldCityMatch = req.path.match(/^\/citta\/([a-zA-Z0-9_-]+)\/?$/);
     if (oldCityMatch) {
+        const safeSlug = encodeURIComponent(oldCityMatch[1]);
         const searchParams = req.url.substring(req.path.length);
-        return res.redirect(301, `/it/citta/${oldCityMatch[1]}${searchParams}`);
+        return res.redirect(301, `/it/citta/${safeSlug}${searchParams}`);
     }
     
     // Redirect /esplora -> /it/esplora
@@ -534,7 +573,7 @@ app.use((req, res, next) => {
 
 const htmlCache = new Map();
 
-app.use(async (req, res) => {
+app.use(rateLimiter, async (req, res) => {
     trackStaticVisit(req);
     const indexPath = path.join(distPath, 'index.html');
     
@@ -586,7 +625,9 @@ app.use(async (req, res) => {
             const expectedOriginalSlug = lang === 'en' ? slugify(itToEnCities[normalizedSlug] || normalizedSlug) : normalizedSlug;
             if (decodeURIComponent(originalSlug) !== expectedOriginalSlug) {
                 const searchParams = req.url.substring(req.path.length);
-                return res.redirect(301, `/${lang}/${lang === 'it' ? 'citta' : 'city'}/${expectedOriginalSlug}${searchParams}`);
+                const safeLang = lang === 'en' ? 'en' : 'it';
+                const safePrefix = safeLang === 'it' ? 'citta' : 'city';
+                return res.redirect(301, `/${safeLang}/${safePrefix}/${encodeURIComponent(expectedOriginalSlug)}${searchParams}`);
             }
             
             cityCap = realCityObj;
@@ -633,7 +674,12 @@ app.use(async (req, res) => {
                     : `Find the cheapest fuel stations in Italy. Interactive map with updated ${displayFuel} prices.`;
             }
 
-            const currentUrl = `https://${req.get('host')}${req.path === '/' ? '/it' : req.path}`;
+            const host = getSafeHost(req);
+            const currentUrl = `${host}${encodeURI(req.path === '/' ? '/it' : req.path)}`;
+            const safeTitle = escapeHtml(title);
+            const safeDesc = escapeHtml(desc);
+            const safeCurrentUrl = escapeHtml(currentUrl);
+            const safeHost = escapeHtml(host);
             
             let aggregateData = null;
             let minStation = null;
@@ -666,31 +712,31 @@ app.use(async (req, res) => {
                 }
             }
             
-            html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
-            html = html.replace(/<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${currentUrl}">`);
-            html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${desc}">`);
-            html = html.replace(/<meta property="og:title" content="[^"]*">/, `<meta property="og:title" content="${title}">`);
-            html = html.replace(/<meta property="og:description" content="[^"]*">/, `<meta property="og:description" content="${desc}">`);
-            html = html.replace(/<meta property="og:type" content="[^"]*">/, `<meta property="og:type" content="website">\n    <meta property="og:image" content="https://${req.get('host')}/assets/img/icon-512.png">\n    <meta property="og:url" content="${currentUrl}">`);
+            html = html.replace(/<title>.*?<\/title>/, `<title>${safeTitle}</title>`);
+            html = html.replace(/<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${safeCurrentUrl}">`);
+            html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${safeDesc}">`);
+            html = html.replace(/<meta property="og:title" content="[^"]*">/, `<meta property="og:title" content="${safeTitle}">`);
+            html = html.replace(/<meta property="og:description" content="[^"]*">/, `<meta property="og:description" content="${safeDesc}">`);
+            html = html.replace(/<meta property="og:type" content="[^"]*">/, `<meta property="og:type" content="website">\n    <meta property="og:image" content="${safeHost}/assets/img/icon-512.png">\n    <meta property="og:url" content="${safeCurrentUrl}">`);
             
             // Inietta contenuto HTML per i crawler (risolve "Scansionata, ma attualmente non indicizzata")
             let staticHtml = `<div style="display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; padding: 20px; text-align: center; background-color: #f9fafb;">
-                <h1 style="font-size: 1.8rem; font-weight: bold; color: #111827; margin-bottom: 10px;">${title}</h1>
-                <p style="font-size: 1rem; color: #4b5563; max-width: 600px; line-height: 1.5;">${desc}</p>
+                <h1 style="font-size: 1.8rem; font-weight: bold; color: #111827; margin-bottom: 10px;">${safeTitle}</h1>
+                <p style="font-size: 1rem; color: #4b5563; max-width: 600px; line-height: 1.5;">${safeDesc}</p>
             </div>`;
             
             if (exploreMatch) {
                 let linksHtml = '<ul style="display:none;">';
-                const cityBaseUrl = `https://${req.get('host')}/${lang}/${lang === 'it' ? 'citta' : 'city'}/`;
+                const cityBaseUrl = `${safeHost}/${lang}/${lang === 'it' ? 'citta' : 'city'}/`;
                 for (const city of cities) {
                     const enName = itToEnCities[city.toLowerCase()] || city.toLowerCase();
                     const slug = slugify(lang === 'it' ? city.toLowerCase() : enName);
-                    linksHtml += `<li><a href="${cityBaseUrl}${slug}">${city}</a></li>`;
+                    linksHtml += `<li><a href="${cityBaseUrl}${encodeURIComponent(slug)}">${escapeHtml(city)}</a></li>`;
                 }
                 linksHtml += '</ul>';
                 staticHtml += linksHtml;
             } else if (isHomePage) {
-                staticHtml += `<div style="display:none;"><a href="https://${req.get('host')}/${lang}/${lang === 'it' ? 'esplora' : 'explore'}">Esplora Città</a></div>`;
+                staticHtml += `<div style="display:none;"><a href="${safeHost}/${lang}/${lang === 'it' ? 'esplora' : 'explore'}">Esplora Città</a></div>`;
             }
             html = html.replace('<div id="root"></div>', `<div id="root">${staticHtml}</div>`);
             
@@ -724,10 +770,10 @@ app.use(async (req, res) => {
                     "@context": "https://schema.org",
                     "@type": "WebSite",
                     "name": "FuelFinder Italy",
-                    "url": `https://${req.get('host')}/`,
+                    "url": `${host}/`,
                     "potentialAction": {
                         "@type": "SearchAction",
-                        "target": `https://${req.get('host')}/${lang}/${lang === 'it' ? 'citta' : 'city'}/{search_term_string}`,
+                        "target": `${host}/${lang}/${lang === 'it' ? 'citta' : 'city'}/{search_term_string}`,
                         "query-input": "required name=search_term_string"
                     }
                 },
@@ -735,8 +781,8 @@ app.use(async (req, res) => {
                     "@context": "https://schema.org",
                     "@type": "Organization",
                     "name": "FuelFinder",
-                    "url": `https://${req.get('host')}/`,
-                    "logo": `https://${req.get('host')}/assets/img/icon-512.png`,
+                    "url": `${host}/`,
+                    "logo": `${host}/assets/img/icon-512.png`,
                     "description": "Piattaforma gratuita per confrontare i prezzi del carburante in Italia."
                 },
                 {
@@ -747,13 +793,13 @@ app.use(async (req, res) => {
                             "@type": "ListItem",
                             "position": 1,
                             "name": "Home",
-                            "item": `https://${req.get('host')}/`
+                            "item": `${host}/`
                         },
                         {
                             "@type": "ListItem",
                             "position": 2,
                             "name": lang === 'it' ? "Italia" : "Italy",
-                            "item": `https://${req.get('host')}/${lang}`
+                            "item": `${host}/${lang}`
                         }
                     ]
                 }
@@ -884,7 +930,8 @@ app.use(async (req, res) => {
                 }
             }
 
-            const jsonLdScript = `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>`;
+            const safeJsonLdString = JSON.stringify(jsonLd).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+            const jsonLdScript = `<script type="application/ld+json">${safeJsonLdString}</script>`;
             html = html.replace('</head>', `${jsonLdScript}\n</head>`);
             
             if (htmlCache.size > 2000) {
