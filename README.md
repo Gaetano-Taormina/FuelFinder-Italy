@@ -1,8 +1,10 @@
 # FuelFinder Italia
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Click_Here-blue?style=for-the-badge)](https://fuelfinder-msn8.onrender.com)
-[![Version](https://img.shields.io/badge/version-1.2.0-brightgreen?style=for-the-badge)](https://github.com/Gaetano-Taormina/FuelFinder-Italy/releases)
+[![Version](https://img.shields.io/badge/version-1.2.4-brightgreen?style=for-the-badge)](https://github.com/Gaetano-Taormina/FuelFinder-Italy/releases)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen?style=for-the-badge)](https://github.com/Gaetano-Taormina/FuelFinder-Italy)
+[![Node](https://img.shields.io/badge/node-%3E%3D22.0.0-informational?style=for-the-badge&logo=node.js)](https://nodejs.org/)
+[![pnpm](https://img.shields.io/badge/pnpm-11.x-orange?style=for-the-badge&logo=pnpm)](https://pnpm.io/)
 
 **Choose your language / Scegli la tua lingua:**
 
@@ -14,7 +16,7 @@
 ## English Version
 
 FuelFinder Italy is a modern full-stack Progressive Web App (PWA) that allows users to find the most convenient fuel stations in Italy.
-The data shown is real and based on official Open Data from the Italian Ministry.
+The data shown is real and based on official Open Data from the Italian Ministry of Enterprises and Made in Italy (MIMIT).
 
 ### Key Features
 
@@ -22,127 +24,135 @@ The data shown is real and based on official Open Data from the Italian Ministry
 - **Smart Autocomplete:** Instant location suggestions while typing, powered by OpenStreetMap Nominatim.
 - **Route Calculation:** Integrated OSRM (Open Source Routing Machine) to automatically trace the optimal route on the map, calculating distance and travel time from the user to the selected station.
 - **Advanced Filters:** Filter by radius (3, 5, 10, 20 km), fuel type (Gasoline, Diesel, LPG, Methane, HVO, LNG), and service type (Self-Service or Served).
-- **Interactive Map:** Clear map visualization (powered by Leaflet) with dynamic point-of-interest clustering.
+- **Interactive Map:** Clear map visualization (powered by Leaflet) with dynamic point-of-interest clustering and code-split chunks.
 - **PWA Support:** The app can be installed directly on a mobile Home screen, hiding the browser UI for a native, full-screen standalone experience.
-- **Multi-language:** Native support for both English and Italian.
+- **Multi-language:** Native internationalization (i18next) for both English and Italian.
 - **Modern UX:** Features Optimistic UI rendering, Skeleton Loaders, CSS-only Tooltips, and SWR caching for a fluid, app-like feel.
-- **Modern Compression:** Native Node 24 zero-dependency multi-format compression (`zstd`, `br`, `gzip`, `deflate`).
-- **Dark/Light Theme:** Modern UI (React + TailwindCSS) that adapts to user preferences.
-- **Zero Turso Quota Waste:** Pre-sync checks `Last-Modified` HTTP header before downloading, computing diffs strictly against local SQLite.
-- **Privacy-Friendly Analytics:** Native backend counter utilizing irreversible IP hashing (SHA-256) to track daily visits without requiring GDPR cookie banners.
+- **Dual Pre-compression:** Vite-integrated Brotli and Gzip pre-compression along with runtime multi-format support (`zstd`, `br`, `gzip`, `deflate`).
+- **Path Aliasing & IDE Support:** Native `@/*` path mapping across frontend and tests with clean editor configuration.
+- **Dark/Light Theme:** Modern UI (React 19 + TailwindCSS v4) that adapts to user preferences.
+- **Zero Cloud Costs & Fast Local DB:** Pre-compiled SQLite snapshot is downloaded automatically on startup from GitHub Releases, eliminating cloud fees and ensuring sub-millisecond query responses.
+- **Privacy-Friendly Analytics:** Native backend counter utilizing irreversible SHA-256 hashing to track daily visits without requiring GDPR cookie banners.
 - **Security Hardened:** Integrated Rate Limiting against DDoS/Scraping attacks, React Error Boundaries for crash prevention, and protective HTTP Security Headers.
 - **Advanced SEO:** Highly optimized for search engines featuring JSON-LD Structured Data, `sitemap.xml`, dynamic Meta Tags, and `robots.txt`.
 - **Admin Dashboard:** Secure passkey-protected panel at `/admin-stats` for visualizing site traffic and usage stats.
-- **Lighthouse Optimized:** Next-gen image formats (WebP) and optimized React chunks for maximum speed.
-- **3-Tier Testing Architecture & 100% Coverage:** Comprehensive testing suite divided into Component/Unit, Group/Integration, and E2E (Playwright), achieving 100% global coverage across all metrics (Lines, Functions, Statements, Branches).
-- **Automated Releases:** Git tag-based release workflow with GitHub Actions compiling release bundles and publishing GitHub Releases.
+- **Lighthouse 100/100:** Next-gen image formats (WebP), deferred CSS, and fine-tuned manual chunks.
+- **3-Tier Testing Architecture & 100% Coverage:** Comprehensive testing suite divided into Component/Unit (Vitest), Integration Flow, and E2E in real browser (Playwright), achieving 100% global coverage.
+- **Automated CI/CD & Dependabot:** GitHub Actions with automatic run cancellation (`concurrency`), Node 22 LTS environment, and smart Dependabot PR grouping.
 
-### Testing & Development Commands
+### Scripts and Commands
 
-All testing and release commands are powered by `pnpm`:
+All commands are powered by `pnpm`:
 
 ```bash
+# Start development environment (Vite frontend + Express backend with auto-reload)
+pnpm dev
+
+# Start individual services
+pnpm run dev:client
+pnpm run dev:server
+
+# Build and preview for production
+pnpm run build
+pnpm run preview
+
 # Run all test suites (Unit, Integration, E2E)
 pnpm test
 
-# Run component & unit tests
-pnpm test:unit
+# Run code coverage analysis (100% target)
+pnpm run test:coverage
 
-# Run integration flow tests
-pnpm test:integration
+# Fast linting and auto-fix with Oxlint
+pnpm run lint
+pnpm run lint:fix
 
-# Run real browser end-to-end tests (Playwright)
-pnpm test:e2e
+# Sync latest MIMIT open data locally
+pnpm run sync
 
-# Run global code coverage analysis (100% target)
-pnpm test:coverage
+# Show local database stats
+pnpm run stats
 
-# Linting with Oxlint
-pnpm lint
-
-# Create a new release and Git tag (patch, minor, major)
-pnpm run release:patch
-pnpm run release:minor
-pnpm run release:major
+# Automatic semantic release and Git tag generation
+pnpm run release
 ```
 
 ### Architecture and Structure
 
-The project features a high-performance **Full-Stack** architecture with a modern, premium user interface.
+The project features a high-performance **Full-Stack** architecture:
 
-- **Frontend (Client):** Developed in React (via Vite) with TailwindCSS for a fast, fluid, and 100% Mobile-responsive design.
+- **Frontend (Client):** Developed in React 19 (via Vite 8) with TailwindCSS v4 for a fast, fluid, and 100% mobile-responsive design.
 - **Backend (API):** Managed by a Node.js server with the Express 5 framework.
-- **Database:** High-performance local **SQLite** (or **Turso libSQL**) database. On production/Render, a pre-compiled SQLite snapshot is downloaded automatically on startup from GitHub Releases, eliminating external cloud database fees and ensuring instant sub-millisecond query responses.
-
-### Data Flow (Synchronization)
-
-The application relies on information released daily by the Ministry (Open Data). A background automated process handles:
-
-1. Scheduled GitHub Actions workflow running twice daily to fetch MIMIT Open Data.
-2. Compiling and indexing local `database.sqlite` with zero downtime.
-3. Automatically compressing and publishing SQLite snapshots to GitHub Releases.
-4. Server downloads the latest snapshot at boot into local storage.
+- **Database:** High-performance local **SQLite** (or **Turso libSQL**) database. On production/Render, a pre-compiled SQLite snapshot is downloaded automatically on startup from GitHub Releases.
 
 ---
 
 ## Versione Italiana
 
 FuelFinder Italia è un'applicazione web full-stack moderna (Progressive Web App) che permette agli utenti di trovare i distributori di carburante più convenienti in Italia.
-I dati mostrati sono reali e basati sugli Open Data ufficiali del Ministero.
+I dati mostrati sono reali e basati sugli Open Data ufficiali del Ministero delle Imprese e del Made in Italy (MIMIT).
 
 ### Caratteristiche Principali
 
 - **Ricerca Georeferenziata:** Cerca distributori inserendo una città/CAP o utilizzando il GPS del dispositivo.
-- **Completamento Automatico:** Suggerimenti intelligenti in tempo reale durante la digitazione delle località.
+- **Completamento Automatico:** Suggerimenti intelligenti in tempo reale durante la digitazione delle località tramite OpenStreetMap Nominatim.
 - **Calcolo del Percorso:** Integrazione con OSRM (Open Source Routing Machine) per tracciare automaticamente il tragitto ottimale sulla mappa, calcolando distanza e tempi di percorrenza dall'utente al distributore.
 - **Filtri Avanzati:** Filtra per raggio di distanza (3, 5, 10, 20 km), tipo di carburante (Benzina, Gasolio, GPL, Metano, HVO, GNL) e tipologia di servizio (Self-Service o Servito).
-- **Mappa Interattiva:** Visualizzazione chiara sulla mappa (grazie a Leaflet) con raggruppamento dinamico (clustering) dei punti di interesse.
-- **Supporto PWA:** L'app può essere installata direttamente sulla schermata Home del cellulare, nascondendo l'interfaccia del browser per un'esperienza nativa (Standalone) a schermo intero.
-- **Multilingua:** Supporto nativo per Italiano e Inglese.
-- **UX Moderna:** Implementa rendering Optimistic UI, Skeleton Loaders, Tooltips in puro CSS e Caching SWR per eliminare i caricamenti a scatti.
-- **Compressione Nativa Avanzata:** Compressione multi-formato a zero dipendenze su Node 24 (`zstd`, `br`, `gzip`, `deflate`).
-- **Tema Scuro/Chiaro:** Interfaccia utente moderna (React + TailwindCSS) che si adatta alle preferenze visive dell'utente.
-- **Zero Costi Database & SQLite Standalone:** Download automatico all'avvio su Render da GitHub Releases con query locali istantanee e zero consumo di quote cloud.
-- **Statistiche GDPR-Friendly:** Contatore visite nativo lato server basato su crittografia (hash irreversibile) per garantire il 100% dell'anonimato senza richiedere banner sui cookie.
-- **Sicurezza e Affidabilità:** Rate Limiting integrato contro attacchi DDoS, Error Boundaries in React per prevenire crash totali, e intestazioni HTTP protettive.
+- **Mappa Interattiva:** Visualizzazione chiara sulla mappa (Leaflet) con raggruppamento dinamico (clustering) dei punti di interesse e chunking dedicato.
+- **Supporto PWA:** L'app può essere installata direttamente sulla schermata Home del dispositivo, offrendo un'esperienza nativa (Standalone) a schermo intero.
+- **Multilingua:** Supporto nativo (i18next) per Italiano e Inglese.
+- **UX Moderna:** Rendering Optimistic UI, Skeleton Loaders, Tooltip in puro CSS e Caching SWR per navigazione istantanea senza scatti.
+- **Doppia Pre-compressione:** Compressione statica integrata in build con Brotli e Gzip, unita al supporto runtime multi-formato (`zstd`, `br`, `gzip`, `deflate`).
+- **Path Aliasing & Supporto IDE:** Alias `@/*` per import puliti e configurazione di File Nesting per VS Code.
+- **Tema Scuro/Chiaro:** Interfaccia utente moderna (React 19 + TailwindCSS v4) che si adatta alle preferenze visive del sistema.
+- **Zero Costi Cloud & SQLite Standalone:** Download automatico all'avvio su Render da GitHub Releases con query locali istantanee e zero costi fissi di database.
+- **Statistiche GDPR-Friendly:** Contatore visite nativo lato server basato su hash crittografico SHA-256 irreversibile per garantire il 100% dell'anonimato senza richiedere banner sui cookie.
+- **Sicurezza e Affidabilità:** Rate Limiting contro attacchi DDoS/scraping, Error Boundaries in React per prevenire crash totali e intestazioni HTTP protettive.
 - **SEO Strutturata:** Ottimizzazione profonda per Google tramite Dati Strutturati (JSON-LD), mappa `sitemap.xml`, `robots.txt` e Open Graph.
 - **Dashboard Admin:** Pannello protetto da passkey sicura alla rotta `/admin-stats` per monitorare il traffico e l'utilizzo del sito.
-- **Testing a 3 Livelli & 100% Coverage:** Suite completa di test suddivisa in Component/Unit, Group/Integration ed E2E (Playwright), con copertura globale del 100% su tutte le metriche (Linee, Funzioni, Statements, Branches).
-- **Release Automatizzate:** Workflow basato su tag Git e GitHub Actions per generare automaticamente pacchetti di rilascio e GitHub Releases.
+- **Lighthouse 100/100:** Formati immagine di nuova generazione (WebP), CSS differito e chunking avanzato delle librerie.
+- **Testing a 3 Livelli & 100% Coverage:** Suite completa di test suddivisa in Component/Unit (Vitest), Group/Integration ed E2E su browser reale (Playwright), con copertura globale del 100%.
+- **Workflow CI/CD & Dependabot:** Pipeline GitHub Actions con cancellazione automatica dei task obsoleti (`concurrency`), Node 22 LTS e raggruppamenti intelligenti per Dependabot.
 
-### Comandi di Testing e Release
+### Script e Comandi
 
 Tutti i comandi sono gestiti tramite `pnpm`:
 
 ```bash
+# Avvia l'ambiente di sviluppo completo (Vite frontend + Express backend con hot-reload)
+pnpm dev
+
+# Avvia i singoli servizi in sviluppo
+pnpm run dev:client
+pnpm run dev:server
+
+# Compila e testa la build di produzione
+pnpm run build
+pnpm run preview
+
 # Esegue tutte e 3 le suite di test (Unit, Integration, E2E)
 pnpm test
 
-# Esegue i test unitari e per componente
-pnpm test:unit
+# Analisi di code coverage globale (obiettivo 100%)
+pnpm run test:coverage
 
-# Esegue i test sui flussi di integrazione
-pnpm test:integration
+# Controllo e correzione linting ultra-rapido con Oxlint
+pnpm run lint
+pnpm run lint:fix
 
-# Esegue i test End-to-End su browser reale (Playwright)
-pnpm test:e2e
+# Sincronizza i dati aperti MIMIT in locale
+pnpm run sync
 
-# Analisi di coverage globale (obiettivo 100%)
-pnpm test:coverage
+# Visualizza statistiche sul database locale
+pnpm run stats
 
-# Linting con Oxlint
-pnpm lint
-
-# Crea una nuova release e il relativo tag Git (patch, minor, major)
-pnpm run release:patch
-pnpm run release:minor
-pnpm run release:major
+# Creazione e rilascio automatico di versione semantica con tag Git
+pnpm run release
 ```
 
 ### Architettura e Struttura
 
 Il progetto è sviluppato su una solida architettura **Full-Stack** ad alte prestazioni:
 
-- **Frontend (Client):** Sviluppato in React (tramite Vite) con TailwindCSS per un design rapido, fluido e responsivo al 100% su Mobile.
+- **Frontend (Client):** Sviluppato in React 19 (tramite Vite 8) con TailwindCSS v4 per un design rapido, fluido e responsivo al 100% su Mobile.
 - **Backend (API):** Gestito da un server Node.js con framework Express 5.
 - **Database:** Motore **SQLite** locale ad altissime prestazioni (con supporto opzionale a **Turso libSQL**). Su Render il database viene scaricato automaticamente all'avvio da GitHub Releases, azzerando le latenze e i costi di terze parti.
