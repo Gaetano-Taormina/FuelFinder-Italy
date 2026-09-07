@@ -42,7 +42,7 @@ export default defineConfig(() => ({
       reportsDirectory: "tests/coverage",
       clean: false,
       cleanOnRerun: false,
-      exclude: ["server/middlewares/analytics.js", "server/stats-cli.js"],
+      exclude: ["server/middlewares/analytics.js", "server/stats-cli.js", "scripts/**"],
       reporter: [
         ["text", { maxCols: 80 }]
       ],

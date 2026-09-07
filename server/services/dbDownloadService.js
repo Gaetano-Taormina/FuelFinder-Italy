@@ -28,6 +28,33 @@ export function validateSqliteHeader(filePath) {
 }
 
 /**
+ * Returns the appropriate streaming decompressor for the requested URL and headers.
+ * Supports Zstandard (zstd), Brotli (br), and Gzip (gz).
+ * @param {string} url 
+ * @param {string} [contentType=''] 
+ * @param {string} [contentEncoding=''] 
+ * @returns {import('node:stream').Transform | null}
+ */
+export function getDecompressor(url, contentType = '', contentEncoding = '') {
+    const isZstd = url.endsWith('.zst') || url.endsWith('.zstd') || contentType.includes('zstd') || contentEncoding.includes('zstd');
+    if (isZstd && typeof zlib.createZstdDecompress === 'function') {
+        return zlib.createZstdDecompress();
+    }
+
+    const isBrotli = url.endsWith('.br') || contentType.includes('br') || contentEncoding.includes('br');
+    if (isBrotli && typeof zlib.createBrotliDecompress === 'function') {
+        return zlib.createBrotliDecompress();
+    }
+
+    const isGzipped = url.endsWith('.gz') || contentType.includes('gzip') || contentEncoding.includes('gzip');
+    if (isGzipped) {
+        return zlib.createGunzip();
+    }
+
+    return null;
+}
+
+/**
  * Streams an HTTP(S) resource with automatic redirect following and timeout handling.
  * @param {string} url 
  * @param {number} timeoutMs 
@@ -46,7 +73,7 @@ export function getHttpStream(url, timeoutMs = 60000, redirectCount = 0) {
         const req = client.get(parsedUrl, {
             headers: {
                 'User-Agent': 'FuelFinder-Downloader/1.0',
-                'Accept': 'application/octet-stream, application/gzip, */*'
+                'Accept': 'application/octet-stream, application/zstd, application/gzip, */*'
             },
             timeout: timeoutMs
         }, (res) => {
@@ -76,10 +103,10 @@ export function getHttpStream(url, timeoutMs = 60000, redirectCount = 0) {
 }
 
 /**
- * Downloads a database file (optionally gzipped) from a remote URL to targetPath atomically.
+ * Downloads a database file (optionally zstd/brotli/gzipped) from a remote URL to targetPath atomically.
  * 
  * @param {Object} options
- * @param {string} options.url - Remote URL to download database from (supports .gz or raw .sqlite)
+ * @param {string} options.url - Remote URL to download database from (supports .zst, .br, .gz or raw .sqlite)
  * @param {string} options.targetPath - Destination path for database.sqlite
  * @param {number} [options.timeoutMs=60000] - Download timeout in milliseconds
  * @param {boolean} [options.force=false] - Force download even if target file already exists
@@ -111,13 +138,12 @@ export async function downloadDatabase({ url, targetPath, timeoutMs = 60000, for
 
         const contentType = (responseStream.headers['content-type'] || '').toLowerCase();
         const contentEncoding = (responseStream.headers['content-encoding'] || '').toLowerCase();
-        const isGzipped = url.endsWith('.gz') || contentType.includes('gzip') || contentEncoding.includes('gzip');
+        const decompressor = getDecompressor(url, contentType, contentEncoding);
 
         const fileStream = fs.createWriteStream(tempPath);
 
-        if (isGzipped) {
-            const gunzip = zlib.createGunzip();
-            await pipeline(responseStream, gunzip, fileStream);
+        if (decompressor) {
+            await pipeline(responseStream, decompressor, fileStream);
         } else {
             await pipeline(responseStream, fileStream);
         }

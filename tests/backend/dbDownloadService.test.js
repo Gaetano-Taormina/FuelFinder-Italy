@@ -5,7 +5,7 @@ import os from 'node:os';
 import http from 'node:http';
 import https from 'node:https';
 import zlib from 'node:zlib';
-import { validateSqliteHeader, downloadDatabase, getHttpStream } from '../../server/services/dbDownloadService.js';
+import { validateSqliteHeader, downloadDatabase, getHttpStream, getDecompressor } from '../../server/services/dbDownloadService.js';
 
 describe('dbDownloadService', () => {
     let tempDir;
@@ -27,6 +27,16 @@ describe('dbDownloadService', () => {
                 const gzipped = zlib.gzipSync(SQLITE_SAMPLE);
                 res.writeHead(200, { 'Content-Type': 'application/gzip' });
                 res.end(gzipped);
+            } else if (req.url === '/database.sqlite.zst') {
+                const zstdCompressed = typeof zlib.zstdCompressSync === 'function' 
+                    ? zlib.zstdCompressSync(SQLITE_SAMPLE)
+                    : zlib.gzipSync(SQLITE_SAMPLE);
+                res.writeHead(200, { 'Content-Type': 'application/zstd' });
+                res.end(zstdCompressed);
+            } else if (req.url === '/database.sqlite.br') {
+                const brotliCompressed = zlib.brotliCompressSync(SQLITE_SAMPLE);
+                res.writeHead(200, { 'Content-Type': 'application/x-brotli' });
+                res.end(brotliCompressed);
             } else if (req.url === '/gzip-header-custom-url') {
                 const gzipped = zlib.gzipSync(SQLITE_SAMPLE);
                 res.writeHead(200, { 'Content-Type': 'application/x-gzip' });
@@ -92,6 +102,15 @@ describe('dbDownloadService', () => {
             });
             expect(validateSqliteHeader(validFile)).toBe(false);
             spy.mockRestore();
+        });
+    });
+
+    describe('getDecompressor', () => {
+        it('identifies zstd, brotli, and gzip streams accurately', () => {
+            expect(getDecompressor('https://example.com/db.zst')).not.toBeNull();
+            expect(getDecompressor('https://example.com/db.br')).not.toBeNull();
+            expect(getDecompressor('https://example.com/db.gz')).not.toBeNull();
+            expect(getDecompressor('https://example.com/db.sqlite')).toBeNull();
         });
     });
 
@@ -169,6 +188,32 @@ describe('dbDownloadService', () => {
             expect(fs.existsSync(targetPath)).toBe(true);
             expect(validateSqliteHeader(targetPath)).toBe(true);
             expect(fs.statSync(targetPath).size).toBe(SQLITE_SAMPLE.length);
+        });
+
+        it('downloads and decompresses zstd SQLite file', async () => {
+            const targetPath = path.join(tempDir, 'downloaded_zstd.sqlite');
+            const result = await downloadDatabase({
+                url: `${serverUrl}/database.sqlite.zst`,
+                targetPath
+            });
+
+            expect(result.success).toBe(true);
+            expect(result.downloaded).toBe(true);
+            expect(fs.existsSync(targetPath)).toBe(true);
+            expect(validateSqliteHeader(targetPath)).toBe(true);
+        });
+
+        it('downloads and decompresses brotli SQLite file', async () => {
+            const targetPath = path.join(tempDir, 'downloaded_brotli.sqlite');
+            const result = await downloadDatabase({
+                url: `${serverUrl}/database.sqlite.br`,
+                targetPath
+            });
+
+            expect(result.success).toBe(true);
+            expect(result.downloaded).toBe(true);
+            expect(fs.existsSync(targetPath)).toBe(true);
+            expect(validateSqliteHeader(targetPath)).toBe(true);
         });
 
         it('downloads gzip with Content-Type gzip even without .gz extension', async () => {
