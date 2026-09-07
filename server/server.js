@@ -31,6 +31,8 @@ process.on('SIGINT', () => {
 });
 
 
+import escapeHtml from 'escape-html';
+
 const slugify = (text) => {
     return text.toString().toLowerCase()
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -39,16 +41,6 @@ const slugify = (text) => {
         .replace(/--+/g, '-')
         .replace(/^-+/, '')
         .replace(/-+$/, '');
-};
-
-const escapeHtml = (str) => {
-    if (typeof str !== 'string') return '';
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
 };
 
 const escapeXml = (str) => {
@@ -593,8 +585,8 @@ app.use(rateLimiter, async (req, res) => {
         'lng': 'GNL'
     };
     const rawFuel = fuelMap[normalizedFuelKey] || 'Benzina';
-    
-    const lang = cityMatch ? cityMatch[1] : (exploreMatch ? exploreMatch[1] : (req.path.match(REGEX_LANG_PREFIX) ? req.path.match(REGEX_LANG_PREFIX)[1] : 'it'));
+    const rawLang = cityMatch ? cityMatch[1] : (exploreMatch ? exploreMatch[1] : (req.path.match(REGEX_LANG_PREFIX) ? req.path.match(REGEX_LANG_PREFIX)[1] : 'it'));
+    const lang = rawLang === 'en' ? 'en' : 'it';
     const displayFuel = lang === 'en' ? (fuelToEn[rawFuel] || 'Petrol') : rawFuel;
     
     const isHomePage = req.path === '/' || (homeMatch && !exploreMatch && !cityMatch);
