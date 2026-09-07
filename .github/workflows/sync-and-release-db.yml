@@ -1,6 +1,10 @@
 name: Daily Database Build & Release
 
 on:
+  push:
+    branches:
+      - publication
+      - main
   schedule:
     # Runs at 07:15 UTC (09:15 CEST Summer) and 08:15 UTC (09:15 CET Winter) right after MIMIT publishes 09:00 data
     - cron: '15 7,8 * * *'
