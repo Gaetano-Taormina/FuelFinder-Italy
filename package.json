@@ -5,31 +5,52 @@
   "description": "Trova i distributori di carburante più economici in Italia",
   "keywords": [
     "carburante",
-    "prezzi",
-    "mappa",
-    "italia",
+    "prezzi-carburanti",
+    "prezzo-benzina",
+    "distributori-italia",
     "benzina",
     "diesel",
-    "fuel",
-    "italy"
+    "gasolio",
+    "gpl",
+    "metano",
+    "hvo",
+    "pompe-bianche",
+    "mimit-open-data",
+    "mappa-interattiva",
+    "fuel-prices-italy",
+    "gas-stations"
   ],
   "author": "FuelFinder",
+  "license": "MIT",
+  "homepage": "https://github.com/Gaetano-Taormina/FuelFinder-Italy#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gaetano-Taormina/FuelFinder-Italy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Gaetano-Taormina/FuelFinder-Italy/issues"
+  },
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"vite --host\" \"node server/server.js\"",
+    "dev": "concurrently -k -n \"vite,api\" -c \"cyan.bold,green.bold\" \"npm:dev:client\" \"npm:dev:server\"",
+    "dev:client": "vite --host",
+    "dev:server": "node --watch server/server.js",
+    "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build --emptyOutDir",
+    "preview": "vite preview",
     "start": "node server/server.js",
     "sync": "node server/sync-cli.js",
-    "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build --emptyOutDir --logLevel warn && node -e \"console.log('\\n✅ Build successful (dist/)\\n')\"",
     "stats": "node server/stats-cli.js",
     "lint": "oxlint -c .oxlintrc.json",
+    "lint:fix": "oxlint --fix -c .oxlintrc.json",
     "test": "node scripts/test-runner.js all",
     "test:coverage": "node scripts/test-runner.js coverage",
     "release": "node scripts/release.js",
     "prepare": "husky"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.0.0"
   },
+  "packageManager": "pnpm@11.25.0",
   "lint-staged": {
     "*.{js,jsx}": "oxlint -c .oxlintrc.json"
   },

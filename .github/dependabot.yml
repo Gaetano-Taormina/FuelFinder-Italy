@@ -1,6 +1,6 @@
 version: 2
 updates:
-  # Aggiornamenti per le dipendenze pnpm (l'ecosistema è "npm" ma Dependabot rileva pnpm-lock.yaml)
+  # Dipendenze JavaScript/Node.js gestite con pnpm
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -13,21 +13,40 @@ updates:
     groups:
       react-ecosystem:
         patterns:
-          - "react"
-          - "react-dom"
-          - "react-router-dom"
-      vite-ecosystem:
+          - "react*"
+          - "@types/react*"
+      vite-and-build:
         patterns:
-          - "vite"
+          - "vite*"
           - "@vitejs/*"
-          - "vitest"
-      # Raggruppa tutti gli aggiornamenti minori o patch per ridurre il rumore delle PR
+          - "cross-env"
+      tailwind-ecosystem:
+        patterns:
+          - "tailwind*"
+          - "@tailwindcss/*"
+      testing-tools:
+        patterns:
+          - "vitest*"
+          - "@vitest/*"
+          - "@testing-library/*"
+          - "@playwright/*"
+          - "supertest"
+          - "happy-dom"
+      maps-ecosystem:
+        patterns:
+          - "leaflet*"
+          - "react-leaflet*"
+      i18n-ecosystem:
+        patterns:
+          - "i18next*"
+          - "react-i18next*"
+      # Raggruppa tutti gli aggiornamenti minori o patch per evitare troppe PR
       minor-and-patch:
         update-types:
           - "minor"
           - "patch"
 
-  # Aggiunto ecosistema per aggiornare automaticamente le GitHub Actions (es. checkout, setup-node)
+  # Aggiornamento automatico delle GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

@@ -49,6 +49,7 @@ test-error.js
 coverage/
 tests/coverage/
 test-results/
+tests/test-results/
 playwright-report/
 .playwright/
 

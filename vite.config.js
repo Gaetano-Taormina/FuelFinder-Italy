@@ -2,14 +2,24 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { compression } from "vite-plugin-compression2";
+import { fileURLToPath, URL } from "node:url";
 
 // https://vite.dev/config/
 export default defineConfig(() => ({
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),
     compression({
       algorithm: "brotliCompress",
+      exclude: [/\.(br)$/, /\.(gz)$/],
+    }),
+    compression({
+      algorithm: "gzip",
       exclude: [/\.(br)$/, /\.(gz)$/],
     }),
     {
@@ -79,6 +89,18 @@ export default defineConfig(() => ({
     sourcemap: false,
     chunkSizeWarningLimit: 1500, // Alza il limite a 1.5MB per evitare il warning
     rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (id.includes("leaflet") || id.includes("react-leaflet")) {
+              return "maps";
+            }
+            if (id.includes("react") || id.includes("react-router-dom") || id.includes("swr") || id.includes("i18next")) {
+              return "vendor";
+            }
+          }
+        },
+      },
       onwarn(warning, defaultHandler) {
         // Ignora il falso positivo di Tailwind v4 su Rolldown
         if (warning.message && warning.message.includes("SOURCEMAP_BROKEN"))

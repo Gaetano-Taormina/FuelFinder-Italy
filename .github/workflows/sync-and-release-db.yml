@@ -1,9 +1,6 @@
 name: Daily Database Build & Release
 
 on:
-  push:
-    branches:
-      - main
   schedule:
     # Runs at 07:15 UTC (09:15 CEST Summer) and 08:15 UTC (09:15 CET Winter) right after MIMIT publishes 09:00 data
     - cron: '15 7,8 * * *'
@@ -31,7 +28,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '22'
           cache: 'pnpm'
 
       - name: Install dependencies
