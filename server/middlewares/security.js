@@ -1,5 +1,5 @@
 /* oxlint-disable no-console */
-import crypto from 'crypto';
+import { rateLimit } from 'express-rate-limit';
 
 // --- SICUREZZA: Intestazioni HTTP Protettive & CSP Hardened ---
 export const securityHeaders = (req, res, next) => {
@@ -17,41 +17,14 @@ export const securityHeaders = (req, res, next) => {
 };
 
 // --- SICUREZZA: Rate Limiting Anti-Scraping / Anti-DDoS ---
-const rateLimitMap = new Map();
-export const rateLimiter = (req, res, next) => {
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
-    const userAgent = (req.headers['user-agent'] || '').toLowerCase();
-    const now = Date.now();
-
-    // Bypass strict rate limit for known search engine crawlers to avoid 'Crawl Anomaly'
-    if (userAgent.includes('googlebot') || userAgent.includes('bingbot') || userAgent.includes('yandexbot')) {
-        return next();
-    }
-    
-    if (!rateLimitMap.has(ip)) {
-        rateLimitMap.set(ip, { count: 1, lastReset: now });
-    } else {
-        const client = rateLimitMap.get(ip);
-        if (now - client.lastReset > 60000) {
-            client.count = 1;
-            client.lastReset = now;
-        } else {
-            client.count++;
-            // Increased from 120 to 600 to allow normal aggressive but legitimate browsing/crawling
-            if (client.count > 600) {
-                console.warn(`[Security] Bloccato traffico anomalo (DDoS/Scraping) dall'IP: ${crypto.createHash('sha256').update(ip).digest('hex').substring(0,8)}`);
-                return res.status(429).json({ error: 'Troppe richieste. Per favore attendi un minuto.' });
-            }
-        }
-    }
-    
-    if (Math.random() < 0.01) {
-        for (const [key, value] of rateLimitMap.entries()) {
-            if (now - value.lastReset > 120000) {
-                rateLimitMap.delete(key);
-            }
-        }
-    }
-    
-    next();
-};
+export const rateLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minuto
+    limit: 600, // Massimo 600 richieste al minuto per IP
+    standardHeaders: true, // Ritorna le intestazioni standard RateLimit-*
+    legacyHeaders: false, // Disabilita X-RateLimit-* deprecate
+    skip: (req) => {
+        const userAgent = (req.headers['user-agent'] || '').toLowerCase();
+        return userAgent.includes('googlebot') || userAgent.includes('bingbot') || userAgent.includes('yandexbot');
+    },
+    message: { error: 'Troppe richieste. Per favore attendi un minuto.' }
+});

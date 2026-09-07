@@ -114,4 +114,61 @@ describe('RoutePanel Component', () => {
     expect(screen.getByText('#2')).toBeInTheDocument();
     expect(screen.getByText('rp_selected_title')).toBeInTheDocument();
   });
+
+  it('matches station by coordinates when id is missing', () => {
+    vi.spyOn(StationsContext, 'useStations').mockReturnValue({
+      selectedStation: { lat: 45.46, lng: 9.19, name: 'Coord Station' },
+      stations: [{ lat: 45.46, lng: 9.19, name: 'Coord Station' }],
+      routeData: null,
+      handleNavigation: vi.fn()
+    });
+    render(<RoutePanel />);
+    expect(screen.getByText('rp_best_badge')).toBeInTheDocument();
+  });
+
+  it('matches station by name when id and coordinates are missing', () => {
+    vi.spyOn(StationsContext, 'useStations').mockReturnValue({
+      selectedStation: { name: 'Name Only Station' },
+      stations: [{ name: 'Name Only Station' }],
+      routeData: null,
+      handleNavigation: vi.fn()
+    });
+    render(<RoutePanel />);
+    expect(screen.getByText('rp_best_badge')).toBeInTheDocument();
+  });
+
+  it('renders station badge when rankIndex is -1 and isBest is false', () => {
+    vi.spyOn(StationsContext, 'useStations').mockReturnValue({
+      selectedStation: { id: 999, name: 'Unmatched Station', isBest: false },
+      stations: [{ id: 1, name: 'Station 1' }],
+      routeData: null,
+      handleNavigation: vi.fn()
+    });
+    render(<RoutePanel />);
+    expect(screen.getByText('rp_station_badge')).toBeInTheDocument();
+    expect(screen.getByText('rp_selected_title')).toBeInTheDocument();
+  });
+
+  it('renders best badge when rankIndex is -1 and isBest is true', () => {
+    vi.spyOn(StationsContext, 'useStations').mockReturnValue({
+      selectedStation: { id: 999, name: 'Unmatched Station', isBest: true },
+      stations: [{ id: 1, name: 'Station 1' }],
+      routeData: null,
+      handleNavigation: vi.fn()
+    });
+    render(<RoutePanel />);
+    expect(screen.getByText('rp_best_badge')).toBeInTheDocument();
+    expect(screen.getByText('rp_title')).toBeInTheDocument();
+  });
+
+  it('returns false in findIndex when station objects have no identifiers', () => {
+    vi.spyOn(StationsContext, 'useStations').mockReturnValue({
+      selectedStation: {},
+      stations: [{}],
+      routeData: null,
+      handleNavigation: vi.fn()
+    });
+    render(<RoutePanel />);
+    expect(screen.getByText('rp_station_badge')).toBeInTheDocument();
+  });
 });

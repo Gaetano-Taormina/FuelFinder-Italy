@@ -30,10 +30,31 @@ describe('Sidebar Component', () => {
     const overlay = document.querySelector('.fixed.inset-0.bg-slate-900\\/60');
     fireEvent.keyDown(overlay, { key: 'Enter', code: 'Enter' });
     expect(handleClose).toHaveBeenCalledTimes(3);
+
+    fireEvent.keyDown(overlay, { key: ' ', code: 'Space' });
+    expect(handleClose).toHaveBeenCalledTimes(4);
     
     // Ignored key does not trigger close
     fireEvent.keyDown(overlay, { key: 'A', code: 'KeyA' });
-    expect(handleClose).toHaveBeenCalledTimes(3);
+    expect(handleClose).toHaveBeenCalledTimes(4);
+  });
+
+  it('opens install modal and triggers onClose when clicking install button, and closes modal', () => {
+    const handleClose = vi.fn();
+    render(
+      <BrowserRouter>
+        <Sidebar isOpen={true} onClose={handleClose} cityName="Milano" langPrefix="it" />
+      </BrowserRouter>
+    );
+
+    const installBtn = screen.getByText('sidebar_install');
+    fireEvent.click(installBtn);
+    expect(handleClose).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('install_modal_title')).toBeInTheDocument();
+
+    const closeButtons = screen.getAllByLabelText('btn_close');
+    fireEvent.click(closeButtons[1]); // Close button on InstallModal
+    expect(screen.queryByText('install_modal_title')).not.toBeInTheDocument();
   });
 
   it('renders closed state with default city (Italia) and English language', () => {

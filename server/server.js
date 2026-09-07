@@ -112,17 +112,6 @@ const enToItCities = Object.freeze({
     'mantua': 'mantova'
 });
 
-const enToFuel = Object.freeze({
-    'Petrol': 'Benzina',
-    'Diesel': 'Gasolio',
-    'LPG': 'GPL',
-    'CNG': 'Metano',
-    'petrol': 'Benzina',
-    'diesel': 'Gasolio',
-    'lpg': 'GPL',
-    'cng': 'Metano'
-});
-
 const fuelToEn = Object.freeze({
     'Benzina': 'Petrol',
     'Gasolio': 'Diesel',
@@ -517,12 +506,13 @@ const ALLOWED_FUELS = new Set(['benzina', 'gasolio', 'gpl', 'metano', 'hvo', 'gn
 app.use((req, res, next) => {
     // Redirect queries with carburante/fuel to path segment
     if (req.query.carburante || req.query.fuel) {
+        const isEn = req.path.startsWith('/en');
+        const isIt = req.path.startsWith('/it');
+        const lang = isEn ? 'en' : 'it';
+        
         let fuelRaw = String(req.query.fuel || req.query.carburante || '').trim().toLowerCase();
         const enToFuelLocal = { 'petrol': 'benzina', 'diesel': 'gasolio', 'lpg': 'gpl', 'cng': 'metano', 'methane': 'metano', 'lng': 'gnl' };
         const itToEnLocal = { 'benzina': 'petrol', 'gasolio': 'diesel', 'gpl': 'lpg', 'metano': 'cng', 'gnl': 'lng' };
-        
-        const isEn = req.path.startsWith('/en');
-        const isIt = req.path.startsWith('/it');
         
         let urlFuel = fuelRaw;
         if (isEn && itToEnLocal[fuelRaw]) {
@@ -531,41 +521,37 @@ app.use((req, res, next) => {
             urlFuel = enToFuelLocal[fuelRaw];
         } else if (!isEn && !isIt) {
             urlFuel = itToEnLocal[fuelRaw] || fuelRaw;
-            urlFuel = enToFuelLocal[urlFuel] || urlFuel; // default to it
+            urlFuel = enToFuelLocal[urlFuel] || urlFuel;
         }
         
         if (!ALLOWED_FUELS.has(urlFuel)) {
             urlFuel = isEn ? 'petrol' : 'benzina';
         }
         
-        const searchParams = new URLSearchParams(req.url.substring(req.path.length));
-        searchParams.delete('fuel');
-        searchParams.delete('carburante');
-        const finalSearch = searchParams.toString() ? `?${searchParams.toString()}` : '';
+        const cityMatch = req.path.match(REGEX_CITY);
+        const exploreMatch = req.path.match(REGEX_EXPLORE);
         
-        // Remove trailing slash if any and sanitize path
-        let cleanPath = req.path.replace(/\/+$/, '');
-        if (cleanPath === '' || cleanPath === '/') cleanPath = isEn ? '/en' : '/it';
-        if (!cleanPath.startsWith('/it') && !cleanPath.startsWith('/en')) {
-            cleanPath = isEn ? `/en${cleanPath}` : `/it${cleanPath}`;
+        let targetPath = `/${lang}`;
+        if (cityMatch) {
+            const citySlug = encodeURIComponent(slugify(cityMatch[3]));
+            targetPath = `/${lang}/${lang === 'it' ? 'citta' : 'city'}/${citySlug}`;
+        } else if (exploreMatch) {
+            targetPath = `/${lang}/${lang === 'it' ? 'esplora' : 'explore'}`;
         }
         
-        const safeCleanPath = encodeURI(cleanPath);
-        return res.redirect(301, `${safeCleanPath}/${encodeURIComponent(urlFuel)}${finalSearch}`);
+        return res.redirect(301, `${targetPath}/${encodeURIComponent(urlFuel)}`);
     }
 
     // Redirect /citta/slug -> /it/citta/slug
     const oldCityMatch = req.path.match(/^\/citta\/([a-zA-Z0-9_-]+)\/?$/);
     if (oldCityMatch) {
         const safeSlug = encodeURIComponent(oldCityMatch[1]);
-        const searchParams = req.url.substring(req.path.length);
-        return res.redirect(301, `/it/citta/${safeSlug}${searchParams}`);
+        return res.redirect(301, `/it/citta/${safeSlug}`);
     }
     
     // Redirect /esplora -> /it/esplora
     if (req.path === '/esplora' || req.path === '/esplora/') {
-        const searchParams = req.url.substring(req.path.length);
-        return res.redirect(301, `/it/esplora${searchParams}`);
+        return res.redirect(301, '/it/esplora');
     }
     
     next();
@@ -581,21 +567,35 @@ app.use(rateLimiter, async (req, res) => {
     const cityMatch = req.path.match(REGEX_CITY);
     const homeMatch = req.path === '/' ? null : req.path.match(REGEX_HOME_LANG);
     
-    let rawFuel = req.query.fuel || req.query.carburante;
-    
+    let rawFuelInput = 'Benzina';
     if (cityMatch && cityMatch[4]) {
-        rawFuel = cityMatch[4];
+        rawFuelInput = cityMatch[4];
     } else if (homeMatch && homeMatch[2] && !exploreMatch && !cityMatch) {
-        rawFuel = homeMatch[2];
+        rawFuelInput = homeMatch[2];
+    } else if (req.query.fuel || req.query.carburante) {
+        rawFuelInput = req.query.fuel || req.query.carburante;
     }
     
-    if (!rawFuel) rawFuel = 'Benzina';
-    
-    // Normalize to IT first
-    if (enToFuel[rawFuel]) rawFuel = enToFuel[rawFuel];
+    // Whitelist and normalize rawFuel from fixed dictionary
+    const normalizedFuelKey = String(rawFuelInput || '').toLowerCase();
+    const fuelMap = {
+        'benzina': 'Benzina',
+        'gasolio': 'Gasolio',
+        'gpl': 'GPL',
+        'metano': 'Metano',
+        'hvo': 'HVO',
+        'gnl': 'GNL',
+        'petrol': 'Benzina',
+        'diesel': 'Gasolio',
+        'lpg': 'GPL',
+        'cng': 'Metano',
+        'methane': 'Metano',
+        'lng': 'GNL'
+    };
+    const rawFuel = fuelMap[normalizedFuelKey] || 'Benzina';
     
     const lang = cityMatch ? cityMatch[1] : (exploreMatch ? exploreMatch[1] : (req.path.match(REGEX_LANG_PREFIX) ? req.path.match(REGEX_LANG_PREFIX)[1] : 'it'));
-    const displayFuel = lang === 'en' ? (fuelToEn[rawFuel] || rawFuel) : rawFuel;
+    const displayFuel = lang === 'en' ? (fuelToEn[rawFuel] || 'Petrol') : rawFuel;
     
     const isHomePage = req.path === '/' || (homeMatch && !exploreMatch && !cityMatch);
 
@@ -624,10 +624,9 @@ app.use(rateLimiter, async (req, res) => {
             // Redirect slug mal formattati
             const expectedOriginalSlug = lang === 'en' ? slugify(itToEnCities[normalizedSlug] || normalizedSlug) : normalizedSlug;
             if (decodeURIComponent(originalSlug) !== expectedOriginalSlug) {
-                const searchParams = req.url.substring(req.path.length);
                 const safeLang = lang === 'en' ? 'en' : 'it';
                 const safePrefix = safeLang === 'it' ? 'citta' : 'city';
-                return res.redirect(301, `/${safeLang}/${safePrefix}/${encodeURIComponent(expectedOriginalSlug)}${searchParams}`);
+                return res.redirect(301, `/${safeLang}/${safePrefix}/${encodeURIComponent(expectedOriginalSlug)}`);
             }
             
             cityCap = realCityObj;
@@ -675,7 +674,13 @@ app.use(rateLimiter, async (req, res) => {
             }
 
             const host = getSafeHost(req);
-            const currentUrl = `${host}${encodeURI(req.path === '/' ? '/it' : req.path)}`;
+            let safePath = `/${lang}`;
+            if (cityMatch) {
+                safePath = `/${lang}/${lang === 'it' ? 'citta' : 'city'}/${encodeURIComponent(slugify(cityCap))}`;
+            } else if (exploreMatch) {
+                safePath = `/${lang}/${lang === 'it' ? 'esplora' : 'explore'}`;
+            }
+            const currentUrl = `${host}${safePath}`;
             const safeTitle = escapeHtml(title);
             const safeDesc = escapeHtml(desc);
             const safeCurrentUrl = escapeHtml(currentUrl);
