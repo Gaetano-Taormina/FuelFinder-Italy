@@ -1,10 +1,19 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '../config/routes.js';
+import InstallModal from './InstallModal';
 
 const Sidebar = memo(function Sidebar({ isOpen, onClose, cityName, langPrefix }) {
     const { t } = useTranslation();
+    const [isInstallOpen, setIsInstallOpen] = useState(false);
+
+    const handleOpenInstall = useCallback(() => {
+        setIsInstallOpen(true);
+        onClose();
+    }, [onClose]);
+
+    const closeInstallModal = useCallback(() => setIsInstallOpen(false), []);
 
     const handleOverlayKeyDown = useCallback((e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -40,11 +49,12 @@ const Sidebar = memo(function Sidebar({ isOpen, onClose, cityName, langPrefix })
                         <span className="font-extrabold text-lg text-slate-800 dark:text-white">FuelFinder</span>
                     </div>
                     <button 
+                        type="button"
                         onClick={onClose}
-                        className="relative z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm text-slate-600 dark:text-slate-300 hover:bg-rose-100 hover:text-rose-600 dark:hover:bg-rose-900/50 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-600 shadow-sm transition-colors focus:outline-none"
-                        aria-label="Chiudi menu"
+                        className="relative z-20 w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 hover:bg-rose-100 hover:text-rose-600 dark:hover:bg-rose-900/60 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-600 shadow-sm transition-all active:scale-95 cursor-pointer focus:outline-none"
+                        aria-label={t('close_menu')}
                     >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        <svg className="w-5 h-5 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
 
@@ -90,8 +100,19 @@ const Sidebar = memo(function Sidebar({ isOpen, onClose, cityName, langPrefix })
                         <svg className="w-5 h-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                         {t('sidebar_explore')}
                     </Link>
+
+                    <button 
+                        type="button"
+                        onClick={handleOpenInstall}
+                        className="mt-2 flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-50/80 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-bold border border-blue-200/60 dark:border-blue-700/50 hover:bg-blue-100 hover:text-blue-800 dark:hover:bg-blue-800/40 transition-colors cursor-pointer text-left w-full focus:outline-none"
+                    >
+                        <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        <span className="truncate">{t('sidebar_install')}</span>
+                    </button>
                 </nav>
             </div>
+
+            <InstallModal isOpen={isInstallOpen} onClose={closeInstallModal} />
         </>
     );
 });

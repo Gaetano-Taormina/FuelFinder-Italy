@@ -23,6 +23,15 @@ describe('RoutePanel Component', () => {
         currentPrice: 1.50,
         dist: 5
       },
+      stations: [
+        {
+          id: 1,
+          name: 'Test Station',
+          address: '123 Test St',
+          currentPrice: 1.50,
+          dist: 5
+        }
+      ],
       setSelectedStation: mockSetSelectedStation,
       routeData: null,
       handleNavigation: mockHandleNavigation
@@ -80,5 +89,29 @@ describe('RoutePanel Component', () => {
     render(<RoutePanel />);
     expect(screen.getByText('-- min')).toBeInTheDocument();
     expect(screen.getByText('-- km')).toBeInTheDocument();
+  });
+
+  it('renders "rp_best_badge" when selected station is rank 0', () => {
+    vi.spyOn(StationsContext, 'useStations').mockReturnValue({
+      selectedStation: { id: 1, name: 'Best Station' },
+      stations: [{ id: 1, name: 'Best Station' }, { id: 2, name: 'Second Station' }],
+      routeData: null,
+      handleNavigation: vi.fn()
+    });
+    render(<RoutePanel />);
+    expect(screen.getByText('rp_best_badge')).toBeInTheDocument();
+    expect(screen.getByText('rp_title')).toBeInTheDocument();
+  });
+
+  it('renders rank number and "rp_selected_title" when selected station is not rank 0', () => {
+    vi.spyOn(StationsContext, 'useStations').mockReturnValue({
+      selectedStation: { id: 2, name: 'Second Station' },
+      stations: [{ id: 1, name: 'Best Station' }, { id: 2, name: 'Second Station' }],
+      routeData: null,
+      handleNavigation: vi.fn()
+    });
+    render(<RoutePanel />);
+    expect(screen.getByText('#2')).toBeInTheDocument();
+    expect(screen.getByText('rp_selected_title')).toBeInTheDocument();
   });
 });

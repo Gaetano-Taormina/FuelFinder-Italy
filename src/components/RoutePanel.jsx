@@ -7,12 +7,26 @@ import { useCallback } from 'react';
 
 export default function RoutePanel() {
     const { t } = useTranslation();
-    const { selectedStation, setSelectedStation, routeData, handleNavigation } = useStations();
+    const { selectedStation, setSelectedStation, routeData, handleNavigation, stations } = useStations();
 
     const navigateToStation = useCallback(() => handleNavigation(selectedStation), [handleNavigation, selectedStation]);
     const closePanel = useCallback(() => setSelectedStation(null), [setSelectedStation]);
 
     if (!selectedStation) return null;
+
+    const rankIndex = stations && stations.length > 0 ? stations.findIndex(s => {
+        if (selectedStation.id != null && s.id != null) {
+            return s.id === selectedStation.id;
+        }
+        if (selectedStation.lat != null && s.lat != null && selectedStation.lng != null && s.lng != null) {
+            return s.lat === selectedStation.lat && s.lng === selectedStation.lng;
+        }
+        if (selectedStation.name && s.name) {
+            return s.name === selectedStation.name;
+        }
+        return false;
+    }) : -1;
+    const isBest = rankIndex === 0 || (rankIndex === -1 && Boolean(selectedStation.isBest));
 
     let travelTime = '--';
     let distText = '--';
@@ -29,8 +43,18 @@ export default function RoutePanel() {
     return (
         <aside className="absolute bottom-4 left-4 right-4 sm:right-auto sm:bottom-8 sm:left-8 z-9999 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-700 sm:min-w-70 sm:max-w-sm transition-all duration-300">
             <div className="flex items-center gap-2 mb-2 sm:mb-3">
-                <span className="text-sm sm:text-base font-black text-yellow-500 bg-yellow-100 dark:bg-yellow-900/30 px-2 py-0.5 rounded-md uppercase tracking-wider border border-yellow-200 dark:border-yellow-700/50">{t('rp_best_badge')}</span>
-                <h3 className="font-bold text-base sm:text-lg text-slate-800 dark:text-white leading-tight">{t('rp_title')}</h3>
+                {isBest ? (
+                    <span className="text-sm sm:text-base font-black text-yellow-500 bg-yellow-100 dark:bg-yellow-900/30 px-2 py-0.5 rounded-md uppercase tracking-wider border border-yellow-200 dark:border-yellow-700/50">
+                        {t('rp_best_badge')}
+                    </span>
+                ) : (
+                    <span className="text-sm sm:text-base font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded-md uppercase tracking-wider border border-blue-200 dark:border-blue-700/50">
+                        {rankIndex >= 0 ? `#${rankIndex + 1}` : t('rp_station_badge')}
+                    </span>
+                )}
+                <h3 className="font-bold text-base sm:text-lg text-slate-800 dark:text-white leading-tight">
+                    {isBest ? t('rp_title') : t('rp_selected_title')}
+                </h3>
             </div>
             <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
                 <div className="flex justify-between border-b border-slate-100 dark:border-slate-700 pb-1">
@@ -59,7 +83,11 @@ export default function RoutePanel() {
                     <span className="font-bold text-slate-800 dark:text-white">{travelTime} min</span>
                 </div>
             </div>
-            <button onClick={closePanel} className="mt-3 sm:mt-4 w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 text-[10px] sm:text-xs font-bold py-2 rounded-xl transition-colors">
+            <button 
+                type="button"
+                onClick={closePanel} 
+                className="mt-3 sm:mt-4 w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 text-[10px] sm:text-xs font-bold py-2 rounded-xl transition-colors cursor-pointer"
+            >
                 {t('btn_close')}
             </button>
         </aside>

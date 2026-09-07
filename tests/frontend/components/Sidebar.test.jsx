@@ -19,7 +19,7 @@ describe('Sidebar Component', () => {
     expect(screen.getByText('Milano')).toBeInTheDocument();
     expect(screen.getByText('FuelFinder')).toBeInTheDocument();
 
-    const closeBtn = screen.getByLabelText('Chiudi menu');
+    const closeBtn = screen.getByLabelText(/chiudi menu|close_menu/i);
     fireEvent.click(closeBtn);
     expect(handleClose).toHaveBeenCalledTimes(1);
 

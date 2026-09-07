@@ -40,6 +40,12 @@ The data shown is real and based on official Open Data from the Italian Ministry
 - **3-Tier Testing Architecture & 100% Coverage:** Comprehensive testing suite divided into Component/Unit (Vitest), Integration Flow, and E2E in real browser (Playwright), achieving 100% global coverage.
 - **Automated CI/CD & Dependabot:** GitHub Actions with automatic run cancellation (`concurrency`), Node 22 LTS environment, and smart Dependabot PR grouping.
 
+### 📱 Quick Mobile Install (PWA)
+
+Scan the QR Code below with your smartphone camera to open FuelFinder Italy and install it directly onto your Home Screen:
+
+![FuelFinder Mobile QR Code](https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&data=https%3A%2F%2Ffuelfinder-msn8.onrender.com%2F)
+
 ### Scripts and Commands
 
 All commands are powered by `pnpm`:
@@ -112,6 +118,12 @@ I dati mostrati sono reali e basati sugli Open Data ufficiali del Ministero dell
 - **Lighthouse 100/100:** Formati immagine di nuova generazione (WebP), CSS differito e chunking avanzato delle librerie.
 - **Testing a 3 Livelli & 100% Coverage:** Suite completa di test suddivisa in Component/Unit (Vitest), Group/Integration ed E2E su browser reale (Playwright), con copertura globale del 100%.
 - **Workflow CI/CD & Dependabot:** Pipeline GitHub Actions con cancellazione automatica dei task obsoleti (`concurrency`), Node 22 LTS e raggruppamenti intelligenti per Dependabot.
+
+### 📱 Installazione Rapida su Smartphone (PWA)
+
+Inquadra il codice QR con la fotocamera del tuo smartphone per aprire FuelFinder Italia e aggiungerlo alla schermata Home:
+
+![FuelFinder QR Code Mobile](https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&data=https%3A%2F%2Ffuelfinder-msn8.onrender.com%2F)
 
 ### Script e Comandi
 
