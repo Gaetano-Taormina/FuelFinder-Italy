@@ -1,10 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import http from 'node:http';
+import https from 'node:https';
 import zlib from 'node:zlib';
-import { validateSqliteHeader, downloadDatabase } from '../../server/services/dbDownloadService.js';
+import { validateSqliteHeader, downloadDatabase, getHttpStream } from '../../server/services/dbDownloadService.js';
 
 describe('dbDownloadService', () => {
     let tempDir;
@@ -26,6 +27,24 @@ describe('dbDownloadService', () => {
                 const gzipped = zlib.gzipSync(SQLITE_SAMPLE);
                 res.writeHead(200, { 'Content-Type': 'application/gzip' });
                 res.end(gzipped);
+            } else if (req.url === '/gzip-header-custom-url') {
+                const gzipped = zlib.gzipSync(SQLITE_SAMPLE);
+                res.writeHead(200, { 'Content-Type': 'application/x-gzip' });
+                res.end(gzipped);
+            } else if (req.url === '/redirect') {
+                res.writeHead(302, { 'Location': '/database.sqlite.gz' });
+                res.end();
+            } else if (req.url === '/loop1') {
+                res.writeHead(302, { 'Location': '/loop2' });
+                res.end();
+            } else if (req.url === '/loop2') {
+                res.writeHead(302, { 'Location': '/loop1' });
+                res.end();
+            } else if (req.url === '/slow') {
+                setTimeout(() => {
+                    res.writeHead(200);
+                    res.end(SQLITE_SAMPLE);
+                }, 1000);
             } else if (req.url === '/invalid.sqlite') {
                 res.writeHead(200, { 'Content-Type': 'application/octet-stream' });
                 res.end(Buffer.from('NOT A SQLITE FILE DATA'));
@@ -63,6 +82,49 @@ describe('dbDownloadService', () => {
             fs.writeFileSync(invalidFile, Buffer.from('HTML 404 NOT FOUND'));
             expect(validateSqliteHeader(invalidFile)).toBe(false);
         });
+
+        it('handles exceptions gracefully returning false', () => {
+            const validFile = path.join(tempDir, 'valid2.sqlite');
+            fs.writeFileSync(validFile, SQLITE_SAMPLE);
+
+            const spy = vi.spyOn(fs, 'readSync').mockImplementationOnce(() => {
+                throw new Error('Disk read error');
+            });
+            expect(validateSqliteHeader(validFile)).toBe(false);
+            spy.mockRestore();
+        });
+    });
+
+    describe('getHttpStream', () => {
+        it('rejects on exceeding max redirects', async () => {
+            await expect(getHttpStream(`${serverUrl}/loop1`)).rejects.toThrow('Too many redirects');
+        });
+
+        it('rejects on timeout', async () => {
+            await expect(getHttpStream(`${serverUrl}/slow`, 50)).rejects.toThrow('timeout');
+        });
+
+        it('handles connection error on invalid port', async () => {
+            await expect(getHttpStream('http://127.0.0.1:1')).rejects.toThrow();
+        });
+
+        it('uses https module for https URLs', async () => {
+            const spy = vi.spyOn(https, 'get').mockImplementationOnce((_url, _opts, callback) => {
+                const mockRes = {
+                    statusCode: 200,
+                    headers: {},
+                    on: vi.fn(),
+                    pipe: vi.fn()
+                };
+                callback(mockRes);
+                return { on: vi.fn() };
+            });
+
+            const stream = await getHttpStream('https://example.com/database.sqlite');
+            expect(stream.statusCode).toBe(200);
+            expect(spy).toHaveBeenCalled();
+            spy.mockRestore();
+        });
     });
 
     describe('downloadDatabase', () => {
@@ -70,6 +132,16 @@ describe('dbDownloadService', () => {
             const result = await downloadDatabase({ url: '', targetPath: path.join(tempDir, 'db.sqlite') });
             expect(result.success).toBe(false);
             expect(result.error).toContain('No URL');
+        });
+
+        it('creates destination directory if not exists', async () => {
+            const nestedPath = path.join(tempDir, 'subfolder', 'deep', 'db.sqlite');
+            const result = await downloadDatabase({
+                url: `${serverUrl}/database.sqlite`,
+                targetPath: nestedPath
+            });
+            expect(result.success).toBe(true);
+            expect(fs.existsSync(nestedPath)).toBe(true);
         });
 
         it('downloads raw SQLite file and verifies header', async () => {
@@ -85,10 +157,10 @@ describe('dbDownloadService', () => {
             expect(validateSqliteHeader(targetPath)).toBe(true);
         });
 
-        it('downloads and decompresses gzipped SQLite file', async () => {
-            const targetPath = path.join(tempDir, 'downloaded_gz.sqlite');
+        it('downloads and decompresses gzipped SQLite file with redirect', async () => {
+            const targetPath = path.join(tempDir, 'downloaded_redirect.sqlite');
             const result = await downloadDatabase({
-                url: `${serverUrl}/database.sqlite.gz`,
+                url: `${serverUrl}/redirect`,
                 targetPath
             });
 
@@ -97,6 +169,18 @@ describe('dbDownloadService', () => {
             expect(fs.existsSync(targetPath)).toBe(true);
             expect(validateSqliteHeader(targetPath)).toBe(true);
             expect(fs.statSync(targetPath).size).toBe(SQLITE_SAMPLE.length);
+        });
+
+        it('downloads gzip with Content-Type gzip even without .gz extension', async () => {
+            const targetPath = path.join(tempDir, 'downloaded_custom_header.sqlite');
+            const result = await downloadDatabase({
+                url: `${serverUrl}/gzip-header-custom-url`,
+                targetPath
+            });
+
+            expect(result.success).toBe(true);
+            expect(result.downloaded).toBe(true);
+            expect(validateSqliteHeader(targetPath)).toBe(true);
         });
 
         it('skips download if valid database already exists and force is false', async () => {

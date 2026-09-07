@@ -2,8 +2,10 @@ name: Daily Database Build & Release
 
 on:
   schedule:
-    # Runs at 06:30 and 14:30 UTC every day (08:30 and 16:30 Italian Time)
-    - cron: '30 6,14 * * *'
+    # Runs at 07:15 UTC (09:15 CEST Summer) and 08:15 UTC (09:15 CET Winter) right after MIMIT publishes 09:00 data
+    - cron: '15 7,8 * * *'
+    # Optional afternoon check at 14:15 UTC (15:15 / 16:15 Italian Time)
+    - cron: '15 14 * * *'
   workflow_dispatch:
 
 permissions:

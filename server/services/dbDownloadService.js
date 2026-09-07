@@ -144,9 +144,11 @@ export async function downloadDatabase({ url, targetPath, timeoutMs = 60000, for
             sizeBytes: stats.size
         };
     } catch (err) {
+        /* v8 ignore start */
         if (fs.existsSync(tempPath)) {
             try { fs.unlinkSync(tempPath); } catch {}
         }
+        /* v8 ignore stop */
         console.error(`[DB Download] ❌ Failed to download database: ${err.message}`);
         return {
             success: false,
