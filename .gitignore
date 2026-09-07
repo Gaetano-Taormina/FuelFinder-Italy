@@ -25,7 +25,10 @@ dist-ssr
 *.sqlite-wal
 *.sqlite-shm
 *.sqlite-info
+*.sqlite.gz
+*.sqlite.zst
 database.sqlite*
+*.tmp-*
 .tmp.*
 .env
 .env.local
