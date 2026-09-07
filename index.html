@@ -8,46 +8,45 @@
     <link rel="dns-prefetch" href="https://a.tile.openstreetmap.org">
     <link rel="dns-prefetch" href="https://b.tile.openstreetmap.org">
     <link rel="dns-prefetch" href="https://c.tile.openstreetmap.org">
-    
-    <!-- Rimossi prefetch per liberare tutta la banda iniziale per index.js -->
-    
+
     <title>FuelFinder - Prezzi Benzina e Diesel</title>
-    
+
     <!-- SEO Meta Tags -->
     <link rel="icon" href="/assets/img/icon-192.png" type="image/png">
     <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
     <link rel="canonical" href="https://fuelfinder-msn8.onrender.com/">
     <meta name="robots" content="index, follow">
     <meta name="description" content="Trova i distributori di benzina, diesel, GPL, metano, HVO e GNL più economici vicino a te in Italia. Mappa interattiva con prezzi del carburante sempre aggiornati.">
-    
-
     <meta name="keywords" content="prezzo benzina, distributori benzina, diesel, carburante economico, mappa distributori, prezzi carburante italia, hvo, biodiesel, gnl">
-    
+
     <!-- Open Graph (Facebook, WhatsApp, LinkedIn) -->
     <meta property="og:title" content="FuelFinder - Prezzi Benzina e Diesel">
-    <meta property="og:description" content="Trova i distributori di benzina, diesel, GPL, metano, HVO e GNL più economici vicino a te in Italia. Mappa interattiva con prezzi aggiornati.">
+    <meta property="og:description" content="Trova i distributori di benzina, diesel, GPL, metano, HVO e GNL più economici vicino a te in Italia. Mappa interattiva con prezzi del carburante sempre aggiornati.">
     <meta property="og:type" content="website">
+    <meta property="og:url" content="https://fuelfinder-msn8.onrender.com/">
     <meta property="og:image" content="https://fuelfinder-msn8.onrender.com/assets/img/icon-512.png">
 
-    <link rel="icon" href="/assets/img/icon-192.png">
-    
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="FuelFinder - Prezzi Benzina e Diesel">
+    <meta name="twitter:description" content="Trova i distributori di benzina, diesel, GPL, metano, HVO e GNL più economici vicino a te in Italia. Mappa interattiva con prezzi del carburante sempre aggiornati.">
+    <meta name="twitter:image" content="https://fuelfinder-msn8.onrender.com/assets/img/icon-512.png">
+
     <!-- PWA Settings -->
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#2563eb">
-    <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
+
     <!-- Critical Resource Hints & Preloads for LCP -->
     <link rel="preload" href="/assets/img/icon-192.webp" as="image" type="image/webp" fetchpriority="high">
-    
+
     <!-- Leaflet CSS Lazy -->
     <link rel="stylesheet" href="/leaflet.css" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="/leaflet.css"></noscript>
-</head>
 
-<body>
+    <!-- Critical Inlined CSS -->
     <style>
         :root { --bg-page: #f8fafc; --bg-header: #ffffff; --text-primary: #1e293b; --border-color: #cbd5e1; }
         @media (prefers-color-scheme: dark) {
@@ -70,6 +69,9 @@
         }
         @keyframes skeleton-pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 0.3; } }
     </style>
+</head>
+
+<body>
     <div id="root">
         <header class="critical-header">
             <div class="critical-container">
