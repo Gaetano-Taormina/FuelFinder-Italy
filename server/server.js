@@ -7,6 +7,7 @@ import path from 'path';
 import fs from 'fs';
 import 'dotenv/config';
 import { fetchTursoUsage } from './services/quotaService.js';
+import { downloadDatabase } from './services/dbDownloadService.js';
 
 // --- GESTIONE ERRORI DI SISTEMA ---
 process.on('uncaughtException', (err) => {
@@ -248,9 +249,23 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server listening on port ${PORT} - Init DB...`);
 });
 
-async function setupDatabase() {
+async function setupDatabase(forceDownload = false) {
+    if (process.env.DB_DOWNLOAD_URL) {
+        console.log(`[INFO] DB_DOWNLOAD_URL configured: ${process.env.DB_DOWNLOAD_URL}`);
+        const force = forceDownload || process.env.FORCE_DB_DOWNLOAD === 'true';
+        const dlResult = await downloadDatabase({
+            url: process.env.DB_DOWNLOAD_URL,
+            targetPath: localDbPath,
+            force
+        });
+        if (!dlResult.success && !fs.existsSync(localDbPath)) {
+            console.error(`[FATAL] Could not download initial SQLite database: ${dlResult.error}`);
+            process.exit(1);
+        }
+    }
+
     let clientOptions;
-    if (syncUrl && (syncUrl.startsWith('libsql://') || syncUrl.startsWith('https://'))) {
+    if (!process.env.DB_DOWNLOAD_URL && syncUrl && (syncUrl.startsWith('libsql://') || syncUrl.startsWith('https://'))) {
         // Direct Remote Client: queries Turso directly over HTTPS/WebSocket without downloading 23MB database on startup
         clientOptions = {
             url: syncUrl,
@@ -258,7 +273,7 @@ async function setupDatabase() {
         };
         console.log("[INFO] Connecting directly to Turso Cloud Database (Direct Remote Mode)...");
     } else {
-        // Local SQLite fallback for offline / local testing
+        // Local SQLite standalone mode
         clientOptions = { url: `file:${localDbPath}` };
         console.log(`[INFO] Using local SQLite database at ${localDbPath}`);
     }
@@ -288,19 +303,18 @@ async function initServer() {
         await setupDatabase();
         await setAnalyticsDb(db);
         
-        // Controllo live quota Turso in background
-        fetchTursoUsage().then(async (usage) => {
-            if (usage) {
-                console.log(`[INFO] Turso Quota Status: ${usage.rowsRead.toLocaleString()} Reads (${usage.pctRead}%), ${usage.rowsWritten.toLocaleString()} Writes (${usage.pctWritten}%), Syncs: ${(usage.bytesSynced/1024/1024).toFixed(1)}MB (${usage.pctSynced}%)`);
-                if (usage.isEmergency) {
-                    console.warn("[EMERGENCY] Soglia del 95% raggiunta su Turso all'avvio. Attivazione Maintenance Mode.");
-                    process.env.MAINTENANCE_MODE = 'true';
-                } else if (usage.isCritical) {
-                    console.warn("[WARN] Quota Turso elevata all'avvio (>80%). Attivazione replica locale.");
-                    await switchToLocalReplica();
+        // Controllo live quota Turso in background solo se collegati a Turso
+        if (syncUrl && !process.env.DB_DOWNLOAD_URL) {
+            fetchTursoUsage().then(async (usage) => {
+                if (usage) {
+                    console.log(`[INFO] Turso Quota Status: ${usage.rowsRead.toLocaleString()} Reads (${usage.pctRead}%), ${usage.rowsWritten.toLocaleString()} Writes (${usage.pctWritten}%), Syncs: ${(usage.bytesSynced/1024/1024).toFixed(1)}MB (${usage.pctSynced}%)`);
+                    if (usage.isEmergency) {
+                        console.warn("[EMERGENCY] Soglia del 95% raggiunta su Turso all'avvio. Attivazione Maintenance Mode.");
+                        process.env.MAINTENANCE_MODE = 'true';
+                    }
                 }
-            }
-        }).catch(() => {});
+            }).catch(() => {});
+        }
         
         // --- API ROUTES ---
         setupApiRoutes(app, db);

@@ -1,23 +1,35 @@
 /* oxlint-disable no-console */
 import 'dotenv/config';
+import path from 'node:path';
 import { createClient } from '@libsql/client';
 import { sync } from './sync/index.js';
+
+const args = process.argv.slice(2);
+const isDryRun = args.includes('--dry-run');
+const isLocalExplicit = args.includes('--local');
 
 const DB_TOKEN = process.env.TURSO_AUTH_TOKEN;
 const syncUrl = process.env.TURSO_DATABASE_URL;
 
-if (!syncUrl || !DB_TOKEN) {
-    console.error("Missing TURSO_DATABASE_URL or TURSO_AUTH_TOKEN in environment variables.");
-    process.exit(1);
+let db;
+
+if (isLocalExplicit || !syncUrl) {
+    const localDbPath = path.join(process.env.DATA_DIR || path.join(process.cwd(), 'server'), 'database.sqlite');
+    console.log(`[Sync] Operating in LOCAL SQLite mode (${localDbPath})`);
+    db = createClient({
+        url: `file:${localDbPath}`
+    });
+} else {
+    if (!DB_TOKEN) {
+        console.error("Missing TURSO_AUTH_TOKEN in environment variables for remote sync.");
+        process.exit(1);
+    }
+    console.log(`[Sync] Operating in REMOTE Turso mode (${syncUrl})`);
+    db = createClient({
+        url: syncUrl,
+        authToken: DB_TOKEN
+    });
 }
-
-const db = createClient({
-    url: syncUrl,
-    authToken: DB_TOKEN
-});
-
-const args = process.argv.slice(2);
-const isDryRun = args.includes('--dry-run');
 
 console.log("Starting manual sync" + (isDryRun ? " (DRY-RUN MODE)" : "") + "...");
 sync(db, 8, { dryRun: isDryRun, showProgress: true }).then(() => {
