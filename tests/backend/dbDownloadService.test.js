@@ -55,6 +55,9 @@ describe('dbDownloadService', () => {
                     res.writeHead(200);
                     res.end(SQLITE_SAMPLE);
                 }, 1000);
+            } else if (req.url === '/no-content-type') {
+                res.writeHead(200);
+                res.end(SQLITE_SAMPLE);
             } else if (req.url === '/invalid.sqlite') {
                 res.writeHead(200, { 'Content-Type': 'application/octet-stream' });
                 res.end(Buffer.from('NOT A SQLITE FILE DATA'));
@@ -70,6 +73,7 @@ describe('dbDownloadService', () => {
     });
 
     afterEach(async () => {
+        vi.restoreAllMocks();
         if (server) {
             await new Promise((resolve) => server.close(resolve));
         }
@@ -107,18 +111,28 @@ describe('dbDownloadService', () => {
 
     describe('getDecompressor', () => {
         it('identifies zstd, brotli, and gzip streams accurately', () => {
+            expect(getDecompressor('')).toBeNull();
             expect(getDecompressor('https://example.com/db.zst')).not.toBeNull();
             expect(getDecompressor('https://example.com/db.br')).not.toBeNull();
             expect(getDecompressor('https://example.com/db.gz')).not.toBeNull();
             expect(getDecompressor('relative-db.gz')).not.toBeNull();
             expect(getDecompressor('https://example.com/db.sqlite')).toBeNull();
+            expect(getDecompressor('https://example.com/data', '', 'zstd')).not.toBeNull();
+            expect(getDecompressor('https://example.com/data', '', 'br')).not.toBeNull();
+            expect(getDecompressor('https://example.com/data', '', 'gzip')).not.toBeNull();
+        });
+
+        it('handles missing brotli decompression in runtime', () => {
+            const mockZlib = { createBrotliDecompress: undefined };
+            expect(getDecompressor('https://example.com/db.br', '', '', mockZlib)).toBeNull();
         });
 
         it('throws helpful error if zstd is requested but not supported in runtime', () => {
-            const spy = vi.spyOn(zlib, 'createZstdDecompress').mockImplementation(() => undefined);
-            // Also test branch where createZstdDecompress returns undefined
-            expect(() => getDecompressor('https://example.com/db.zst')).toThrow('Node.js >= 22');
-            spy.mockRestore();
+            const mockZlib = { createZstdDecompress: undefined };
+            expect(() => getDecompressor('https://example.com/db.zst', '', '', mockZlib)).toThrow('Node.js >= 22');
+            
+            const mockZlib2 = { createZstdDecompress: () => undefined };
+            expect(() => getDecompressor('https://example.com/db.zst', '', '', mockZlib2)).toThrow('Node.js >= 22');
         });
     });
 
@@ -133,6 +147,22 @@ describe('dbDownloadService', () => {
 
         it('handles connection error on invalid port', async () => {
             await expect(getHttpStream('http://127.0.0.1:1')).rejects.toThrow();
+        });
+
+        it('handles HTTP error without statusMessage', async () => {
+            const spy = vi.spyOn(http, 'get').mockImplementationOnce((_url, _opts, callback) => {
+                const mockRes = {
+                    statusCode: 500,
+                    statusMessage: '',
+                    headers: {},
+                    resume: vi.fn()
+                };
+                callback(mockRes);
+                return { on: vi.fn() };
+            });
+
+            await expect(getHttpStream('http://example.com/fail')).rejects.toThrow('HTTP error 500: Request failed');
+            spy.mockRestore();
         });
 
         it('uses https module for https URLs', async () => {
@@ -233,6 +263,18 @@ describe('dbDownloadService', () => {
             const targetPath = path.join(tempDir, 'downloaded_custom_header.sqlite');
             const result = await downloadDatabase({
                 url: `${serverUrl}/gzip-header-custom-url`,
+                targetPath
+            });
+
+            expect(result.success).toBe(true);
+            expect(result.downloaded).toBe(true);
+            expect(validateSqliteHeader(targetPath)).toBe(true);
+        });
+
+        it('downloads raw SQLite file without Content-Type header', async () => {
+            const targetPath = path.join(tempDir, 'downloaded_no_content_type.sqlite');
+            const result = await downloadDatabase({
+                url: `${serverUrl}/no-content-type`,
                 targetPath
             });
 
