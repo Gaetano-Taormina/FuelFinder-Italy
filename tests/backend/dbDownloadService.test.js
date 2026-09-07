@@ -110,6 +110,7 @@ describe('dbDownloadService', () => {
             expect(getDecompressor('https://example.com/db.zst')).not.toBeNull();
             expect(getDecompressor('https://example.com/db.br')).not.toBeNull();
             expect(getDecompressor('https://example.com/db.gz')).not.toBeNull();
+            expect(getDecompressor('relative-db.gz')).not.toBeNull();
             expect(getDecompressor('https://example.com/db.sqlite')).toBeNull();
         });
 
@@ -204,10 +205,15 @@ describe('dbDownloadService', () => {
                 targetPath
             });
 
-            expect(result.success).toBe(true);
-            expect(result.downloaded).toBe(true);
-            expect(fs.existsSync(targetPath)).toBe(true);
-            expect(validateSqliteHeader(targetPath)).toBe(true);
+            if (typeof zlib.createZstdDecompress === 'function') {
+                expect(result.success).toBe(true);
+                expect(result.downloaded).toBe(true);
+                expect(fs.existsSync(targetPath)).toBe(true);
+                expect(validateSqliteHeader(targetPath)).toBe(true);
+            } else {
+                expect(result.success).toBe(false);
+                expect(result.error).toContain('Node.js >= 22');
+            }
         });
 
         it('downloads and decompresses brotli SQLite file', async () => {

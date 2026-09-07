@@ -36,7 +36,15 @@ export function validateSqliteHeader(filePath) {
  * @returns {import('node:stream').Transform | null}
  */
 export function getDecompressor(url, contentType = '', contentEncoding = '') {
-    const isZstd = url.endsWith('.zst') || url.endsWith('.zstd') || contentType.includes('zstd') || contentEncoding.includes('zstd');
+    let pathname = '';
+    try {
+        pathname = new URL(url).pathname.toLowerCase();
+    } catch {
+        pathname = (url || '').toLowerCase();
+    }
+    const lowerUrl = (url || '').toLowerCase();
+
+    const isZstd = lowerUrl.endsWith('.zst') || lowerUrl.endsWith('.zstd') || pathname.endsWith('.zst') || pathname.endsWith('.zstd') || contentType.includes('zstd') || contentEncoding.includes('zstd');
     if (isZstd) {
         if (typeof zlib.createZstdDecompress === 'function') {
             const decompressor = zlib.createZstdDecompress();
@@ -45,12 +53,12 @@ export function getDecompressor(url, contentType = '', contentEncoding = '') {
         throw new Error('Zstandard (.zst) decompression requires Node.js >= 22. Please set NODE_VERSION=24 on Render or use the .gz URL.');
     }
 
-    const isBrotli = url.endsWith('.br') || contentType.includes('br') || contentEncoding.includes('br');
+    const isBrotli = lowerUrl.endsWith('.br') || pathname.endsWith('.br') || contentType.includes('br') || contentEncoding.includes('br');
     if (isBrotli && typeof zlib.createBrotliDecompress === 'function') {
         return zlib.createBrotliDecompress();
     }
 
-    const isGzipped = url.endsWith('.gz') || contentType.includes('gzip') || contentEncoding.includes('gzip');
+    const isGzipped = lowerUrl.endsWith('.gz') || pathname.endsWith('.gz') || contentType.includes('gzip') || contentEncoding.includes('gzip');
     if (isGzipped) {
         return zlib.createGunzip();
     }
@@ -117,7 +125,8 @@ export function getHttpStream(url, timeoutMs = 60000, redirectCount = 0) {
  * @returns {Promise<{success: boolean, downloaded: boolean, error?: string, sizeBytes?: number}>}
  */
 export async function downloadDatabase({ url, targetPath, timeoutMs = 60000, force = false }) {
-    if (!url) {
+    const cleanUrl = (url || '').trim().replace(/^["']|["']$/g, '');
+    if (!cleanUrl) {
         return { success: false, downloaded: false, error: 'No URL provided' };
     }
 
@@ -134,15 +143,15 @@ export async function downloadDatabase({ url, targetPath, timeoutMs = 60000, for
     }
 
     const tempPath = `${targetPath}.tmp-${Date.now()}`;
-    console.log(`[DB Download] Downloading SQLite database from: ${url} ...`);
+    console.log(`[DB Download] Downloading SQLite database from: ${cleanUrl} ...`);
     const startTime = Date.now();
 
     try {
-        const responseStream = await getHttpStream(url, timeoutMs);
+        const responseStream = await getHttpStream(cleanUrl, timeoutMs);
 
         const contentType = (responseStream.headers['content-type'] || '').toLowerCase();
         const contentEncoding = (responseStream.headers['content-encoding'] || '').toLowerCase();
-        const decompressor = getDecompressor(url, contentType, contentEncoding);
+        const decompressor = getDecompressor(cleanUrl, contentType, contentEncoding);
 
         const fileStream = fs.createWriteStream(tempPath);
 
