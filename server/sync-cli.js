@@ -4,9 +4,9 @@ import path from 'node:path';
 import { createClient } from '@libsql/client';
 import { sync } from './sync/index.js';
 
-const args = process.argv.slice(2);
-const isDryRun = args.includes('--dry-run');
-const isLocalExplicit = args.includes('--local');
+const args = new Set(process.argv.slice(2));
+const isDryRun = args.has('--dry-run');
+const isLocalExplicit = args.has('--local');
 
 const DB_TOKEN = process.env.TURSO_AUTH_TOKEN;
 const syncUrl = process.env.TURSO_DATABASE_URL;

@@ -72,15 +72,16 @@ The project features a high-performance **Full-Stack** architecture with a moder
 
 - **Frontend (Client):** Developed in React (via Vite) with TailwindCSS for a fast, fluid, and 100% Mobile-responsive design.
 - **Backend (API):** Managed by a Node.js server with the Express 5 framework.
-- **Database:** The massive amount of data on stations and prices is stored in a **Turso (libSQL)** database. This allows the application to perform geometric calculations and filtering in fractions of a second without overloading the client.
+- **Database:** High-performance local **SQLite** (or **Turso libSQL**) database. On production/Render, a pre-compiled SQLite snapshot is downloaded automatically on startup from GitHub Releases, eliminating external cloud database fees and ensuring instant sub-millisecond query responses.
 
 ### Data Flow (Synchronization)
 
 The application relies on information released daily by the Ministry (Open Data). A background automated process handles:
 
-1. Checking `HEAD` headers to skip downloading if no upstream updates exist.
-2. Streaming and parsing data with zero external dependencies (`nativeParser.js`).
-3. Calculating diffs locally using SQLite before updating Turso, preventing unnecessary remote operations.
+1. Scheduled GitHub Actions workflow running twice daily to fetch MIMIT Open Data.
+2. Compiling and indexing local `database.sqlite` with zero downtime.
+3. Automatically compressing and publishing SQLite snapshots to GitHub Releases.
+4. Server downloads the latest snapshot at boot into local storage.
 
 ---
 
@@ -101,7 +102,7 @@ I dati mostrati sono reali e basati sugli Open Data ufficiali del Ministero.
 - **UX Moderna:** Implementa rendering Optimistic UI, Skeleton Loaders, Tooltips in puro CSS e Caching SWR per eliminare i caricamenti a scatti.
 - **Compressione Nativa Avanzata:** Compressione multi-formato a zero dipendenze su Node 24 (`zstd`, `br`, `gzip`, `deflate`).
 - **Tema Scuro/Chiaro:** Interfaccia utente moderna (React + TailwindCSS) che si adatta alle preferenze visive dell'utente.
-- **Protezione Quota Turso:** Controllo preventivo dell'header `Last-Modified` e calcolo differenziale basato su SQLite locale per azzerare le letture superflue.
+- **Zero Costi Database & SQLite Standalone:** Download automatico all'avvio su Render da GitHub Releases con query locali istantanee e zero consumo di quote cloud.
 - **Statistiche GDPR-Friendly:** Contatore visite nativo lato server basato su crittografia (hash irreversibile) per garantire il 100% dell'anonimato senza richiedere banner sui cookie.
 - **Sicurezza e Affidabilità:** Rate Limiting integrato contro attacchi DDoS, Error Boundaries in React per prevenire crash totali, e intestazioni HTTP protettive.
 - **SEO Strutturata:** Ottimizzazione profonda per Google tramite Dati Strutturati (JSON-LD), mappa `sitemap.xml`, `robots.txt` e Open Graph.
@@ -144,4 +145,4 @@ Il progetto è sviluppato su una solida architettura **Full-Stack** ad alte pres
 
 - **Frontend (Client):** Sviluppato in React (tramite Vite) con TailwindCSS per un design rapido, fluido e responsivo al 100% su Mobile.
 - **Backend (API):** Gestito da un server Node.js con framework Express 5.
-- **Database:** La massiccia mole di dati sui distributori e sui prezzi viene conservata in un database **Turso (libSQL)**.
+- **Database:** Motore **SQLite** locale ad altissime prestazioni (con supporto opzionale a **Turso libSQL**). Su Render il database viene scaricato automaticamente all'avvio da GitHub Releases, azzerando le latenze e i costi di terze parti.
