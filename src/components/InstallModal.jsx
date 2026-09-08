@@ -5,7 +5,7 @@ const InstallModal = memo(function InstallModal({ isOpen, onClose }) {
     const { t } = useTranslation();
     const [copied, setCopied] = useState(false);
     const appUrl = 'https://fuelfinder-msn8.onrender.com/';
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=10&data=${encodeURIComponent(appUrl)}`;
+    const qrCodeUrl = '/assets/img/qr-code.svg';
 
     const handleCopy = useCallback(async () => {
         try {
