@@ -23,7 +23,7 @@ The data shown is real and based on official Open Data from the Italian Ministry
 - **Geolocated Search:** Search for stations by entering a city/zip code or using the device's GPS.
 - **Smart Autocomplete:** Instant location suggestions while typing, powered by OpenStreetMap Nominatim.
 - **Route Calculation:** Integrated OSRM (Open Source Routing Machine) to automatically trace the optimal route on the map, calculating distance and travel time from the user to the selected station.
-- **Advanced Filters:** Filter by radius (3, 5, 10, 20 km), fuel type (Gasoline, Diesel, LPG, Methane, HVO, LNG), and service type (Self-Service or Served).
+- **Advanced Filters:** Filter by radius (3, 5, 10, 20 km), fuel type (Petrol, Diesel, LPG, Methane, HVO, LNG), and service type (Self-Service or Served).
 - **Interactive Map:** Clear map visualization (powered by Leaflet) with dynamic point-of-interest clustering and code-split chunks.
 - **PWA Support:** The app can be installed directly on a mobile Home screen, hiding the browser UI for a native, full-screen standalone experience.
 - **Multi-language:** Native internationalization (i18next) for both English and Italian.
