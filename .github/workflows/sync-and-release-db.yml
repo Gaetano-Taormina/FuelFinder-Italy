@@ -9,6 +9,8 @@ on:
     # Afternoon check at 14:23 UTC (16:23 CEST / 15:23 CET)
     - cron: '23 14 * * *'
   workflow_dispatch:
+  repository_dispatch:
+    types: [sync-db, trigger-sync]
 
 permissions:
   contents: write
