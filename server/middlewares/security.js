@@ -26,5 +26,6 @@ export const rateLimiter = rateLimit({
         const userAgent = (req.headers['user-agent'] || '').toLowerCase();
         return userAgent.includes('googlebot') || userAgent.includes('bingbot') || userAgent.includes('yandexbot');
     },
+    validate: { xForwardedForHeader: false },
     message: { error: 'Troppe richieste. Per favore attendi un minuto.' }
 });

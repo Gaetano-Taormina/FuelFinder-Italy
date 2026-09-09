@@ -113,6 +113,7 @@ const fuelToEn = Object.freeze({
 
 let isReady = false;
 const app = express();
+app.set('trust proxy', 1);
 
 // --- 1. HEALTHCHECK ---
 // Risponde subito 200 OK a Render per evitare timeout all'avvio.
