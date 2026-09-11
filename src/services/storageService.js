@@ -42,14 +42,14 @@ export function openStorageDb() {
 /**
  * Saves a city search to the recent history
  * @param {string} city 
- * @param {{lat: number, lng: number}} coords 
+ * @param {{lat: number, lng: number}} [coords] 
  * @returns {Promise<number|null>}
  */
 export async function saveSearchHistory(city, coords) {
   if (!city) return null;
   try {
     const db = await openStorageDb();
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       const tx = db.transaction(STORES.SEARCHES, 'readwrite');
       const store = tx.objectStore(STORES.SEARCHES);
 
@@ -76,7 +76,7 @@ export async function saveSearchHistory(city, coords) {
 export async function getSearchHistory(limit = 5) {
   try {
     const db = await openStorageDb();
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       const tx = db.transaction(STORES.SEARCHES, 'readonly');
       const store = tx.objectStore(STORES.SEARCHES);
       const index = store.index('timestamp');
@@ -114,7 +114,7 @@ export async function getSearchHistory(limit = 5) {
 export async function clearSearchHistory() {
   try {
     const db = await openStorageDb();
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       const tx = db.transaction(STORES.SEARCHES, 'readwrite');
       const store = tx.objectStore(STORES.SEARCHES);
       const request = store.clear();
@@ -135,7 +135,7 @@ export async function saveFavoriteStation(station) {
   if (!station || !station.id) return false;
   try {
     const db = await openStorageDb();
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       const tx = db.transaction(STORES.FAVORITES, 'readwrite');
       const store = tx.objectStore(STORES.FAVORITES);
 
@@ -167,7 +167,7 @@ export async function removeFavoriteStation(stationId) {
   if (!stationId) return false;
   try {
     const db = await openStorageDb();
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       const tx = db.transaction(STORES.FAVORITES, 'readwrite');
       const store = tx.objectStore(STORES.FAVORITES);
       const request = store.delete(stationId);
@@ -186,7 +186,7 @@ export async function removeFavoriteStation(stationId) {
 export async function getFavoriteStations() {
   try {
     const db = await openStorageDb();
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       const tx = db.transaction(STORES.FAVORITES, 'readonly');
       const store = tx.objectStore(STORES.FAVORITES);
       const request = store.getAll();
@@ -207,7 +207,7 @@ export async function isFavoriteStation(stationId) {
   if (!stationId) return false;
   try {
     const db = await openStorageDb();
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       const tx = db.transaction(STORES.FAVORITES, 'readonly');
       const store = tx.objectStore(STORES.FAVORITES);
       const request = store.get(stationId);

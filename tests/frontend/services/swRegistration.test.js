@@ -55,10 +55,36 @@ describe('Service Worker Registration Service', () => {
     // Trigger updatefound and statechange
     if (typeof mockRegistration.onupdatefound === 'function') {
       mockRegistration.onupdatefound();
+      mockRegistration.installing.state = 'installing';
+      if (typeof mockRegistration.installing.onstatechange === 'function') {
+        mockRegistration.installing.onstatechange();
+      }
       mockRegistration.installing.state = 'installed';
       if (typeof mockRegistration.installing.onstatechange === 'function') {
         mockRegistration.installing.onstatechange();
       }
+    }
+  });
+
+  it('handles updatefound when installing worker is null or without controller', async () => {
+    window.__ENABLE_SW__ = true;
+    const mockRegistration = {
+      onupdatefound: null,
+      installing: null
+    };
+
+    const registerMock = vi.fn().mockResolvedValue(mockRegistration);
+    Object.defineProperty(navigator, 'serviceWorker', {
+      value: {
+        register: registerMock,
+        controller: null
+      },
+      configurable: true
+    });
+
+    await registerServiceWorker();
+    if (typeof mockRegistration.onupdatefound === 'function') {
+      mockRegistration.onupdatefound();
     }
   });
 

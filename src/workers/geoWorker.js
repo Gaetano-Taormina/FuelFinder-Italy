@@ -78,6 +78,7 @@ export function handleWorkerMessage(event, target = typeof self !== 'undefined' 
   }
 }
 
+/* v8 ignore next 4 */
 // Worker message listener for browser environment
 if (typeof self !== 'undefined' && typeof self.addEventListener === 'function') {
   self.addEventListener('message', handleWorkerMessage);

@@ -168,10 +168,18 @@ describe('SSR Routes & Controller & SEO Redirects', () => {
         expect(resIt.status).toBe(301);
         expect(resIt.headers.location).toBe('/it/gasolio');
 
-        // Root without lang prefix
+        // Root without lang prefix with both fuel translations
         const resRoot = await request(app).get('/?carburante=benzina');
         expect(resRoot.status).toBe(301);
         expect(resRoot.headers.location).toBe('/it/benzina');
+
+        const resRootDiesel = await request(app).get('/?carburante=diesel');
+        expect(resRootDiesel.status).toBe(301);
+        expect(resRootDiesel.headers.location).toBe('/it/gasolio');
+
+        const resRootGasolio = await request(app).get('/?fuel=gasolio');
+        expect(resRootGasolio.status).toBe(301);
+        expect(resRootGasolio.headers.location).toBe('/it/gasolio');
 
         // Unknown fuel fallback
         const resUnknownEn = await request(app).get('/en?fuel=unknown_fuel');
