@@ -27,6 +27,8 @@ export default {
   "rp_price": "Price:",
   "rp_dist": "📍 Distance:",
   "rp_time": "⏱️ Estimated time:",
+  "btn_share": "Share Station",
+  "share_copied": "Link Copied!",
   "btn_close": "Close Panel",
   "footer_text": "Data provided by <a href=\"https://www.mimit.gov.it/it/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"font-bold hover:text-blue-700 dark:hover:text-blue-400 transition-colors\">MIMIT</a> (Free Open Data)",
   "table_title": "<span>🏆</span> Best Prices Ranking",

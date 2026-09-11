@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import RoutePanel from '../../../src/components/RoutePanel';
 import * as StationsContext from '../../../src/context/StationsContext';
@@ -171,4 +171,79 @@ describe('RoutePanel Component', () => {
     render(<RoutePanel />);
     expect(screen.getByText('rp_station_badge')).toBeInTheDocument();
   });
+
+  it('copies station share link to clipboard on share button click and resets timeout', async () => {
+    vi.useFakeTimers();
+    let resolveClipboard;
+    const writeTextMock = vi.fn().mockImplementation(() => new Promise((resolve) => { resolveClipboard = resolve; }));
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: writeTextMock },
+      configurable: true
+    });
+
+    render(<RoutePanel />);
+    const shareBtn = screen.getByRole('button', { name: 'btn_share' });
+    expect(shareBtn).toBeInTheDocument();
+    fireEvent.click(shareBtn);
+    expect(writeTextMock).toHaveBeenCalledWith(expect.stringContaining('/it/citta/italia/stazione/1'));
+
+    await act(async () => {
+      resolveClipboard();
+    });
+    expect(screen.getByText('share_copied')).toBeInTheDocument();
+
+    await act(async () => {
+      vi.advanceTimersByTime(2500);
+    });
+    expect(screen.queryByText('share_copied')).not.toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
+  it('handles clipboard failure gracefully when writeText rejects', async () => {
+    const writeTextMock = vi.fn().mockRejectedValue(new Error('Permission denied'));
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: writeTextMock },
+      configurable: true
+    });
+
+    render(<RoutePanel />);
+    const shareBtn = screen.getByRole('button', { name: 'btn_share' });
+    fireEvent.click(shareBtn);
+    expect(writeTextMock).toHaveBeenCalled();
+  });
+
+  it('handles missing clipboard object safely', () => {
+    Object.defineProperty(navigator, 'clipboard', {
+      value: undefined,
+      configurable: true
+    });
+
+    render(<RoutePanel />);
+    const shareBtn = screen.getByRole('button', { name: 'btn_share' });
+    fireEvent.click(shareBtn);
+    expect(screen.queryByText('share_copied')).not.toBeInTheDocument();
+  });
+
+  it('generates share URL with station comune in english', () => {
+    const writeTextMock = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: writeTextMock },
+      configurable: true
+    });
+
+    vi.spyOn(StationsContext, 'useStations').mockReturnValue({
+      selectedStation: { id: 50706, comune: 'Milano', name: 'ENI Milano', currentPrice: 1.80 },
+      stations: [],
+      setSelectedStation: vi.fn(),
+      routeData: null,
+      handleNavigation: vi.fn(),
+      fuelType: 'diesel'
+    });
+
+    render(<RoutePanel />);
+    const shareBtn = screen.getByRole('button', { name: 'btn_share' });
+    fireEvent.click(shareBtn);
+    expect(writeTextMock).toHaveBeenCalledWith(expect.stringMatching(/\/it\/citta\/[Mm]ilano\/stazione\/50706\/diesel/));
+  });
 });
+

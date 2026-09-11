@@ -67,7 +67,7 @@ function LayoutContent() {
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
     const [mapInteractive, setMapInteractive] = useState(false);
 
-    const { city } = useParams();
+    const { city, stationId } = useParams();
     const currLang = (i18n.resolvedLanguage || 'it').split('-')[0];
 
     useEffect(() => {
@@ -106,7 +106,13 @@ function LayoutContent() {
         const displayItFuel = itFuel;
         const displayEnFuel = fuelToEn[itFuel] || itFuel;
 
-        if (city) {
+        if (stationId) {
+            getRealCityName(city || '', currLang).then(cityName => {
+                document.title = currLang === 'it'
+                    ? `FuelFinder Italia - Distributore ${cityName} (${displayItFuel})`
+                    : `FuelFinder Italy - Gas Station in ${cityName} (${displayEnFuel})`;
+            });
+        } else if (city) {
             getRealCityName(city, currLang).then(cityName => {
                 document.title = currLang === 'it' 
                     ? `FuelFinder Italia - Prezzi ${displayItFuel} a ${cityName}` 
@@ -117,16 +123,38 @@ function LayoutContent() {
                 ? `FuelFinder Italia - Prezzi ${displayItFuel}`
                 : `FuelFinder Italy - Prices for ${displayEnFuel}`;
         }
-    }, [city, currLang, fuelType]);
+    }, [city, stationId, currLang, fuelType]);
 
     // Traccia la visita al caricamento dell'app
     useEffect(() => {
         fetch('/api/visit').catch(() => {});
     }, []);
 
-    // Auto-search for city from URL
+    // Load single station directly if stationId param is present
     useEffect(() => {
-        if (city) {
+        if (stationId) {
+            const parsedId = parseInt(stationId, 10);
+            const found = stations && stations.find(s => s.id === parsedId);
+            if (found) {
+                setSelectedStation(found);
+                setUserPos({ lat: found.lat, lng: found.lng });
+            } else {
+                fetch(`/api/stations/${parsedId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data.success && data.station) {
+                            setSelectedStation(data.station);
+                            setUserPos({ lat: data.station.lat, lng: data.station.lng });
+                        }
+                    })
+                    .catch(() => {});
+            }
+        }
+    }, [stationId, stations, setSelectedStation, setUserPos]);
+
+    // Auto-search for city from URL (if not direct station view)
+    useEffect(() => {
+        if (city && !stationId) {
             getRealCityName(city, currLang).then(cityName => {
                 setLocationStr(cityName);
                 
@@ -146,22 +174,19 @@ function LayoutContent() {
                     .catch(() => {});
             });
         }
-    }, [city, setLocationStr, setUserPos, location.state, currLang]);
+    }, [city, stationId, setLocationStr, setUserPos, location.state, currLang]);
 
-    // Auto-select cheapest station when data loads for a city, or when fuel changes
+    // Auto-select cheapest station when data loads for a city, or when fuel changes (only if no specific stationId requested)
     useEffect(() => {
-        if (city && stations && stations.length > 0) {
+        if (city && !stationId && stations && stations.length > 0) {
             setSelectedStation(prev => {
-                // Selezioniamo automaticamente la migliore stazione se:
-                // 1. Non ce n'è una selezionata
-                // 2. La stazione selezionata non esiste più nei nuovi risultati (es. cambio carburante)
                 if (!prev || !stations.find(s => s.id === prev.id)) {
                     return stations[0];
                 }
                 return prev;
             });
         }
-    }, [city, stations, setSelectedStation]);
+    }, [city, stationId, stations, setSelectedStation]);
 
     const lastGeocodedPos = useRef(null);
 
@@ -224,7 +249,20 @@ function LayoutContent() {
         const nextLang = currLang === 'it' ? 'en' : 'it';
         let newPath = `/${nextLang}`;
         
-        if (city) {
+        if (city && stationId) {
+            let searchSlug = city.toLowerCase();
+            if (currLang === 'en' && enToItCities[searchSlug]) {
+                searchSlug = enToItCities[searchSlug];
+            }
+            let targetCitySlug = searchSlug;
+            if (nextLang === 'en') {
+                const enEntry = Object.entries(enToItCities).find(([, it]) => it === targetCitySlug);
+                if (enEntry) targetCitySlug = enEntry[0];
+            }
+            const cityPrefix = ROUTES[nextLang]?.cityPrefix || ROUTES.it.cityPrefix;
+            const stationPrefix = ROUTES[nextLang]?.stationPrefix || ROUTES.it.stationPrefix;
+            newPath = `/${nextLang}/${cityPrefix}/${targetCitySlug}/${stationPrefix}/${stationId}`;
+        } else if (city) {
             let searchSlug = city.toLowerCase();
             if (currLang === 'en' && enToItCities[searchSlug]) {
                 searchSlug = enToItCities[searchSlug];
@@ -255,7 +293,7 @@ function LayoutContent() {
         const finalPath = newFuelUrl ? `${newPath}/${newFuelUrl.toLowerCase()}` : newPath;
         const finalSearch = searchParams.toString() ? `?${searchParams.toString()}` : '';
         navigate(`${finalPath}${finalSearch}`);
-    }, [currLang, city, location.pathname, location.search, fuelType, navigate]);
+    }, [currLang, city, stationId, location.pathname, location.search, fuelType, navigate]);
 
     const showViewToggles = (stations && stations.length > 0) || userPos != null;
 
@@ -350,7 +388,7 @@ function LayoutContent() {
 
 function MainApp() {
     const { i18n } = useTranslation();
-    const { lang, city, fuel } = useParams();
+    const { lang, city, stationId, fuel } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -368,7 +406,11 @@ function MainApp() {
 
         if (currentRouteLang !== validLang) {
             let redirectPath = `/${validLang}`;
-            if (city) {
+            if (city && stationId) {
+                const citySegment = ROUTES[validLang]?.cityPrefix || ROUTES.it.cityPrefix;
+                const stationSegment = ROUTES[validLang]?.stationPrefix || ROUTES.it.stationPrefix;
+                redirectPath += `/${citySegment}/${city}/${stationSegment}/${stationId}`;
+            } else if (city) {
                 const pathSegment = ROUTES[validLang]?.cityPrefix || ROUTES.it.cityPrefix;
                 redirectPath += `/${pathSegment}/${city}`;
             }
@@ -387,7 +429,7 @@ function MainApp() {
             
             navigate(`${redirectPath}${location.search}`, { replace: true });
         }
-    }, [lang, city, fuel, i18n.resolvedLanguage, navigate, i18n, location.pathname, location.search]);
+    }, [lang, city, stationId, fuel, i18n.resolvedLanguage, navigate, i18n, location.pathname, location.search]);
     
     return (
         <StationsProvider>
