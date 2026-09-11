@@ -28,6 +28,10 @@ export class SsrController {
         return typeof this.dbProvider === 'function' ? this.dbProvider() : this.dbProvider;
     }
 
+    clearCache() {
+        this.htmlCache.clear();
+    }
+
     async handleSsrRequest(req, res) {
         trackStaticVisit(req);
 

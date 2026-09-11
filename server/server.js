@@ -19,6 +19,7 @@ import { seoRedirectMiddleware } from './middlewares/seoRedirect.js';
 import { setupApiRoutes } from './routes/api.js';
 import { setupSitemapRoutes } from './routes/sitemaps.js';
 import { setupSsrRoutes } from './routes/ssr.js';
+import { sitemapService } from './services/sitemapService.js';
 
 import { downloadDatabase } from './services/dbDownloadService.js';
 import { sync } from './sync/index.js';
@@ -115,6 +116,8 @@ async function setupDatabase(forceDownload = false) {
     }
 }
 
+let ssrController = null;
+
 // 6. Asynchronous Server Init & Route Binding
 async function initServer() {
     try {
@@ -145,7 +148,7 @@ async function initServer() {
         app.use(seoRedirectMiddleware);
 
         // --- SSR DYNAMIC HTML & SPA FALLBACK ---
-        setupSsrRoutes(app, () => db);
+        ssrController = setupSsrRoutes(app, () => db);
 
         // --- GLOBAL ERROR HANDLER ---
         app.use(globalErrorHandler);
@@ -180,7 +183,9 @@ function scheduleDailySync() {
                 console.warn("Maintenance mode active: skipping scheduled sync.");
             } else {
                 await sync(db);
-                console.info("Scheduled update completed successfully.");
+                sitemapService.clearCache();
+                if (ssrController) ssrController.clearCache();
+                console.info("Scheduled update completed successfully (Sitemap and SSR caches invalidated).");
             }
         } catch (e) {
             console.error("Scheduled update error:", e);

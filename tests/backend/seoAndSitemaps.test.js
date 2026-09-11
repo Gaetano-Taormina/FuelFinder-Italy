@@ -4,6 +4,7 @@ import request from 'supertest';
 import express from 'express';
 import { SitemapService } from '../../server/services/sitemapService.js';
 import { SeoService } from '../../server/services/seoService.js';
+import { SsrController } from '../../server/controllers/ssrController.js';
 import { slugify, escapeXml, getSafeHost } from '../../server/utils/seoHelpers.js';
 import { setupSitemapRoutes } from '../../server/routes/sitemaps.js';
 
@@ -64,6 +65,19 @@ describe('Sitemap Service & Controller', () => {
 
         const invalidFuel = service.getFuelSitemap('https://example.com', 'it', 'unknown-fuel');
         expect(invalidFuel).toBeNull();
+    });
+
+    it('isolates cache across different hosts and allows clearing cache', () => {
+        const service = new SitemapService();
+        const xmlHost1 = service.getIndexSitemap('https://host1.com');
+        const xmlHost2 = service.getIndexSitemap('https://host2.com');
+        
+        expect(xmlHost1).toContain('https://host1.com');
+        expect(xmlHost2).toContain('https://host2.com');
+        expect(xmlHost1).not.toBe(xmlHost2);
+
+        service.clearCache();
+        expect(service.cacheByHost.size).toBe(0);
     });
 
     it('serves sitemap routes through express', async () => {
@@ -429,6 +443,14 @@ describe('SEO Service & SSR Controller', () => {
         });
         expect(meta.title).toBe('');
         expect(meta.desc).toBe('');
+    });
+
+    it('clears SSR htmlCache on clearCache invocation', () => {
+        const controller = new SsrController(() => null);
+        controller.htmlCache.set('test_key', '<html>cached</html>');
+        expect(controller.htmlCache.size).toBe(1);
+        controller.clearCache();
+        expect(controller.htmlCache.size).toBe(0);
     });
 });
 

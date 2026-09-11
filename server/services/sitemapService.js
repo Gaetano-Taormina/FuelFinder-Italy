@@ -7,13 +7,24 @@ import {
 
 export class SitemapService {
     constructor() {
-        this.cache = {
-            index: null,
-            it: null,
-            en: null,
-            fuelsIt: {},
-            fuelsEn: {}
-        };
+        this.cacheByHost = new Map();
+    }
+
+    getHostCache(host) {
+        if (!this.cacheByHost.has(host)) {
+            this.cacheByHost.set(host, {
+                index: null,
+                it: null,
+                en: null,
+                fuelsIt: {},
+                fuelsEn: {}
+            });
+        }
+        return this.cacheByHost.get(host);
+    }
+
+    clearCache() {
+        this.cacheByHost.clear();
     }
 
     getUrlsetStart() {
@@ -34,7 +45,8 @@ export class SitemapService {
     }
 
     getIndexSitemap(host) {
-        if (this.cache.index) return this.cache.index;
+        const hostCache = this.getHostCache(host);
+        if (hostCache.index) return hostCache.index;
 
         const safeHost = escapeXml(host);
         let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
@@ -48,12 +60,13 @@ export class SitemapService {
         });
         
         xml += `</sitemapindex>`;
-        this.cache.index = xml;
+        hostCache.index = xml;
         return xml;
     }
 
     getLanguageSitemap(host, lang) {
-        if (this.cache[lang]) return this.cache[lang];
+        const hostCache = this.getHostCache(host);
+        if (hostCache[lang]) return hostCache[lang];
 
         let xml = this.getUrlsetStart();
         const isIt = lang === 'it';
@@ -85,7 +98,7 @@ export class SitemapService {
         }
 
         xml += `</urlset>`;
-        this.cache[lang] = xml;
+        hostCache[lang] = xml;
         return xml;
     }
 
@@ -97,7 +110,8 @@ export class SitemapService {
         
         if (fuelIndex === -1) return null;
 
-        const cacheMap = isIt ? this.cache.fuelsIt : this.cache.fuelsEn;
+        const hostCache = this.getHostCache(host);
+        const cacheMap = isIt ? hostCache.fuelsIt : hostCache.fuelsEn;
         if (cacheMap[requestedFuel]) return cacheMap[requestedFuel];
 
         const altLang = isIt ? 'en' : 'it';
