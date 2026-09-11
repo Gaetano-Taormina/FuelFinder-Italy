@@ -106,4 +106,31 @@ describe('Service Worker Registration Service', () => {
     const result = await unregisterServiceWorker();
     expect(result).toBe(false);
   });
+
+  it('returns false when unregistering without serviceWorker support', async () => {
+    const originalSW = navigator.serviceWorker;
+    Object.defineProperty(navigator, 'serviceWorker', {
+      value: undefined,
+      configurable: true
+    });
+
+    const result = await unregisterServiceWorker();
+    expect(result).toBe(false);
+
+    Object.defineProperty(navigator, 'serviceWorker', {
+      value: originalSW,
+      configurable: true
+    });
+  });
+
+  it('returns null/false when window is undefined (SSR environment)', async () => {
+    const originalWindow = globalThis.window;
+    // @ts-ignore
+    delete globalThis.window;
+
+    expect(await registerServiceWorker()).toBeNull();
+    expect(await unregisterServiceWorker()).toBe(false);
+
+    globalThis.window = originalWindow;
+  });
 });
