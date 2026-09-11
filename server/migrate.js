@@ -1,14 +1,14 @@
 /* oxlint-disable no-console */
 import { createClient } from '@libsql/client';
+import path from 'path';
 import 'dotenv/config';
 
 async function migrate() {
-    console.log("[INFO] Inizio migrazione schema database...");
+    console.log("[INFO] Inizio migrazione schema database locale...");
     
-    // Connessione DIRETTA al database remoto Turso (senza replica locale)
+    const dbPath = path.join(process.env.DATA_DIR || path.join(process.cwd(), 'server'), 'database.sqlite');
     const client = createClient({
-        url: process.env.TURSO_DATABASE_URL,
-        authToken: process.env.TURSO_AUTH_TOKEN
+        url: `file:${dbPath}`
     });
 
     try {
@@ -34,14 +34,14 @@ async function migrate() {
                 id_impianto INTEGER,
                 desc_carburante TEXT,
                 prezzo REAL,
-                isSelf INTEGER,
-                dt_com TEXT,
-                PRIMARY KEY (id_impianto, desc_carburante, isSelf)
+                is_self INTEGER,
+                dt_comunicazione TEXT,
+                PRIMARY KEY (id_impianto, desc_carburante, is_self)
             );
         `);
         console.log("[INFO] Tabella 'prices' verificata/creata con successo.");
 
-        // Indici per velocizzare ricerche geografiche e azzerare Full Table Scan su Turso
+        // Indici per velocizzare ricerche geografiche
         await client.execute(`CREATE INDEX IF NOT EXISTS idx_stations_coords ON stations(latitudine, longitudine);`);
         await client.execute(`CREATE INDEX IF NOT EXISTS idx_stations_comune ON stations(comune COLLATE NOCASE);`);
         await client.execute(`CREATE INDEX IF NOT EXISTS idx_prices_impianto ON prices(id_impianto);`);

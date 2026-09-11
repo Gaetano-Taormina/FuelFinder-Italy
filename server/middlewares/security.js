@@ -17,15 +17,17 @@ export const securityHeaders = (req, res, next) => {
 };
 
 // --- SICUREZZA: Rate Limiting Anti-Scraping / Anti-DDoS ---
+export const shouldSkipRateLimit = (req) => {
+    const userAgent = (req?.headers?.['user-agent'] || '').toLowerCase();
+    return userAgent.includes('googlebot') || userAgent.includes('bingbot') || userAgent.includes('yandexbot');
+};
+
 export const rateLimiter = rateLimit({
     windowMs: 60 * 1000, // 1 minuto
     limit: 600, // Massimo 600 richieste al minuto per IP
     standardHeaders: true, // Ritorna le intestazioni standard RateLimit-*
     legacyHeaders: false, // Disabilita X-RateLimit-* deprecate
-    skip: (req) => {
-        const userAgent = (req.headers['user-agent'] || '').toLowerCase();
-        return userAgent.includes('googlebot') || userAgent.includes('bingbot') || userAgent.includes('yandexbot');
-    },
+    skip: shouldSkipRateLimit,
     validate: { xForwardedForHeader: false },
     message: { error: 'Troppe richieste. Per favore attendi un minuto.' }
 });

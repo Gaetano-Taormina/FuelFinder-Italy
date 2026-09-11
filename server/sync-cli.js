@@ -6,56 +6,38 @@ import { sync } from './sync/index.js';
 
 const args = new Set(process.argv.slice(2));
 const isDryRun = args.has('--dry-run');
-const isLocalExplicit = args.has('--local');
 
-const DB_TOKEN = process.env.TURSO_AUTH_TOKEN;
-const syncUrl = process.env.TURSO_DATABASE_URL;
+const localDbPath = path.join(process.env.DATA_DIR || path.join(process.cwd(), 'server'), 'database.sqlite');
 
-let db;
+console.group('⚙️ [CLI] Database Sync Runner');
+console.info(`Mode: LOCAL SQLite`);
+console.info(`Target DB: ${localDbPath}`);
+console.info(`Execution: ${isDryRun ? 'DRY-RUN (Simulated)' : 'PRODUCTION (Write)'}`);
+console.groupEnd();
 
-if (isLocalExplicit || !syncUrl) {
-    const localDbPath = path.join(process.env.DATA_DIR || path.join(process.cwd(), 'server'), 'database.sqlite');
-    console.log(`[Sync] Operating in LOCAL SQLite mode (${localDbPath})`);
-    db = createClient({
-        url: `file:${localDbPath}`
-    });
-} else {
-    if (!DB_TOKEN) {
-        console.error("Missing TURSO_AUTH_TOKEN in environment variables for remote sync.");
-        process.exit(1);
-    }
-    console.log(`[Sync] Operating in REMOTE Turso mode (${syncUrl})`);
-    db = createClient({
-        url: syncUrl,
-        authToken: DB_TOKEN
-    });
-}
+const db = createClient({
+    url: `file:${localDbPath}`
+});
 
-console.log("Starting manual sync" + (isDryRun ? " (DRY-RUN MODE)" : "") + "...");
+console.time('⏱️ Total CLI Execution Time');
 sync(db, 2, { dryRun: isDryRun, showProgress: true, retryDelayMs: 15000 }).then(() => {
-    console.log("Manual sync finished.");
+    console.timeEnd('⏱️ Total CLI Execution Time');
     process.exit(0);
 }).catch(err => {
     const errorMsg = err.message || err.toString();
     
-    console.error("\n❌ [ERRORE CRITICO] Fallimento Sincronizzazione Database:");
-    
-    if (errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('quota')) {
-        console.error(" ➔ Causa: Quota Turso esaurita (limite letture/scritture superato).");
-        console.error(" ➔ Soluzione: Attendi il reset mensile o effettua l'upgrade del piano.");
-    } else if (errorMsg.includes('SQLITE_CORRUPT') || errorMsg.includes('malformed')) {
-        console.error(" ➔ Causa: Possibile corruzione del database locale (SQLite).");
-        console.error(" ➔ Soluzione: Cancella il file locale 'database.sqlite' e riavvia il server.");
-    } else if (errorMsg.includes('network') || errorMsg.includes('fetch') || errorMsg.includes('ECONNREFUSED')) {
-        console.error(" ➔ Causa: Errore di rete durante la comunicazione con Turso o MIMIT.");
-        console.error(" ➔ Soluzione: Verifica la connessione internet e lo stato dei server remoti.");
-    } else if (errorMsg.includes('auth') || errorMsg.includes('token') || errorMsg.includes('unauthorized')) {
-        console.error(" ➔ Causa: Token di autenticazione Turso non valido o scaduto.");
-        console.error(" ➔ Soluzione: Controlla la variabile TURSO_AUTH_TOKEN nel file .env o su Render.");
+    console.group('❌ [CRITICAL ERROR] Database Sync Failed');
+    if (errorMsg.includes('SQLITE_CORRUPT') || errorMsg.includes('malformed')) {
+        console.error("Cause: Possibile corruzione del database locale (SQLite).");
+        console.info("Solution: Cancella il file locale 'database.sqlite' e riavvia il server.");
+    } else if (errorMsg.includes('network') || errorMsg.includes('fetch') || errorMsg.includes('ECONNREFUSED') || errorMsg.includes('timeout')) {
+        console.error("Cause: Errore di rete o timeout durante la comunicazione con i server MIMIT.");
+        console.info("Solution: Verifica la connessione internet e lo stato del portale Open Data MIMIT.");
     } else {
-        console.error(" ➔ Causa: Errore generico non previsto durante l'esecuzione delle query.");
-        console.error(` ➔ Dettagli Tecnici: ${errorMsg}`);
+        console.error("Cause: Errore imprevisto durante l'esecuzione del sync.");
+        console.error(`Technical Details: ${errorMsg}`);
     }
+    console.groupEnd();
     
     process.exit(1);
 });

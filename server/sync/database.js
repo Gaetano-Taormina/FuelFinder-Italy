@@ -74,7 +74,7 @@ export async function loadExistingData(db, localDb) {
       for (const r of prRes.rows) existingPrices.set(`${r.id_impianto}_${r.desc_carburante}_${r.is_self}`, r);
   } catch {}
 
-  console.log(`Loaded: ${existingStations.size} stations, ${existingPrices.size} prices (zero remote Turso read cost).`);
+  console.log(`Loaded: ${existingStations.size} stations, ${existingPrices.size} prices.`);
   return { existingStations, existingPrices };
 }
 
@@ -115,11 +115,11 @@ export async function applyChanges(db, syncOps) {
         batchedQueries.push({ sql: `DELETE FROM prices WHERE id_impianto=? AND desc_carburante=? AND is_self=?`, args });
     }
 
-    console.log(`Sending ${batchedQueries.length} highly-optimized bulk queries to Turso...`);
+    console.log(`Applying ${batchedQueries.length} optimized bulk batch queries to database...`);
     if (batchedQueries.length > 0) {
-        const TURSO_BATCH_SIZE = 50; 
-        for (let i = 0; i < batchedQueries.length; i += TURSO_BATCH_SIZE) {
-            const chunk = batchedQueries.slice(i, i + TURSO_BATCH_SIZE);
+        const BATCH_CHUNK_SIZE = 50; 
+        for (let i = 0; i < batchedQueries.length; i += BATCH_CHUNK_SIZE) {
+            const chunk = batchedQueries.slice(i, i + BATCH_CHUNK_SIZE);
             // oxlint-disable-next-line no-await-in-loop
             await db.batch(chunk, "write");
         }

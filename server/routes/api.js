@@ -6,6 +6,7 @@ export function setupApiRoutes(app, db) {
     
     app.get('/api/stats', controller.getStats);
     app.get('/api/stations', controller.getStations);
+    app.get('/api/stations/:id', controller.getStationById);
     app.get('/api/cities', controller.getCities);
     app.get('/api/cities/validate', controller.validateCity);
 }

@@ -159,4 +159,31 @@ export class ApiController {
             next(error);
         }
     }
+
+    getStationById = async (req, res, next) => {
+        try {
+            const { id } = req.params;
+            const parsedId = parseInt(id, 10);
+            if (isNaN(parsedId) || parsedId <= 0) {
+                return res.status(400).json({ error: 'ID stazione non valido' });
+            }
+
+            const station = await this.stationService.getStationById(parsedId);
+            if (!station) {
+                return res.status(404).json({ error: 'Stazione non trovata' });
+            }
+
+            res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=900');
+            const etag = generateETag(station);
+            res.setHeader('ETag', etag);
+
+            if (req.headers && req.headers['if-none-match'] === etag) {
+                return res.status(304).end();
+            }
+
+            res.json({ success: true, station });
+        } catch (error) {
+            next(error);
+        }
+    }
 }

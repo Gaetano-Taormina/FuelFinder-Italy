@@ -55,4 +55,9 @@ export class StationService {
             totalCount: results.length
         };
     }
+
+    async getStationById(id) {
+        if (!id) return null;
+        return this.repository.findStationById(id);
+    }
 }

@@ -41,19 +41,14 @@ const rl = readline.createInterface({
     
     rl.close();
 
-    console.log('\n=============================================');
-    console.log('   FUEL STATISTICS DASHBOARD');
-    console.log('=============================================\n');
-
-    const DB_URL = process.env.TURSO_DATABASE_URL || 'file:' + path.join(process.cwd(), 'server', 'database.sqlite');
-    const DB_TOKEN = process.env.TURSO_AUTH_TOKEN;
+    const dbPath = path.join(process.env.DATA_DIR || path.join(process.cwd(), 'server'), 'database.sqlite');
     
     try {
-        const db = createClient({ url: DB_URL, authToken: DB_TOKEN });
+        const db = createClient({ url: `file:${dbPath}` });
         const res = await db.execute('SELECT * FROM app_analytics ORDER BY date DESC');
 
         if (res.rows.length === 0) {
-            console.log('Stats DB is empty.');
+            console.info('ℹ️ Analytics database is currently empty.');
         } else {
             const rowsToShow = res.rows.slice(0, daysLimit);
             
@@ -61,41 +56,38 @@ const rl = readline.createInterface({
             let totalUnique = 0;
             let totalSearches = 0;
 
-            rowsToShow.forEach(row => {
+            const tableRows = rowsToShow.map(row => {
                 const uniqueUsers = row.uniqueIps ? JSON.parse(row.uniqueIps).length : 0;
                 totalVisits += (row.visits || 0);
                 totalUnique += uniqueUsers;
                 totalSearches += (row.searches || 0);
-                
-                console.log(`  Date: ${row.date}`);
-                console.log(`    Total Visits:    ${row.visits || 0}`);
-                console.log(`    Unique Visitors: ${uniqueUsers}`);
-                console.log(`    Searches:   ${row.searches || 0}`);
-                console.log('---------------------------------------------');
-            });
-            
-            console.log(`\nSOMMARIO TOTALI (Ultimi ${rowsToShow.length} giorni registrati)`);
-            console.log(`=============================================`);
-            console.log(`    Visite Totali:    ${totalVisits}`);
-            console.log(`    Visitatori Unici: ${totalUnique} (stimati)`);
-            console.log(`    Total Searches:  ${totalSearches}`);
-            console.log(`=============================================\n`);
-        }
 
-        const { fetchTursoUsage, TURSO_LIMITS } = await import('./services/quotaService.js');
-        const tursoUsage = await fetchTursoUsage();
-        if (tursoUsage) {
-            console.log(`=============================================`);
-            console.log(`   TURSO CLOUD QUOTA LIVE USAGE`);
-            console.log(`=============================================`);
-            console.log(`  Rows Read:    ${tursoUsage.rowsRead.toLocaleString()} / ${TURSO_LIMITS.ROWS_READ.toLocaleString()} (${tursoUsage.pctRead}%)`);
-            console.log(`  Rows Written: ${tursoUsage.rowsWritten.toLocaleString()} / ${TURSO_LIMITS.ROWS_WRITTEN.toLocaleString()} (${tursoUsage.pctWritten}%)`);
-            console.log(`  Storage Sync: ${(tursoUsage.bytesSynced / 1024 / 1024).toFixed(1)} MB / 3.0 GB (${tursoUsage.pctSynced}%)`);
-            console.log(`  Status:       ${tursoUsage.isCritical ? '⚠️ SOGLIA CRITICA (>80%)' : '✅ NORMALE (Entro i limiti)'}`);
-            console.log(`=============================================\n`);
+                return {
+                    'Date': row.date,
+                    'Visits': row.visits || 0,
+                    'Unique Visitors': uniqueUsers,
+                    'Searches': row.searches || 0
+                };
+            });
+
+            console.group('📊 FuelFinder Analytics Dashboard');
+            console.table(tableRows);
+            console.groupEnd();
+
+            console.group('📈 Summary Totals');
+            console.table({
+                'Metrics': {
+                    'Days Tracked': rowsToShow.length,
+                    'Total Visits': totalVisits,
+                    'Total Unique Visitors (est.)': totalUnique,
+                    'Total Searches': totalSearches,
+                    'Avg Visits/Day': (totalVisits / rowsToShow.length).toFixed(1)
+                }
+            });
+            console.groupEnd();
         }
     } catch (e) {
-        console.error('DB Read Error:', e.message);
+        console.error('❌ DB Read Error:', e.message);
     }
     
     process.exit(0);

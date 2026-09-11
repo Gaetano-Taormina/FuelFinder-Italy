@@ -150,4 +150,88 @@ describe('Backend Server API - GET /api/stations', () => {
         expect(res.status).toBe(200);
         expect(res.body.stations.length).toBeGreaterThan(0);
     });
+
+    it('tests StationRepository.findCityPricesForSeo', async () => {
+        const { StationRepository } = await import('../../server/repositories/stationRepository.js');
+        const repo = new StationRepository(db);
+
+        const rows = await repo.findCityPricesForSeo('Roma', 'Benzina');
+        expect(rows.length).toBeGreaterThan(0);
+        expect(rows[0].nome_impianto).toBeDefined();
+
+        const emptyRows = await repo.findCityPricesForSeo('NonExistentCity', 'Benzina');
+        expect(emptyRows).toEqual([]);
+
+        const nullDbRepo = new StationRepository(null);
+        const nullRows = await nullDbRepo.findCityPricesForSeo('Roma', 'Benzina');
+        expect(nullRows).toEqual([]);
+
+        const throwingDbRepo = new StationRepository({
+            execute: vi.fn().mockRejectedValue(new Error('DB Query Error'))
+        });
+        const thrownRows = await throwingDbRepo.findCityPricesForSeo('Roma', 'Benzina');
+        expect(thrownRows).toEqual([]);
+    });
+
+    it('GET /api/stations/:id returns station details with prices and supports ETag 304', async () => {
+        const res = await request(app).get('/api/stations/1');
+        expect(res.status).toBe(200);
+        expect(res.body.success).toBe(true);
+        expect(res.body.station).toBeDefined();
+        expect(res.body.station.id).toBe(1);
+        expect(res.body.station.name).toBe('Eni Roma Centro');
+        expect(res.body.station.prices.self['Benzina']).toBe(1.850);
+        expect(res.body.station.prices.servito['Diesel']).toBe(1.750);
+        expect(res.headers.etag).toBeDefined();
+
+        // 304 Not Modified
+        const res304 = await request(app)
+            .get('/api/stations/1')
+            .set('If-None-Match', res.headers.etag);
+        expect(res304.status).toBe(304);
+    });
+
+    it('GET /api/stations/:id passes unexpected error to next()', async () => {
+        const { ApiController } = await import('../../server/controllers/apiController.js');
+        const brokenService = {
+            getStationById: vi.fn().mockRejectedValue(new Error('Unexpected Station Error'))
+        };
+        const controller = new ApiController(db);
+        controller.stationService = brokenService;
+
+        const next = vi.fn();
+        await controller.getStationById({ params: { id: '1' }, headers: {} }, { setHeader: vi.fn() }, next);
+        expect(next).toHaveBeenCalledWith(expect.any(Error));
+    });
+
+    it('GET /api/stations/:id returns 404 for non-existent station', async () => {
+        const res = await request(app).get('/api/stations/999999');
+        expect(res.status).toBe(404);
+        expect(res.body.error).toBe('Stazione non trovata');
+    });
+
+    it('GET /api/stations/:id returns 400 for invalid ID', async () => {
+        const res = await request(app).get('/api/stations/invalid-id');
+        expect(res.status).toBe(400);
+        expect(res.body.error).toBe('ID stazione non valido');
+    });
+
+    it('StationRepository.findStationById returns null on db failure or null db', async () => {
+        const { StationRepository } = await import('../../server/repositories/stationRepository.js');
+        const nullRepo = new StationRepository(null);
+        expect(await nullRepo.findStationById(1)).toBeNull();
+
+        const failingRepo = new StationRepository({
+            execute: vi.fn().mockRejectedValue(new Error('DB error'))
+        });
+        expect(await failingRepo.findStationById(1)).toBeNull();
+    });
+
+    it('StationService.getStationById returns null on falsy ID', async () => {
+        const { StationService } = await import('../../server/services/stationService.js');
+        const service = new StationService(db);
+        expect(await service.getStationById(null)).toBeNull();
+        expect(await service.getStationById(0)).toBeNull();
+    });
 });
+
