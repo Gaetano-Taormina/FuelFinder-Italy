@@ -58,5 +58,10 @@ playwright-report/
 .lint_logs
 .vite/
 
+# Local REST Client / API Collections
+*.http
+*.collection.json
+
 # Git Hooks (ignore temporary husky internal cache, track hook scripts)
 .husky/_
+

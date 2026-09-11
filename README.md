@@ -1,7 +1,7 @@
 # FuelFinder Italia
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Click_Here-blue?style=for-the-badge)](https://fuelfinder-msn8.onrender.com)
-[![Version](https://img.shields.io/badge/version-1.2.4-brightgreen?style=for-the-badge)](https://github.com/Gaetano-Taormina/FuelFinder-Italy/releases)
+[![Version](https://img.shields.io/badge/version-1.3.0-brightgreen?style=for-the-badge)](https://github.com/Gaetano-Taormina/FuelFinder-Italy/releases)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen?style=for-the-badge)](https://github.com/Gaetano-Taormina/FuelFinder-Italy)
 [![Node](https://img.shields.io/badge/node-%3E%3D22.0.0-informational?style=for-the-badge&logo=node.js)](https://nodejs.org/)
 [![pnpm](https://img.shields.io/badge/pnpm-11.x-orange?style=for-the-badge&logo=pnpm)](https://pnpm.io/)
@@ -22,6 +22,8 @@ The data shown is real and based on official Open Data from the Italian Ministry
 
 - **Geolocated Search:** Search for stations by entering a city/zip code or using the device's GPS.
 - **Smart Autocomplete:** Instant location suggestions while typing, powered by OpenStreetMap Nominatim.
+- **Localized Station Routes & Sharing:** Direct localized URLs for each station (`/:lang/:cityPrefix/:city/:stationPrefix/:stationId/:fuel?`) with 1-click clipboard sharing and GasStation JSON-LD structured schema.
+- **Station Detail API:** Dedicated endpoint (`GET /api/stations/:id`) providing full station metadata, pricing history, and breakdown by Self-Service / Served.
 - **Route Calculation:** Integrated OSRM (Open Source Routing Machine) to automatically trace the optimal route on the map, calculating distance and travel time from the user to the selected station.
 - **Advanced Filters:** Filter by radius (3, 5, 10, 20 km), fuel type (Petrol, Diesel, LPG, Methane, HVO, LNG), and service type (Self-Service or Served).
 - **Interactive Map:** Clear map visualization (powered by Leaflet) with dynamic point-of-interest clustering and code-split chunks.
@@ -34,10 +36,10 @@ The data shown is real and based on official Open Data from the Italian Ministry
 - **Zero Cloud Costs & Fast Local DB:** Pre-compiled SQLite snapshot is downloaded automatically on startup from GitHub Releases, eliminating cloud fees and ensuring sub-millisecond query responses.
 - **Privacy-Friendly Analytics:** Native backend counter utilizing irreversible SHA-256 hashing to track daily visits without requiring GDPR cookie banners.
 - **Security Hardened:** Integrated Rate Limiting against DDoS/Scraping attacks, React Error Boundaries for crash prevention, and protective HTTP Security Headers.
-- **Advanced SEO:** Highly optimized for search engines featuring JSON-LD Structured Data, `sitemap.xml`, dynamic Meta Tags, and `robots.txt`.
+- **Advanced SEO & Crawl Protection:** Highly optimized for search engines featuring JSON-LD Structured Data, `sitemap.xml`, dynamic Meta Tags, `robots.txt`, and smart `noindex, follow` crawl budget protection on single station routes.
 - **Admin Dashboard:** Secure passkey-protected panel at `/admin-stats` for visualizing site traffic and usage stats.
 - **Lighthouse 100/100:** Next-gen image formats (WebP), deferred CSS, and fine-tuned manual chunks.
-- **3-Tier Testing Architecture & 100% Coverage:** Comprehensive testing suite divided into Component/Unit (Vitest), Integration Flow, and E2E in real browser (Playwright), achieving 100% global coverage.
+- **3-Tier Testing Architecture & 100% Coverage:** Comprehensive testing suite divided into Component/Unit (Vitest), Integration Flow, and E2E in real browser (Playwright), achieving 100% global coverage across lines, statements, and functions.
 - **Automated CI/CD & Dependabot:** GitHub Actions with automatic run cancellation (`concurrency`), Node 22 LTS environment, and smart Dependabot PR grouping.
 
 ### 📱 Quick Mobile Install (PWA)
@@ -88,7 +90,7 @@ The project features a high-performance **Full-Stack** architecture:
 
 - **Frontend (Client):** Developed in React 19 (via Vite 8) with TailwindCSS v4 for a fast, fluid, and 100% mobile-responsive design.
 - **Backend (API):** Managed by a Node.js server with the Express 5 framework.
-- **Database:** High-performance local **SQLite** (or **Turso libSQL**) database. On production/Render, a pre-compiled SQLite snapshot is downloaded automatically on startup from GitHub Releases.
+- **Database:** High-performance local **SQLite** database. On production/Render, a pre-compiled SQLite snapshot is downloaded automatically on startup from GitHub Releases.
 
 ---
 
@@ -101,6 +103,8 @@ I dati mostrati sono reali e basati sugli Open Data ufficiali del Ministero dell
 
 - **Ricerca Georeferenziata:** Cerca distributori inserendo una città/CAP o utilizzando il GPS del dispositivo.
 - **Completamento Automatico:** Suggerimenti intelligenti in tempo reale durante la digitazione delle località tramite OpenStreetMap Nominatim.
+- **Schede Dettaglio Stazione & Condivisione:** URL dedicati e localizzati per ogni distributore (`/:lang/:cityPrefix/:city/:stationPrefix/:stationId/:fuel?`) con condivisione immediata del link e dati strutturati Schema.org GasStation.
+- **API Dettaglio Stazione:** Endpoint dedicato (`GET /api/stations/:id`) con anagrafica completa, storico prezzi e suddivisione Self-Service e Servito.
 - **Calcolo del Percorso:** Integrazione con OSRM (Open Source Routing Machine) per tracciare automaticamente il tragitto ottimale sulla mappa, calcolando distanza e tempi di percorrenza dall'utente al distributore.
 - **Filtri Avanzati:** Filtra per raggio di distanza (3, 5, 10, 20 km), tipo di carburante (Benzina, Gasolio, GPL, Metano, HVO, GNL) e tipologia di servizio (Self-Service o Servito).
 - **Mappa Interattiva:** Visualizzazione chiara sulla mappa (Leaflet) con raggruppamento dinamico (clustering) dei punti di interesse e chunking dedicato.
@@ -113,10 +117,10 @@ I dati mostrati sono reali e basati sugli Open Data ufficiali del Ministero dell
 - **Zero Costi Cloud & SQLite Standalone:** Download automatico all'avvio su Render da GitHub Releases con query locali istantanee e zero costi fissi di database.
 - **Statistiche GDPR-Friendly:** Contatore visite nativo lato server basato su hash crittografico SHA-256 irreversibile per garantire il 100% dell'anonimato senza richiedere banner sui cookie.
 - **Sicurezza e Affidabilità:** Rate Limiting contro attacchi DDoS/scraping, Error Boundaries in React per prevenire crash totali e intestazioni HTTP protettive.
-- **SEO Strutturata:** Ottimizzazione profonda per Google tramite Dati Strutturati (JSON-LD), mappa `sitemap.xml`, `robots.txt` e Open Graph.
+- **SEO Strutturata & Protezione Crawl Budget:** Ottimizzazione profonda per Google tramite Dati Strutturati (JSON-LD), mappa `sitemap.xml`, `robots.txt`, Open Graph e direttiva `noindex, follow` per preservare il crawl budget sui singoli distributori.
 - **Dashboard Admin:** Pannello protetto da passkey sicura alla rotta `/admin-stats` per monitorare il traffico e l'utilizzo del sito.
 - **Lighthouse 100/100:** Formati immagine di nuova generazione (WebP), CSS differito e chunking avanzato delle librerie.
-- **Testing a 3 Livelli & 100% Coverage:** Suite completa di test suddivisa in Component/Unit (Vitest), Group/Integration ed E2E su browser reale (Playwright), con copertura globale del 100%.
+- **Testing a 3 Livelli & 100% Coverage:** Suite completa di test suddivisa in Component/Unit (Vitest), Group/Integration ed E2E su browser reale (Playwright), con copertura globale del 100% su linee, statement e funzioni.
 - **Workflow CI/CD & Dependabot:** Pipeline GitHub Actions con cancellazione automatica dei task obsoleti (`concurrency`), Node 22 LTS e raggruppamenti intelligenti per Dependabot.
 
 ### 📱 Installazione Rapida su Smartphone (PWA)
@@ -167,4 +171,4 @@ Il progetto è sviluppato su una solida architettura **Full-Stack** ad alte pres
 
 - **Frontend (Client):** Sviluppato in React 19 (tramite Vite 8) con TailwindCSS v4 per un design rapido, fluido e responsivo al 100% su Mobile.
 - **Backend (API):** Gestito da un server Node.js con framework Express 5.
-- **Database:** Motore **SQLite** locale ad altissime prestazioni (con supporto opzionale a **Turso libSQL**). Su Render il database viene scaricato automaticamente all'avvio da GitHub Releases, azzerando le latenze e i costi di terze parti.
+- **Database:** Motore **SQLite** locale ad altissime prestazioni. Su Render il database viene scaricato automaticamente all'avvio da GitHub Releases, azzerando le latenze e i costi di terze parti.
