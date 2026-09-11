@@ -110,14 +110,40 @@ self.addEventListener('fetch', (event) => {
       return;
     }
 
-    // 3a. Navigation Requests (HTML / SSR / Routes) -> Network-First with SPA index.html fallback
-    if (request.mode === 'navigate') {
+    // 3a. Navigation & HTML Document Requests (SSR / Dynamic Routes / Direct visits) -> Network-First with Cache/SPA Fallback
+    const isNavigation =
+      request.mode === 'navigate' ||
+      request.destination === 'document' ||
+      (request.headers.get('accept') && request.headers.get('accept').includes('text/html'));
+
+    if (isNavigation) {
       event.respondWith(
-        fetch(request).catch(async () => {
-          const cache = await caches.open(CACHE_NAME);
-          const fallback = (await cache.match('/index.html')) || (await cache.match('/'));
-          return fallback || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } });
-        })
+        fetch(request)
+          .then(async (networkResponse) => {
+            if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaqueredirect')) {
+              const cache = await caches.open(CACHE_NAME);
+              cache.put(request, networkResponse.clone()).catch(() => {});
+            }
+            return networkResponse;
+          })
+          .catch(async () => {
+            const cache = await caches.open(CACHE_NAME);
+            const cachedMatch =
+              (await cache.match(request)) ||
+              (await cache.match('/index.html')) ||
+              (await cache.match('/'));
+
+            return (
+              cachedMatch ||
+              new Response(
+                '<!DOCTYPE html><html lang="it"><head><meta charset="utf-8"><title>Offline - FuelFinder</title></head><body><p>Applicazione offline. Riconnettiti per visualizzare i prezzi aggiornati.</p></body></html>',
+                {
+                  status: 200,
+                  headers: { 'Content-Type': 'text/html; charset=utf-8' }
+                }
+              )
+            );
+          })
       );
       return;
     }
@@ -126,14 +152,26 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.open(CACHE_NAME).then(async (cache) => {
         const cachedResponse = await cache.match(request);
-        const fetchPromise = fetch(request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            cache.put(request, networkResponse.clone());
-          }
-          return networkResponse;
-        }).catch(() => cachedResponse);
 
-        return cachedResponse || fetchPromise;
+        const networkFetch = fetch(request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              cache.put(request, networkResponse.clone()).catch(() => {});
+            }
+            return networkResponse;
+          })
+          .catch(() => {
+            return (
+              cachedResponse ||
+              new Response('', {
+                status: 503,
+                statusText: 'Service Unavailable',
+                headers: { 'Content-Type': 'text/plain' }
+              })
+            );
+          });
+
+        return cachedResponse || networkFetch;
       })
     );
   }
