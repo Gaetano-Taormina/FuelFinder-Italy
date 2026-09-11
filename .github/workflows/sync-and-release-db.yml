@@ -12,27 +12,48 @@ on:
   repository_dispatch:
     types: [sync-db, trigger-sync]
 
+concurrency:
+  group: sync-and-release-db
+  cancel-in-progress: false
+
 permissions:
   contents: write
+  id-token: write
+  attestations: write
 
 jobs:
   build-and-publish-db:
-    name: Build & Publish SQLite Database
+    name: Build, Attest & Publish Database
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -48,8 +69,16 @@ jobs:
           echo "Zstandard size: $(du -h server/database.sqlite.zst | cut -f1)"
           echo "Gzipped size:  $(du -h server/database.sqlite.gz | cut -f1)"
 
+      - name: Generate Database Release Attestation
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            server/database.sqlite.zst
+            server/database.sqlite.gz
+            server/database.sqlite
+
       - name: Upload Database to GitHub Release (latest-data)
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: latest-data
           name: "Latest MIMIT Fuel Database"
