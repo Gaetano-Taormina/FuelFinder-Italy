@@ -6,8 +6,11 @@ import './index.css'
 import i18n from './utils/i18n'
 import { ROUTES } from './config/routes.js'
 import App from './App.jsx'
+import { registerServiceWorker } from './services/swRegistration.js'
 
 import { ErrorBoundary } from './components/ErrorBoundary.jsx'
+
+registerServiceWorker();
 
 const ExplorePage = lazy(() => import('./pages/ExplorePage.jsx'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'))
@@ -39,6 +42,9 @@ createRoot(document.getElementById('root')).render(
           <Route key={`explore-naked-${lang}`} path={`/${ROUTES[lang].explore}`} element={<PageWrapper><ExplorePage /></PageWrapper>} />
         ))}
         
+        {Object.keys(ROUTES).map((lang) => (
+          <Route key={`station-${lang}`} path={`/${lang}/${ROUTES[lang].cityPrefix}/:city/${ROUTES[lang].stationPrefix}/:stationId/:fuel?`} element={<PageWrapper><App /></PageWrapper>} />
+        ))}
         {Object.keys(ROUTES).map((lang) => (
           <Route key={`city-${lang}`} path={`/${lang}/${ROUTES[lang].cityPrefix}/:city/:fuel?`} element={<PageWrapper><App /></PageWrapper>} />
         ))}
