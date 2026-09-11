@@ -134,12 +134,18 @@ export class SsrController {
                 let renderedHtml = '';
 
                 if (station) {
+                    const safeCitySlug = encodeURIComponent(slugify(station.comune));
+                    const stationPrefix = lang === 'it' ? 'stazione' : 'station';
+                    const cityPrefix = lang === 'it' ? 'citta' : 'city';
+                    const fuelSegment = stationMatch[6] ? `/${encodeURIComponent(slugify(rawFuel))}` : '';
+                    const safeStationPath = `/${lang}/${cityPrefix}/${safeCitySlug}/${stationPrefix}/${station.id}${fuelSegment}`;
+
                     const metadata = seoService.generateStationMetadata({
                         station,
                         lang,
                         displayFuel: stationMatch[6] ? displayFuel : null,
                         host,
-                        pathSegment: req.path
+                        pathSegment: safeStationPath
                     });
 
                     const crawlerHtml = seoService.generateStationCrawlerHtml({
