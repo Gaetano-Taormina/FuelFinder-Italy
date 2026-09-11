@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fuelfinder-v1.4.0';
+const CACHE_NAME = 'fuelfinder-v1.4.1';
 const TILE_CACHE_NAME = 'fuelfinder-tiles-v1';
 const API_CACHE_NAME = 'fuelfinder-api-v1';
 
@@ -103,13 +103,26 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3. Same-origin Static Assets & Navigation -> Stale-While-Revalidate
+  // 3. Same-origin Requests
   if (url.origin === self.location.origin) {
     if (url.pathname.startsWith('/api/')) {
       // Direct pass-through for dynamic backend API queries
       return;
     }
 
+    // 3a. Navigation Requests (HTML / SSR / Routes) -> Network-First with SPA index.html fallback
+    if (request.mode === 'navigate') {
+      event.respondWith(
+        fetch(request).catch(async () => {
+          const cache = await caches.open(CACHE_NAME);
+          const fallback = (await cache.match('/index.html')) || (await cache.match('/'));
+          return fallback || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+        })
+      );
+      return;
+    }
+
+    // 3b. Static Assets (CSS, JS, WebP, SVG, WOFF2) -> Stale-While-Revalidate
     event.respondWith(
       caches.open(CACHE_NAME).then(async (cache) => {
         const cachedResponse = await cache.match(request);
@@ -118,10 +131,13 @@ self.addEventListener('fetch', (event) => {
             cache.put(request, networkResponse.clone());
           }
           return networkResponse;
-        }).catch(() => cachedResponse);
+        }).catch(() => {
+          return cachedResponse || new Response('', { status: 408 });
+        });
 
         return cachedResponse || fetchPromise;
       })
     );
   }
 });
+

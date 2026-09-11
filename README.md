@@ -1,7 +1,7 @@
 # FuelFinder Italia
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Click_Here-blue?style=for-the-badge)](https://fuelfinder-msn8.onrender.com)
-[![Version](https://img.shields.io/badge/version-1.4.0-brightgreen?style=for-the-badge)](https://github.com/Gaetano-Taormina/FuelFinder-Italy/releases)
+[![Version](https://img.shields.io/badge/version-1.4.1-brightgreen?style=for-the-badge)](https://github.com/Gaetano-Taormina/FuelFinder-Italy/releases)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen?style=for-the-badge)](https://github.com/Gaetano-Taormina/FuelFinder-Italy)
 [![Node](https://img.shields.io/badge/node-%3E%3D22.0.0-informational?style=for-the-badge&logo=node.js)](https://nodejs.org/)
 [![pnpm](https://img.shields.io/badge/pnpm-11.x-orange?style=for-the-badge&logo=pnpm)](https://pnpm.io/)
