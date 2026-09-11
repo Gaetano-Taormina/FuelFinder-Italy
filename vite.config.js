@@ -3,6 +3,10 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { compression } from "vite-plugin-compression2";
 import { fileURLToPath, URL } from "node:url";
+import os from "node:os";
+
+const availableCpus = typeof os.availableParallelism === "function" ? os.availableParallelism() : os.cpus().length;
+const maxTestWorkers = Math.max(2, Math.min(4, Math.floor(availableCpus / 2)));
 
 // https://vite.dev/config/
 export default defineConfig(() => ({
@@ -37,6 +41,10 @@ export default defineConfig(() => ({
   test: {
     slowTestThreshold: 1000,
     fileParallelism: true,
+    pool: "forks",
+    maxForks: maxTestWorkers,
+    minForks: 1,
+    isolate: true,
     coverage: {
       provider: "v8",
       reportsDirectory: "tests/coverage",
@@ -54,7 +62,7 @@ export default defineConfig(() => ({
           name: 'unit',
           environment: 'happy-dom',
           globals: true,
-          isolate: false,
+          isolate: true,
           slowTestThreshold: 1000,
           setupFiles: ['./tests/frontend/setupTests.js'],
           include: ['tests/frontend/**/*.{test,spec}.{js,jsx}', 'tests/backend/**/*.{test,spec}.{js,jsx}'],
@@ -66,7 +74,7 @@ export default defineConfig(() => ({
           name: 'integration',
           environment: 'happy-dom',
           globals: true,
-          isolate: false,
+          isolate: true,
           slowTestThreshold: 1000,
           setupFiles: ['./tests/frontend/setupTests.js'],
           include: ['tests/integration/**/*.{test,spec}.{js,jsx}'],
@@ -77,16 +85,26 @@ export default defineConfig(() => ({
   build: {
     target: "esnext",
     sourcemap: false,
-    chunkSizeWarningLimit: 1500, // Alza il limite a 1.5MB per evitare il warning
+    chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
         manualChunks(id) {
           if (id.includes("node_modules")) {
-            if (id.includes("leaflet") || id.includes("react-leaflet")) {
+            if (id.includes("leaflet") || id.includes("react-leaflet") || id.includes("react-leaflet-cluster")) {
               return "maps";
             }
-            if (id.includes("react") || id.includes("react-router-dom") || id.includes("swr") || id.includes("i18next")) {
-              return "vendor";
+            if (id.includes("/react/") || id.includes("/react-dom/") || id.includes("\\react\\") || id.includes("\\react-dom\\")) {
+              return "react-core";
+            }
+            if (
+              id.includes("react-router") ||
+              id.includes("swr") ||
+              id.includes("i18next")
+            ) {
+              return "vendor-state";
+            }
+            if (id.includes("qrcode")) {
+              return "qrcode";
             }
           }
         },
