@@ -56,7 +56,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
 
   // 1. Map Tiles (OpenStreetMap) -> Cache-First Strategy
-  if (url.hostname.includes('tile.openstreetmap.org')) {
+  if (url.hostname === 'tile.openstreetmap.org' || url.hostname.endsWith('.tile.openstreetmap.org')) {
     event.respondWith(
       caches.open(TILE_CACHE_NAME).then(async (cache) => {
         const cachedResponse = await cache.match(request);
@@ -80,7 +80,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // 2. External Routing & Geocoding (OSRM & Nominatim) -> Network-First with Cache Fallback
-  if (url.hostname.includes('router.project-osrm.org') || url.hostname.includes('nominatim.openstreetmap.org')) {
+  if (url.hostname === 'router.project-osrm.org' || url.hostname === 'nominatim.openstreetmap.org') {
     event.respondWith(
       caches.open(API_CACHE_NAME).then(async (cache) => {
         try {
