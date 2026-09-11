@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fuelfinder-v1.3.0';
+const CACHE_NAME = 'fuelfinder-v1.4.0';
 const TILE_CACHE_NAME = 'fuelfinder-tiles-v1';
 const API_CACHE_NAME = 'fuelfinder-api-v1';
 
@@ -16,9 +16,10 @@ async function trimCache(cacheName, maxItems) {
   try {
     const cache = await caches.open(cacheName);
     const keys = await cache.keys();
-    if (keys.length > maxItems) {
-      await cache.delete(keys[0]);
-      await trimCache(cacheName, maxItems);
+    const excess = keys.length - maxItems;
+    if (excess > 0) {
+      const keysToDelete = keys.slice(0, excess);
+      await Promise.all(keysToDelete.map((key) => cache.delete(key)));
     }
   } catch {
     // Ignore cache trimming errors in background

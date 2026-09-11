@@ -1,23 +1,73 @@
 import { useState, useCallback, useRef } from 'react';
 
+const MAX_CACHE_SIZE = 100;
+const suggestionsCache = new Map();
+const coordsCache = new Map();
+
+/**
+ * Helper to manage LRU Map cache
+ */
+function setCache(map, key, value) {
+    if (map.size >= MAX_CACHE_SIZE) {
+        const firstKey = map.keys().next().value;
+        map.delete(firstKey);
+    }
+    map.set(key, value);
+}
+
+/**
+ * Clears in-memory Nominatim caches (useful for testing)
+ */
+export function clearNominatimCache() {
+    suggestionsCache.clear();
+    coordsCache.clear();
+}
+
 export function useNominatim() {
     const [suggestions, setSuggestions] = useState([]);
     const timeoutRef = useRef(null);
+    const abortControllerRef = useRef(null);
 
     const fetchSuggestions = useCallback((val) => {
         if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
         }
 
+        const normalizedVal = (val || '').trim().toLowerCase();
+        if (!normalizedVal) {
+            setSuggestions([]);
+            return Promise.resolve([]);
+        }
+
         return new Promise((resolve) => {
             timeoutRef.current = setTimeout(async () => {
+                if (suggestionsCache.has(normalizedVal)) {
+                    const cached = suggestionsCache.get(normalizedVal);
+                    setSuggestions(cached);
+                    resolve(cached);
+                    return;
+                }
+
+                if (abortControllerRef.current) {
+                    abortControllerRef.current.abort();
+                }
+                const controller = new AbortController();
+                abortControllerRef.current = controller;
+
                 try {
-                    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&countrycodes=it&limit=5`);
+                    const res = await fetch(
+                        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&countrycodes=it&limit=5`,
+                        { signal: controller.signal }
+                    );
                     const data = await res.json();
+                    setCache(suggestionsCache, normalizedVal, data);
                     setSuggestions(data);
                     resolve(data);
-                } catch {
-                    // Ignored error
+                } catch (err) {
+                    if (err.name === 'AbortError') {
+                        resolve([]);
+                        return;
+                    }
                     setSuggestions([]);
                     resolve([]);
                 }
@@ -27,18 +77,31 @@ export function useNominatim() {
 
     const clearSuggestions = useCallback(() => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            abortControllerRef.current = null;
+        }
         setSuggestions([]);
     }, []);
 
     const searchCoords = useCallback(async (locationStr) => {
+        const normalizedLoc = (locationStr || '').trim().toLowerCase();
+        if (!normalizedLoc) return null;
+
+        if (coordsCache.has(normalizedLoc)) {
+            return coordsCache.get(normalizedLoc);
+        }
+
         try {
             const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationStr)}&countrycodes=it`);
             const data = await res.json();
             if (data && data.length > 0) {
-                return {
+                const coords = {
                     lat: parseFloat(data[0].lat),
                     lng: parseFloat(data[0].lon)
                 };
+                setCache(coordsCache, normalizedLoc, coords);
+                return coords;
             }
         } catch {
             // Ignored error
@@ -53,3 +116,4 @@ export function useNominatim() {
         searchCoords 
     };
 }
+
