@@ -304,4 +304,37 @@ describe('useNominatim Hook', () => {
             resolveInflight({ json: async () => [] });
         }
     });
+
+    it('handles res.ok === false gracefully in fetchSuggestions and searchCoords', async () => {
+        global.fetch.mockResolvedValueOnce({
+            ok: false,
+            status: 503,
+            json: async () => ({ error: 'Service Unavailable' })
+        });
+
+        const { result } = renderHook(() => useNominatim());
+        let promise;
+        act(() => {
+            promise = result.current.fetchSuggestions('NapoliError');
+        });
+
+        await act(async () => {
+            vi.advanceTimersByTime(500);
+            await promise;
+        });
+
+        const data = await promise;
+        expect(data).toEqual([]);
+        expect(result.current.suggestions).toEqual([]);
+
+        global.fetch.mockResolvedValueOnce({
+            ok: false,
+            status: 500,
+            json: async () => ({ error: 'Internal Error' })
+        });
+
+        const coords = await result.current.searchCoords('FirenzeError');
+        expect(coords).toBeNull();
+    });
 });
+
