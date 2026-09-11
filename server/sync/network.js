@@ -7,14 +7,18 @@ import { pipeline } from "stream/promises";
 export const URL_ANAGRAFICA = "https://www.mimit.gov.it/images/exportCSV/anagrafica_impianti_attivi.csv";
 export const URL_PREZZI = "https://www.mimit.gov.it/images/exportCSV/prezzo_alle_8.csv";
 
-export async function checkUpdates(lastModifiedHeader) {
+export async function checkUpdates(lastModifiedHeader, timeoutMs = 30000) {
   console.log("Checking MIMIT updates...");
   const headers = {};
   if (lastModifiedHeader) {
     headers["If-Modified-Since"] = lastModifiedHeader;
   }
 
-  const headResponse = await fetch(URL_PREZZI, { method: "HEAD", headers });
+  const headResponse = await fetch(URL_PREZZI, {
+    method: "HEAD",
+    headers,
+    signal: AbortSignal.timeout(timeoutMs)
+  });
   if (headResponse.status === 304) {
     console.log(`HTTP 304: No changes since ${lastModifiedHeader}. Sync skipped.`);
     return { shouldUpdate: false };
@@ -27,8 +31,10 @@ export async function checkUpdates(lastModifiedHeader) {
   return { shouldUpdate: true, newLastModified };
 }
 
-export async function downloadFile(url) {
-  const response = await fetch(url);
+export async function downloadFile(url, timeoutMs = 60000) {
+  const response = await fetch(url, {
+    signal: AbortSignal.timeout(timeoutMs)
+  });
   if (!response.ok) throw new Error(`Errore Server MIMIT - HTTP ${response.status}`);
 
   const tmpFile = path.join(process.cwd(), "server", `temp_${Date.now()}.csv`);

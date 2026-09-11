@@ -9,7 +9,13 @@ import { initSchema, getLastModified, loadExistingData, applyChanges, setLastMod
 import { processStationsDiff, processPricesDiff, processDeletions } from "./processor.js";
 import { fetchTursoUsage } from "../services/quotaService.js";
 
-export async function sync(dbClient, retries = 8, options = {}) {
+export async function sync(dbClient, retries = 3, options = {}) {
+  if (typeof retries === 'object' && retries !== null) {
+    options = retries;
+    retries = options.retries ?? 3;
+  }
+  const retryDelayMs = options.retryDelayMs ?? (process.env.CI ? 15000 : 30000);
+
   const usage = await fetchTursoUsage().catch(() => null);
   if (usage && (usage.isEmergency || usage.isCritical)) {
     console.warn(`[Sync] Quota Turso elevata (${usage.pctRead}% Read, ${usage.pctWritten}% Write). Sincronizzazione remota bloccata per salvaguardia account.`);
@@ -41,9 +47,10 @@ export async function sync(dbClient, retries = 8, options = {}) {
 
     console.error(`[Sync] Error:`, error.message);
     if (retries > 0) {
-      console.log(`[Sync] Retrying in 5m... (Left: ${retries})`);
-      await new Promise((res) => setTimeout(res, 5 * 60 * 1000));
-      return sync(dbClient, retries - 1);
+      const waitSec = Math.round(retryDelayMs / 1000);
+      console.log(`[Sync] Retrying in ${waitSec}s... (Left: ${retries})`);
+      await new Promise((res) => setTimeout(res, retryDelayMs));
+      return sync(dbClient, retries - 1, { ...options, retryDelayMs });
     }
     throw error;
   }

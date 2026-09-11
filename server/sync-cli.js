@@ -32,7 +32,7 @@ if (isLocalExplicit || !syncUrl) {
 }
 
 console.log("Starting manual sync" + (isDryRun ? " (DRY-RUN MODE)" : "") + "...");
-sync(db, 8, { dryRun: isDryRun, showProgress: true }).then(() => {
+sync(db, 2, { dryRun: isDryRun, showProgress: true, retryDelayMs: 15000 }).then(() => {
     console.log("Manual sync finished.");
     process.exit(0);
 }).catch(err => {
