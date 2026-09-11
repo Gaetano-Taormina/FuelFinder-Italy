@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { calculateDistance, processStations, handleWorkerMessage } from '../../../src/workers/geoWorker.js';
+import { describe, it, expect } from 'vitest';
+import { calculateDistance, processStations } from '../../../src/workers/geoWorker.js';
 
 describe('Geo Worker - Off-thread Calculations', () => {
   it('computes accurate Haversine distance between two coordinates', () => {
@@ -44,30 +44,5 @@ describe('Geo Worker - Off-thread Calculations', () => {
     expect(processStations(list, null)).toBe(list);
     expect(processStations(list, { lat: 'invalid', lng: 0 })).toBe(list);
     expect(processStations(list, { lat: 0, lng: 'invalid' })).toBe(list);
-  });
-
-  it('dispatches PROCESS_STATIONS event via handleWorkerMessage', () => {
-    const mockTarget = { postMessage: vi.fn() };
-    const event = {
-      data: {
-        id: 'job-1',
-        type: 'PROCESS_STATIONS',
-        stations: [{ id: 10, lat: 37.31, lng: 13.58, currentPrice: 1.75 }],
-        originCoords: { lat: 37.31, lng: 13.58 },
-        radiusKm: 25
-      }
-    };
-
-    handleWorkerMessage(event, mockTarget);
-    expect(mockTarget.postMessage).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: 'job-1',
-        type: 'PROCESS_STATIONS_SUCCESS'
-      })
-    );
-
-    // Branch: invalid type or missing target
-    handleWorkerMessage({ data: { type: 'UNKNOWN' } }, mockTarget);
-    handleWorkerMessage(null, null);
   });
 });

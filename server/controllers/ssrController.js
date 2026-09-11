@@ -14,8 +14,7 @@ import {
     REGEX_EXPLORE,
     REGEX_CITY,
     REGEX_STATION,
-    REGEX_HOME_LANG,
-    REGEX_LANG_PREFIX
+    REGEX_HOME_LANG
 } from '../utils/seoHelpers.js';
 
 export class SsrController {
@@ -52,7 +51,7 @@ export class SsrController {
 
         
         // Whitelist and normalize rawFuel
-        const normalizedFuelKey = String(rawFuelInput || '').toLowerCase();
+        const normalizedFuelKey = String(rawFuelInput).toLowerCase();
         const fuelMap = {
             'benzina': 'Benzina',
             'gasolio': 'Gasolio',
@@ -68,11 +67,11 @@ export class SsrController {
             'lng': 'GNL'
         };
         const rawFuel = fuelMap[normalizedFuelKey] || 'Benzina';
-        const rawLang = (stationMatch || cityMatch) ? (stationMatch || cityMatch)[1] : (exploreMatch ? exploreMatch[1] : (req.path.match(REGEX_LANG_PREFIX) ? req.path.match(REGEX_LANG_PREFIX)[1] : 'it'));
-        const lang = rawLang === 'en' ? 'en' : 'it';
-        const displayFuel = lang === 'en' ? (fuelToEn[rawFuel] || 'Petrol') : rawFuel;
+        const matchObj = stationMatch || cityMatch || exploreMatch;
+        const lang = matchObj ? matchObj[1] : (req.path.startsWith('/en') ? 'en' : 'it');
+        const displayFuel = lang === 'en' ? fuelToEn[rawFuel] : rawFuel;
         
-        const isHomePage = req.path === '/' || (homeMatch && !exploreMatch && !cityMatch && !stationMatch);
+        const isHomePage = req.path === '/' || Boolean(homeMatch && !exploreMatch && !cityMatch && !stationMatch);
 
         if ((stationMatch || cityMatch || exploreMatch || isHomePage) && fs.existsSync(this.indexPath)) {
             let cacheKey = '';
@@ -89,7 +88,7 @@ export class SsrController {
                 if (!station) {
                     return res.status(404).sendFile(this.indexPath);
                 }
-                cacheKey = `${lang}_station_${station.id}_${slugify(rawFuel)}`;
+                cacheKey = `${lang}_station_${station.id}_${stationMatch[6] ? slugify(rawFuel) : 'all'}`;
             } else if (cityMatch) {
                 const rawOriginalSlug = cityMatch[3];
                 let originalSlug = rawOriginalSlug.toLowerCase();
@@ -120,7 +119,7 @@ export class SsrController {
                 cacheKey = `${lang}_${slugify(cityCap)}_${slugify(rawFuel)}`;
             } else if (exploreMatch) {
                 cacheKey = `${lang}_esplora`;
-            } else if (isHomePage) {
+            } else {
                 cacheKey = `${lang}_home_${slugify(rawFuel)}`;
             }
             

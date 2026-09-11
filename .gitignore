@@ -65,3 +65,9 @@ playwright-report/
 # Git Hooks (ignore temporary husky internal cache, track hook scripts)
 .husky/_
 
+# AI Assistant Customizations & Skills (local only, hidden from repo)
+.agents/
+.agent/
+_agents/
+
+

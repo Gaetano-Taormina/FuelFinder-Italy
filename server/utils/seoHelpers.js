@@ -43,7 +43,9 @@ export const fuelToEn = Object.freeze({
     'Benzina': 'Petrol',
     'Gasolio': 'Diesel',
     'GPL': 'LPG',
-    'Metano': 'CNG'
+    'Metano': 'CNG',
+    'HVO': 'HVO',
+    'GNL': 'LNG'
 });
 
 export const slugify = (text) => {

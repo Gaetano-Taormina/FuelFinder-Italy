@@ -190,7 +190,7 @@ export async function getFavoriteStations() {
       const tx = db.transaction(STORES.FAVORITES, 'readonly');
       const store = tx.objectStore(STORES.FAVORITES);
       const request = store.getAll();
-      request.onsuccess = () => resolve(request.result || []);
+      request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
   } catch {

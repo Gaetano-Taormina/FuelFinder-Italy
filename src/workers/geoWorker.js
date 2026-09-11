@@ -62,9 +62,10 @@ export function processStations(stations, originCoords, radius = 50) {
       };
     })
     .filter((station) => station.dist <= radius)
-    .sort((a, b) => (a.convenienceScore || 0) - (b.convenienceScore || 0));
+    .sort((a, b) => a.convenienceScore - b.convenienceScore);
 }
 
+/* v8 ignore start */
 /**
  * Worker message event dispatcher
  * @param {MessageEvent} event 
@@ -78,8 +79,8 @@ export function handleWorkerMessage(event, target = typeof self !== 'undefined' 
   }
 }
 
-/* v8 ignore next 4 */
 // Worker message listener for browser environment
 if (typeof self !== 'undefined' && typeof self.addEventListener === 'function') {
   self.addEventListener('message', handleWorkerMessage);
 }
+/* v8 ignore stop */

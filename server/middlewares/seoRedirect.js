@@ -9,22 +9,14 @@ export function seoRedirectMiddleware(req, res, next) {
     // Redirect queries with carburante/fuel to path segment
     if (req.query.carburante || req.query.fuel) {
         const isEn = req.path.startsWith('/en');
-        const isIt = req.path.startsWith('/it');
         const lang = isEn ? 'en' : 'it';
         
-        const fuelRaw = String(req.query.fuel || req.query.carburante || '').trim().toLowerCase();
+        const rawParam = req.query.fuel || req.query.carburante;
+        const fuelRaw = String(rawParam).trim().toLowerCase();
         const enToFuelLocal = { 'petrol': 'benzina', 'diesel': 'gasolio', 'lpg': 'gpl', 'cng': 'metano', 'methane': 'metano', 'lng': 'gnl' };
         const itToEnLocal = { 'benzina': 'petrol', 'gasolio': 'diesel', 'gpl': 'lpg', 'metano': 'cng', 'gnl': 'lng' };
         
-        let urlFuel = fuelRaw;
-        if (isEn && itToEnLocal[fuelRaw]) {
-            urlFuel = itToEnLocal[fuelRaw];
-        } else if (isIt && enToFuelLocal[fuelRaw]) {
-            urlFuel = enToFuelLocal[fuelRaw];
-        } else if (!isEn && !isIt) {
-            urlFuel = itToEnLocal[fuelRaw] || fuelRaw;
-            urlFuel = enToFuelLocal[urlFuel] || urlFuel;
-        }
+        let urlFuel = isEn ? (itToEnLocal[fuelRaw] || fuelRaw) : (enToFuelLocal[fuelRaw] || fuelRaw);
         
         if (!ALLOWED_FUELS.has(urlFuel)) {
             urlFuel = isEn ? 'petrol' : 'benzina';

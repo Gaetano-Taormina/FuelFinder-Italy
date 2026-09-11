@@ -221,27 +221,25 @@ export class SeoService {
                     }
                 });
 
-                if (minStation) {
-                    jsonLd.push({
-                        "@context": "https://schema.org",
-                        "@type": "LocalBusiness",
-                        "name": minStation.nome_impianto,
-                        "address": minStation.indirizzo,
-                        "geo": {
-                            "@type": "GeoCoordinates",
-                            "latitude": minStation.latitudine,
-                            "longitude": minStation.longitudine
-                        },
-                        "url": currentUrl,
-                        "priceRange": "€",
-                        "makesOffer": {
-                            "@type": "Offer",
-                            "name": offerName,
-                            "price": minPrice,
-                            "priceCurrency": "EUR"
-                        }
-                    });
-                }
+                jsonLd.push({
+                    "@context": "https://schema.org",
+                    "@type": "LocalBusiness",
+                    "name": minStation.nome_impianto,
+                    "address": minStation.indirizzo,
+                    "geo": {
+                        "@type": "GeoCoordinates",
+                        "latitude": minStation.latitudine,
+                        "longitude": minStation.longitudine
+                    },
+                    "url": currentUrl,
+                    "priceRange": "€",
+                    "makesOffer": {
+                        "@type": "Offer",
+                        "name": offerName,
+                        "price": minPrice,
+                        "priceCurrency": "EUR"
+                    }
+                });
 
                 if (maxStation && maxStation.nome_impianto !== minStation?.nome_impianto) {
                     jsonLd.push({

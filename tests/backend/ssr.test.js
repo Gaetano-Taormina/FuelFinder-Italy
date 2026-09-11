@@ -122,6 +122,10 @@ describe('SSR Routes & Controller & SEO Redirects', () => {
         const resIt = await request(app).get('/it/citta/ROMA');
         expect(resIt.status).toBe(301);
         expect(resIt.headers.location).toBe('/it/citta/roma');
+
+        const resEnUntranslated = await request(app).get('/en/city/PALERMO');
+        expect(resEnUntranslated.status).toBe(301);
+        expect(resEnUntranslated.headers.location).toBe('/en/city/palermo');
     });
 
     it('renders English explore page correctly', async () => {
@@ -232,10 +236,22 @@ describe('SSR Routes & Controller & SEO Redirects', () => {
         expect(resEn.text).toContain('Prices');
     });
 
+    it('renders English home page with HVO fuel segment', async () => {
+        const res = await request(app).get('/en/hvo');
+        expect(res.status).toBe(200);
+        expect(res.text).toContain('Real-time HVO Prices');
+    });
+
     it('renders station detail without fuel suffix', async () => {
         const res = await request(app).get('/it/citta/roma/stazione/1');
         expect(res.status).toBe(200);
         expect(res.text).toContain('Eni Roma');
+    });
+
+    it('falls back to default fuel when unknown fuel segment is passed', async () => {
+        const res = await request(app).get('/it/unmapped_fuel_xyz');
+        expect(res.status).toBe(200);
+        expect(res.text).toContain('Prezzi Benzina');
     });
 
     it('handles unexpected SSR generation errors and falls back to 404', async () => {
@@ -266,6 +282,11 @@ describe('SSR Routes & Controller & SEO Redirects', () => {
         const res = await request(app).get('/en/city/rome/station/1');
         expect(res.status).toBe(200);
         expect(res.text).toContain('Eni Roma');
+    });
+
+    it('handles direct db instance in SsrController', () => {
+        const directController = new SsrController(db);
+        expect(directController.getDb()).toBe(db);
     });
 });
 

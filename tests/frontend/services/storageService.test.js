@@ -63,7 +63,7 @@ describe('Storage Service (IndexedDB Persistence)', () => {
   it('handles onupgradeneeded when object stores already exist', async () => {
     const mockDb = {
       objectStoreNames: {
-        contains: (name) => true
+        contains: () => true
       }
     };
 
@@ -204,7 +204,10 @@ describe('Storage Service (IndexedDB Persistence)', () => {
     const cleared = await clearSearchHistory();
     expect(cleared).toBe(true);
 
-    // Test Favorites with fallback brand and empty strings
+    // Test Favorites with full properties, fallback brand, and empty strings
+    const savedFavFull = await saveFavoriteStation({ id: 50705, name: 'Full Station', address: 'Via Roma', comune: 'Palermo', lat: 38.1, lng: 13.3 });
+    expect(savedFavFull).toBe(true);
+
     const savedFav = await saveFavoriteStation({ id: 50706, brand: 'Q8', lat: 37.3, lng: 13.5 });
     expect(savedFav).toBe(true);
 
@@ -215,7 +218,7 @@ describe('Storage Service (IndexedDB Persistence)', () => {
     expect(isFav).toBe(true);
 
     const favList = await getFavoriteStations();
-    expect(favList.length).toBe(2);
+    expect(favList.length).toBe(3);
 
     const removedFav = await removeFavoriteStation(50706);
     expect(removedFav).toBe(true);
