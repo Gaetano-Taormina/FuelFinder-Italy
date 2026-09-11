@@ -1,7 +1,7 @@
 {
   "name": "fuelfinder-italy",
   "private": true,
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Trova i distributori di carburante più economici in Italia",
   "keywords": [
     "carburante",
@@ -43,6 +43,8 @@
     "stats": "node server/stats-cli.js",
     "lint": "oxlint -c .oxlintrc.json",
     "lint:fix": "oxlint --fix -c .oxlintrc.json",
+    "security": "node scripts/security-audit.js",
+    "audit": "node scripts/security-audit.js",
     "test": "node scripts/test-runner.js all",
     "test:coverage": "node scripts/test-runner.js coverage",
     "release": "node scripts/release.js",
