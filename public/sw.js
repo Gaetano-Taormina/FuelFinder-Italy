@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fuelfinder-v1.4.1';
+const CACHE_NAME = 'fuelfinder-v1.4.2';
 const TILE_CACHE_NAME = 'fuelfinder-tiles-v1';
 const API_CACHE_NAME = 'fuelfinder-api-v1';
 
@@ -73,7 +73,7 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         } catch {
-          return cachedResponse || new Response('', { status: 408 });
+          return cachedResponse || new Response('', { status: 503, headers: { 'Content-Type': 'text/plain' } });
         }
       })
     );
@@ -131,13 +131,12 @@ self.addEventListener('fetch', (event) => {
             cache.put(request, networkResponse.clone());
           }
           return networkResponse;
-        }).catch(() => {
-          return cachedResponse || new Response('', { status: 408 });
-        });
+        }).catch(() => cachedResponse);
 
         return cachedResponse || fetchPromise;
       })
     );
   }
 });
+
 

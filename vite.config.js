@@ -22,16 +22,6 @@ export default defineConfig(() => ({
       algorithm: "gzip",
       exclude: [/\.(br)$/, /\.(gz)$/],
     }),
-    {
-      name: "defer-css",
-      enforce: "post",
-      transformIndexHtml(html) {
-        return html.replace(
-          /<link rel="stylesheet" crossorigin href="([^"]+)">/g,
-          '<link rel="preload" href="$1" as="style" crossorigin onload="this.onload=null;this.rel=\'stylesheet\'"><noscript><link rel="stylesheet" crossorigin href="$1"></noscript>',
-        );
-      },
-    },
   ],
   server: {
     proxy: {
