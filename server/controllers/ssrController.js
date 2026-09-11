@@ -36,39 +36,30 @@ export class SsrController {
         const cityMatch = !stationMatch && req.path.match(REGEX_CITY);
         const homeMatch = req.path === '/' ? null : (!stationMatch && req.path.match(REGEX_HOME_LANG));
         
-        let rawFuelInput = 'Benzina';
+        let candidate = '';
         if (stationMatch && stationMatch[6]) {
-            rawFuelInput = stationMatch[6];
+            candidate = stationMatch[6];
         } else if (cityMatch && cityMatch[4]) {
-            rawFuelInput = cityMatch[4];
+            candidate = cityMatch[4];
         } else if (homeMatch && homeMatch[2] && !exploreMatch && !cityMatch) {
-            rawFuelInput = homeMatch[2];
-        /* v8 ignore start */
-        } else if (req.query.fuel || req.query.carburante) {
-            rawFuelInput = req.query.fuel || req.query.carburante;
+            candidate = homeMatch[2];
         }
-        /* v8 ignore stop */
-
         
-        // Whitelist and normalize rawFuel
-        const normalizedFuelKey = String(rawFuelInput).toLowerCase();
-        const fuelMap = {
-            'benzina': 'Benzina',
-            'gasolio': 'Gasolio',
-            'gpl': 'GPL',
-            'metano': 'Metano',
-            'hvo': 'HVO',
-            'gnl': 'GNL',
-            'petrol': 'Benzina',
-            'diesel': 'Gasolio',
-            'lpg': 'GPL',
-            'cng': 'Metano',
-            'methane': 'Metano',
-            'lng': 'GNL'
-        };
-        const rawFuel = fuelMap[normalizedFuelKey] || 'Benzina';
-        const matchObj = stationMatch || cityMatch || exploreMatch;
-        const lang = matchObj ? matchObj[1] : (req.path.startsWith('/en') ? 'en' : 'it');
+        const fuelKey = String(candidate).toLowerCase();
+        let rawFuel = 'Benzina';
+        if (fuelKey === 'gasolio' || fuelKey === 'diesel') {
+            rawFuel = 'Gasolio';
+        } else if (fuelKey === 'gpl' || fuelKey === 'lpg') {
+            rawFuel = 'GPL';
+        } else if (fuelKey === 'metano' || fuelKey === 'cng' || fuelKey === 'methane') {
+            rawFuel = 'Metano';
+        } else if (fuelKey === 'hvo') {
+            rawFuel = 'HVO';
+        } else if (fuelKey === 'gnl' || fuelKey === 'lng') {
+            rawFuel = 'GNL';
+        }
+        
+        const lang = req.path.startsWith('/en') ? 'en' : 'it';
         const displayFuel = lang === 'en' ? fuelToEn[rawFuel] : rawFuel;
         
         const isHomePage = req.path === '/' || Boolean(homeMatch && !exploreMatch && !cityMatch && !stationMatch);

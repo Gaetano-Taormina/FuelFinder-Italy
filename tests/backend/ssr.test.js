@@ -240,6 +240,18 @@ describe('SSR Routes & Controller & SEO Redirects', () => {
         const res = await request(app).get('/en/hvo');
         expect(res.status).toBe(200);
         expect(res.text).toContain('Real-time HVO Prices');
+
+        const resGpl = await request(app).get('/it/gpl');
+        expect(resGpl.status).toBe(200);
+        expect(resGpl.text).toContain('Prezzi GPL');
+
+        const resGnl = await request(app).get('/it/gnl');
+        expect(resGnl.status).toBe(200);
+        expect(resGnl.text).toContain('Prezzi GNL');
+
+        const resGasolio = await request(app).get('/it/gasolio');
+        expect(resGasolio.status).toBe(200);
+        expect(resGasolio.text).toContain('Prezzi Gasolio');
     });
 
     it('renders station detail without fuel suffix', async () => {
