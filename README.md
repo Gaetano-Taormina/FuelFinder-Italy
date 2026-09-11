@@ -26,8 +26,9 @@ The data shown is real and based on official Open Data from the Italian Ministry
 - **Station Detail API:** Dedicated endpoint (`GET /api/stations/:id`) providing full station metadata, pricing history, and breakdown by Self-Service / Served.
 - **Route Calculation:** Integrated OSRM (Open Source Routing Machine) to automatically trace the optimal route on the map, calculating distance and travel time from the user to the selected station.
 - **Advanced Filters:** Filter by radius (3, 5, 10, 20 km), fuel type (Petrol, Diesel, LPG, Methane, HVO, LNG), and service type (Self-Service or Served).
-- **Interactive Map:** Clear map visualization (powered by Leaflet) with dynamic point-of-interest clustering and code-split chunks.
-- **PWA Support:** The app can be installed directly on a mobile Home screen, hiding the browser UI for a native, full-screen standalone experience.
+- **Interactive Map & Offline Tile Caching:** Clear map visualization (powered by Leaflet) with dynamic point-of-interest clustering and Service Worker Cache-First map tile caching (LRU 500 items).
+- **Off-thread Geo Web Worker:** Offloads heavy Haversine distance computations and convenience score sorting to a background Web Worker, maintaining 60+ FPS UI fluidity.
+- **PWA & Native Storage:** Pure Vanilla IndexedDB for search history and favorite stations with full offline service worker caching for map routes and assets.
 - **Multi-language:** Native internationalization (i18next) for both English and Italian.
 - **Modern UX:** Features Optimistic UI rendering, Skeleton Loaders, CSS-only Tooltips, and SWR caching for a fluid, app-like feel.
 - **Dual Pre-compression:** Vite-integrated Brotli and Gzip pre-compression along with runtime multi-format support (`zstd`, `br`, `gzip`, `deflate`).
@@ -107,8 +108,9 @@ I dati mostrati sono reali e basati sugli Open Data ufficiali del Ministero dell
 - **API Dettaglio Stazione:** Endpoint dedicato (`GET /api/stations/:id`) con anagrafica completa, storico prezzi e suddivisione Self-Service e Servito.
 - **Calcolo del Percorso:** Integrazione con OSRM (Open Source Routing Machine) per tracciare automaticamente il tragitto ottimale sulla mappa, calcolando distanza e tempi di percorrenza dall'utente al distributore.
 - **Filtri Avanzati:** Filtra per raggio di distanza (3, 5, 10, 20 km), tipo di carburante (Benzina, Gasolio, GPL, Metano, HVO, GNL) e tipologia di servizio (Self-Service o Servito).
-- **Mappa Interattiva:** Visualizzazione chiara sulla mappa (Leaflet) con raggruppamento dinamico (clustering) dei punti di interesse e chunking dedicato.
-- **Supporto PWA:** L'app può essere installata direttamente sulla schermata Home del dispositivo, offrendo un'esperienza nativa (Standalone) a schermo intero.
+- **Mappa Interattiva & Cache Tile Offline:** Visualizzazione chiara sulla mappa (Leaflet) con raggruppamento dinamico (clustering) dei punti di interesse e caching delle tile cartografiche tramite Service Worker (LRU 500 elementi).
+- **Web Worker Geospaziale:** Calcoli matematici pesanti (formula di Haversine e ranking di convenienza) delegati in background a un Web Worker dedicato, garantendo un'interfaccia a 60+ FPS fissi.
+- **PWA & Storage Nativo:** Supporto PWA per installazione rapida su Home Screen, persistenza IndexedDB pura per cronologia e preferiti, e cache offline per rotte OSRM.
 - **Multilingua:** Supporto nativo (i18next) per Italiano e Inglese.
 - **UX Moderna:** Rendering Optimistic UI, Skeleton Loaders, Tooltip in puro CSS e Caching SWR per navigazione istantanea senza scatti.
 - **Doppia Pre-compressione:** Compressione statica integrata in build con Brotli e Gzip, unita al supporto runtime multi-formato (`zstd`, `br`, `gzip`, `deflate`).
