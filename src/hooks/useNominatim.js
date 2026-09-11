@@ -56,13 +56,19 @@ export function useNominatim() {
 
                 try {
                     const res = await fetch(
-                        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&countrycodes=it&limit=5`,
+                        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&countrycodes=it&limit=5&email=contact@fuelfinder.it`,
                         { signal: controller.signal }
                     );
+                    if (res && res.ok === false) {
+                        setSuggestions([]);
+                        resolve([]);
+                        return;
+                    }
                     const data = await res.json();
-                    setCache(suggestionsCache, normalizedVal, data);
-                    setSuggestions(data);
-                    resolve(data);
+                    const safeData = Array.isArray(data) ? data : [];
+                    setCache(suggestionsCache, normalizedVal, safeData);
+                    setSuggestions(safeData);
+                    resolve(safeData);
                 } catch (err) {
                     if (err.name === 'AbortError') {
                         resolve([]);
@@ -93,9 +99,10 @@ export function useNominatim() {
         }
 
         try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationStr)}&countrycodes=it`);
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationStr)}&countrycodes=it&email=contact@fuelfinder.it`);
+            if (res && res.ok === false) return null;
             const data = await res.json();
-            if (data && data.length > 0) {
+            if (Array.isArray(data) && data.length > 0) {
                 const coords = {
                     lat: parseFloat(data[0].lat),
                     lng: parseFloat(data[0].lon)

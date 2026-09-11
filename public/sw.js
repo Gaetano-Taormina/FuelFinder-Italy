@@ -87,15 +87,23 @@ self.addEventListener('fetch', (event) => {
         try {
           const networkResponse = await fetch(request);
           if (networkResponse && networkResponse.status === 200) {
-            cache.put(request, networkResponse.clone());
+            cache.put(request, networkResponse.clone()).catch(() => {});
           }
           return networkResponse;
         } catch {
           const cached = await cache.match(request);
           if (cached) return cached;
-          return new Response(JSON.stringify({ error: 'Offline network error' }), {
-            status: 503,
-            headers: { 'Content-Type': 'application/json' }
+
+          // Graceful fallback (empty array for search, empty address for reverse)
+          const isReverse = url.pathname.includes('/reverse');
+          const fallbackBody = isReverse ? { address: {} } : [];
+
+          return new Response(JSON.stringify(fallbackBody), {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*'
+            }
           });
         }
       })
