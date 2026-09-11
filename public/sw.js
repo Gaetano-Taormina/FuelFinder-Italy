@@ -83,30 +83,35 @@ self.addEventListener('fetch', (event) => {
   // 2. External Routing & Geocoding (OSRM & Nominatim) -> Network-First with Cache Fallback
   if (url.hostname === 'router.project-osrm.org' || url.hostname === 'nominatim.openstreetmap.org') {
     event.respondWith(
-      caches.open(API_CACHE_NAME).then(async (cache) => {
+      (async () => {
         try {
-          const networkResponse = await fetch(request);
-          if (networkResponse && networkResponse.status === 200) {
-            cache.put(request, networkResponse.clone()).catch(() => {});
-          }
-          return networkResponse;
-        } catch {
-          const cached = await cache.match(request);
-          if (cached) return cached;
-
-          // Graceful fallback (empty array for search, empty address for reverse)
-          const isReverse = url.pathname.includes('/reverse');
-          const fallbackBody = isReverse ? { address: {} } : [];
-
-          return new Response(JSON.stringify(fallbackBody), {
-            status: 200,
-            headers: {
-              'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': '*'
+          const cache = await caches.open(API_CACHE_NAME);
+          try {
+            const networkResponse = await fetch(request);
+            if (networkResponse && networkResponse.status === 200) {
+              cache.put(request, networkResponse.clone()).catch(() => {});
             }
-          });
+            return networkResponse;
+          } catch {
+            const cached = await cache.match(request);
+            if (cached) return cached;
+          }
+        } catch {
+          // Ignore cache open failures
         }
-      })
+
+        // Graceful degradation fallback (empty array for search, empty address for reverse)
+        const isReverse = url.pathname.includes('/reverse');
+        const fallbackBody = isReverse ? { address: {} } : [];
+
+        return new Response(JSON.stringify(fallbackBody), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          }
+        });
+      })()
     );
     return;
   }

@@ -164,9 +164,9 @@ function LayoutContent() {
                 
                 const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cityName + ', Italia')}&email=contact@fuelfinder.it`;
                 fetch(geocodeUrl)
-                    .then(res => res.json())
+                    .then(res => (res && res.ok !== false ? res.json() : []))
                     .then(data => {
-                        if (data && data.length > 0) {
+                        if (Array.isArray(data) && data.length > 0) {
                             const { lat, lon } = data[0];
                             setUserPos({ lat: parseFloat(lat), lng: parseFloat(lon) });
                         }
@@ -197,7 +197,7 @@ function LayoutContent() {
             if (lastGeocodedPos.current === posKey) return;
             const reverseUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${userPos.lat}&lon=${userPos.lng}&email=contact@fuelfinder.it`;
             fetch(reverseUrl)
-                .then(res => res.json())
+                .then(res => (res && res.ok !== false ? res.json() : null))
                 .then(data => {
                     if (data && data.address) {
                         const cityMatch = data.address.city || data.address.town || data.address.village || data.address.municipality;
@@ -205,9 +205,9 @@ function LayoutContent() {
                             const searchSlug = slugify(cityMatch);
                             
                             fetch(`/api/cities/validate?slug=${encodeURIComponent(searchSlug)}`)
-                                .then(res => res.json())
+                                .then(res => (res && res.ok !== false ? res.json() : { valid: false }))
                                 .then(validateData => {
-                                    if (validateData.valid) {
+                                    if (validateData && validateData.valid) {
                                         let targetCitySlug = searchSlug;
                                         if (currLang === 'en' && Object.values(enToItCities).includes(searchSlug)) {
                                              const enEntry = Object.entries(enToItCities).find(([, it]) => it === searchSlug);
