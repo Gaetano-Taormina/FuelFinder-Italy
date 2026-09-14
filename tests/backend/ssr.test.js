@@ -300,6 +300,50 @@ describe('SSR Routes & Controller & SEO Redirects', () => {
         const directController = new SsrController(db);
         expect(directController.getDb()).toBe(db);
     });
+
+    it('sets Cache-Control and ETag headers on SSR response and handles 304 Not Modified on cache hit and miss', async () => {
+        const freshApp = express();
+        const testController = setupSsrRoutes(freshApp, () => db);
+
+        // 1. First request: Cache Miss -> 200 with Cache-Control and ETag
+        const resMiss = await request(freshApp).get('/it/metano');
+        expect(resMiss.status).toBe(200);
+        expect(resMiss.headers['cache-control']).toBe('public, max-age=3600, stale-while-revalidate=86400');
+        expect(resMiss.headers.etag).toBeDefined();
+        const etag = resMiss.headers.etag;
+
+        // 2. Second request with If-None-Match: Cache Hit -> 304 Not Modified
+        const resHit304 = await request(freshApp)
+            .get('/it/metano')
+            .set('If-None-Match', etag);
+        expect(resHit304.status).toBe(304);
+        expect(resHit304.headers['cache-control']).toBe('public, max-age=3600, stale-while-revalidate=86400');
+        expect(resHit304.headers.etag).toBe(etag);
+        expect(resHit304.text).toBe('');
+
+        // 3. Request with mismatched If-None-Match -> 200 OK from Cache Hit
+        const resHit200 = await request(freshApp)
+            .get('/it/metano')
+            .set('If-None-Match', '"mismatched-etag"');
+        expect(resHit200.status).toBe(200);
+        expect(resHit200.headers.etag).toBe(etag);
+
+        // 4. Fresh route: Cache Miss with immediate matching If-None-Match
+        // Clear cache and compute expected etag on new route with fixed host
+        testController.clearCache();
+        const resMiss200 = await request(freshApp)
+            .get('/it/citta/roma')
+            .set('Host', 'localhost:3000');
+        const cityEtag = resMiss200.headers.etag;
+        testController.clearCache();
+
+        const resMiss304 = await request(freshApp)
+            .get('/it/citta/roma')
+            .set('Host', 'localhost:3000')
+            .set('If-None-Match', cityEtag);
+        expect(resMiss304.status).toBe(304);
+        expect(resMiss304.text).toBe('');
+    });
 });
 
 

@@ -1,6 +1,7 @@
 /* oxlint-disable no-console */
 import path from 'path';
 import fs from 'fs';
+import crypto from 'node:crypto';
 import { trackStaticVisit } from '../middlewares/analytics.js';
 import { StationRepository } from '../repositories/stationRepository.js';
 import { seoService } from '../services/seoService.js';
@@ -16,6 +17,10 @@ import {
     REGEX_STATION,
     REGEX_HOME_LANG
 } from '../utils/seoHelpers.js';
+
+function generateETag(content) {
+    return `"${crypto.createHash('sha1').update(content).digest('base64url').slice(0, 16)}"`;
+}
 
 export class SsrController {
     constructor(dbProvider) {
@@ -119,7 +124,14 @@ export class SsrController {
             }
             
             if (this.htmlCache.has(cacheKey)) {
-                return res.send(this.htmlCache.get(cacheKey));
+                const cached = this.htmlCache.get(cacheKey);
+                res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+                res.setHeader('ETag', cached.etag);
+
+                if (req.headers && req.headers['if-none-match'] === cached.etag) {
+                    return res.status(304).end();
+                }
+                return res.send(cached.html);
             }
             
             try {
@@ -219,12 +231,21 @@ export class SsrController {
                     });
                 }
 
+                const etag = generateETag(renderedHtml);
+
                 /* v8 ignore next 4 */
                 if (this.htmlCache.size > 2000) {
                     const keys = Array.from(this.htmlCache.keys());
                     for (let i = 0; i < 1000; i++) this.htmlCache.delete(keys[i]);
                 }
-                this.htmlCache.set(cacheKey, renderedHtml);
+                this.htmlCache.set(cacheKey, { html: renderedHtml, etag });
+
+                res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+                res.setHeader('ETag', etag);
+
+                if (req.headers && req.headers['if-none-match'] === etag) {
+                    return res.status(304).end();
+                }
 
                 return res.send(renderedHtml);
             /* v8 ignore start */
