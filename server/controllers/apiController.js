@@ -126,7 +126,19 @@ export class ApiController {
 
     getCities = (req, res, next) => {
         try {
-            getCityData();
+            const cities = getCityData();
+            const slug = req.query?.slug;
+
+            if (slug) {
+                const normalizedSlug = slugify(slug);
+                const realCityObj = cities.find(c => slugify(c.name) === normalizedSlug);
+                res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+                if (realCityObj) {
+                    return res.json({ valid: true, city: realCityObj });
+                }
+                return res.json({ valid: false });
+            }
+
             res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
             if (cityDataEtag) {
                 res.setHeader('ETag', cityDataEtag);
@@ -141,23 +153,11 @@ export class ApiController {
     }
 
     validateCity = (req, res, next) => {
-        try {
-            const { slug } = req.query;
-            if (!slug) return res.status(400).json({ error: 'Missing slug parameter' });
-
-            const cities = getCityData();
-            const normalizedSlug = slugify(slug);
-            const realCityObj = cities.find(c => slugify(c.name) === normalizedSlug);
-
-            res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
-            if (realCityObj) {
-                res.json({ valid: true, city: realCityObj });
-            } else {
-                res.json({ valid: false });
-            }
-        } catch (error) {
-            next(error);
+        const slug = req.query?.slug;
+        if (!slug) {
+            return res.status(400).json({ error: 'Missing slug parameter' });
         }
+        return this.getCities(req, res, next);
     }
 
     getStationById = async (req, res, next) => {

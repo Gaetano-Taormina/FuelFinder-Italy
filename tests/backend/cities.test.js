@@ -71,4 +71,20 @@ describe('Backend Server API - Cities', () => {
         expect(res.status).toBe(200);
         expect(res.body.valid).toBe(false);
     });
+
+    it('supports direct query via /api/cities?slug=roma', async () => {
+        const res = await request(app).get('/api/cities?slug=roma');
+        expect(res.status).toBe(200);
+        expect(res.body.valid).toBe(true);
+        expect(res.body.city.name).toBe('Roma');
+
+        const resInvalid = await request(app).get('/api/cities?slug=invalid-city');
+        expect(resInvalid.status).toBe(200);
+        expect(resInvalid.body.valid).toBe(false);
+
+        const controller = new ApiController({});
+        const resMock = { status: vi.fn().mockReturnThis(), json: vi.fn() };
+        controller.validateCity({}, resMock, vi.fn());
+        expect(resMock.status).toHaveBeenCalledWith(400);
+    });
 });
