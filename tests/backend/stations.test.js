@@ -173,6 +173,43 @@ describe('Backend Server API - GET /api/stations', () => {
         expect(thrownRows).toEqual([]);
     });
 
+    it('tests StationRepository.findStationsNearby and findStationsInBoundingBox', async () => {
+        const { StationRepository } = await import('../../server/repositories/stationRepository.js');
+        const { StationService } = await import('../../server/services/stationService.js');
+        const repo = new StationRepository(db);
+
+        const results1 = await repo.findStationsInBoundingBox(41.8, 42.0, 12.4, 12.6, 'Benzina', '1');
+        expect(results1.length).toBeGreaterThan(0);
+
+        const results0 = await repo.findStationsNearby({ lat: 41.9, lng: 12.5, radius: 10, minLat: 41.8, maxLat: 42.0, minLng: 12.4, maxLng: 12.6, fuelType: 'Diesel', serviceType: '0' });
+        expect(results0.length).toBeGreaterThan(0);
+
+        const resultsEntrambi = await repo.findStationsNearby({ lat: 41.9, lng: 12.5, radius: 10, minLat: 41.8, maxLat: 42.0, minLng: 12.4, maxLng: 12.6, fuelType: 'Benzina', serviceType: 'entrambi' });
+        expect(resultsEntrambi.length).toBeGreaterThan(0);
+
+        const nullDbRepo = new StationRepository(null);
+        expect(await nullDbRepo.findStationsNearby({})).toEqual([]);
+
+        const throwingDbRepo = new StationRepository({
+            execute: vi.fn().mockRejectedValue(new Error('DB Query Error'))
+        });
+        expect(await throwingDbRepo.findStationsNearby({ lat: 41.9, lng: 12.5, radius: 10, minLat: 41, maxLat: 42, minLng: 12, maxLng: 13, fuelType: 'Benzina', serviceType: '1' })).toEqual([]);
+
+        // Test duplicate IDs deduplication and servito mapping in StationService
+        const mockRepo = {
+            findStationsNearby: vi.fn().mockResolvedValue([
+                { id: 10, name: 'S10', isSelf: 1, currentPrice: 1.80 },
+                { id: 10, name: 'S10 Duplicate', isSelf: 0, currentPrice: 1.95 },
+                { id: 20, name: 'S20', isSelf: 0, currentPrice: 1.70 }
+            ])
+        };
+        const service = new StationService(db);
+        service.repository = mockRepo;
+        const serviceRes = await service.getStationsNearby({ lat: 41.9, lng: 12.5, radius: 5, fuelType: 'Benzina', serviceType: 'entrambi' });
+        expect(serviceRes.stations.length).toBe(2);
+        expect(serviceRes.stations[1].prices.servito['Benzina']).toBe(1.70);
+    });
+
     it('GET /api/stations/:id returns station details with prices and supports ETag 304', async () => {
         const res = await request(app).get('/api/stations/1');
         expect(res.status).toBe(200);

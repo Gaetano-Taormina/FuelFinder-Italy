@@ -336,5 +336,29 @@ describe('useNominatim Hook', () => {
         const coords = await result.current.searchCoords('FirenzeError');
         expect(coords).toBeNull();
     });
+
+    it('handles non-array response gracefully when ok is true in fetchSuggestions', async () => {
+        global.fetch.mockResolvedValueOnce({
+            ok: true,
+            status: 200,
+            json: async () => ({ message: 'Not an array format' })
+        });
+
+        const { result } = renderHook(() => useNominatim());
+        let promise;
+        act(() => {
+            promise = result.current.fetchSuggestions('TorinoNonArray');
+        });
+
+        await act(async () => {
+            vi.advanceTimersByTime(500);
+            await promise;
+        });
+
+        const data = await promise;
+        expect(data).toEqual([]);
+        expect(result.current.suggestions).toEqual([]);
+    });
 });
+
 

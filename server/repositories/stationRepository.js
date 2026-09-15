@@ -4,31 +4,63 @@ export class StationRepository {
         this.db = db;
     }
 
-    async findStationsInBoundingBox(minLat, maxLat, minLng, maxLng, fuelType, serviceType) {
+    async findStationsNearby({ lat, lng, radius, minLat, maxLat, minLng, maxLng, fuelType, serviceType, limit = 50 }) {
+        if (!this.db) return [];
         let serviceCondition = '';
         if (serviceType === '1') serviceCondition = 'AND p.is_self = 1';
         else if (serviceType === '0') serviceCondition = 'AND p.is_self = 0';
 
         const sql = `
-            SELECT s.id, s.gestore as brand, s.bandiera, s.nome_impianto as name, s.indirizzo as address, 
-                   s.comune, s.provincia, s.latitudine as lat, s.longitudine as lng,
-                   p.prezzo as currentPrice, p.is_self as isSelf
-            FROM stations s
-            INNER JOIN prices p ON s.id = p.id_impianto
-            WHERE s.latitudine BETWEEN ? AND ? 
-              AND s.longitudine BETWEEN ? AND ?
-              AND p.desc_carburante = ?
-              ${serviceCondition}
-            ORDER BY p.prezzo ASC
-            LIMIT 300
+            WITH geo_stations AS (
+                SELECT s.id, s.gestore as brand, s.bandiera, s.nome_impianto as name, s.indirizzo as address, 
+                       s.comune, s.provincia, s.latitudine as lat, s.longitudine as lng,
+                       p.prezzo as currentPrice, p.is_self as isSelf,
+                       (6371 * acos(min(1.0, max(-1.0, 
+                           cos(? * 0.017453292519943295) * cos(s.latitudine * 0.017453292519943295) * 
+                           cos((s.longitudine - ?) * 0.017453292519943295) + 
+                           sin(? * 0.017453292519943295) * sin(s.latitudine * 0.017453292519943295)
+                       )))) AS dist
+                FROM stations s
+                INNER JOIN prices p ON s.id = p.id_impianto
+                WHERE s.latitudine BETWEEN ? AND ? 
+                  AND s.longitudine BETWEEN ? AND ?
+                  AND p.desc_carburante = ?
+                  ${serviceCondition}
+            )
+            SELECT id, brand, bandiera, name, address, comune, provincia, lat, lng, 
+                   currentPrice, isSelf, dist,
+                   (currentPrice + (dist * 0.015)) AS convenienceScore
+            FROM geo_stations
+            WHERE dist <= ?
+            ORDER BY convenienceScore ASC
+            LIMIT ?
         `;
 
-        const result = await this.db.execute({
-            sql,
-            args: [minLat, maxLat, minLng, maxLng, fuelType]
+        try {
+            const result = await this.db.execute({
+                sql,
+                args: [lat, lng, lat, minLat, maxLat, minLng, maxLng, fuelType, radius, limit]
+            });
+            return result.rows;
+        } catch (e) {
+            console.error("Errore query findStationsNearby:", e);
+            return [];
+        }
+    }
+
+    async findStationsInBoundingBox(minLat, maxLat, minLng, maxLng, fuelType, serviceType) {
+        return this.findStationsNearby({
+            lat: (minLat + maxLat) / 2,
+            lng: (minLng + maxLng) / 2,
+            radius: 1000,
+            minLat,
+            maxLat,
+            minLng,
+            maxLng,
+            fuelType,
+            serviceType,
+            limit: 300
         });
-        
-        return result.rows;
     }
 
     async findCityPricesForSeo(city, fuelType) {
