@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStations } from '../context/StationsContext';
 import { formatStationName } from '../utils/formatters';
@@ -29,33 +29,39 @@ export default function RoutePanel() {
         }
     }, [selectedStation, i18n?.resolvedLanguage, fuelType]);
 
+    const rankIndex = useMemo(() => {
+        if (!selectedStation || !stations || stations.length === 0) return -1;
+        return stations.findIndex(s => {
+            if (selectedStation.id != null && s.id != null) {
+                return s.id === selectedStation.id;
+            }
+            if (selectedStation.lat != null && s.lat != null && selectedStation.lng != null && s.lng != null) {
+                return s.lat === selectedStation.lat && s.lng === selectedStation.lng;
+            }
+            if (selectedStation.name && s.name) {
+                return s.name === selectedStation.name;
+            }
+            return false;
+        });
+    }, [selectedStation, stations]);
+
+    const isBest = rankIndex === 0 || (rankIndex === -1 && Boolean(selectedStation?.isBest));
+
+    const { travelTime, distText } = useMemo(() => {
+        if (!selectedStation) return { travelTime: '--', distText: '--' };
+        if (routeData) {
+            return {
+                travelTime: Math.round(routeData.duration / 60),
+                distText: (routeData.distance / 1000).toFixed(1)
+            };
+        }
+        return {
+            travelTime: selectedStation.dist ? Math.round((selectedStation.dist / 40) * 60) : '--',
+            distText: selectedStation.dist ? selectedStation.dist.toFixed(2) : '--'
+        };
+    }, [selectedStation, routeData]);
+
     if (!selectedStation) return null;
-
-    const rankIndex = stations && stations.length > 0 ? stations.findIndex(s => {
-        if (selectedStation.id != null && s.id != null) {
-            return s.id === selectedStation.id;
-        }
-        if (selectedStation.lat != null && s.lat != null && selectedStation.lng != null && s.lng != null) {
-            return s.lat === selectedStation.lat && s.lng === selectedStation.lng;
-        }
-        if (selectedStation.name && s.name) {
-            return s.name === selectedStation.name;
-        }
-        return false;
-    }) : -1;
-    const isBest = rankIndex === 0 || (rankIndex === -1 && Boolean(selectedStation.isBest));
-
-    let travelTime = '--';
-    let distText = '--';
-
-    if (routeData) {
-        travelTime = Math.round(routeData.duration / 60);
-        distText = (routeData.distance / 1000).toFixed(1);
-    } else {
-        // Fallback or while loading
-        travelTime = selectedStation.dist ? Math.round((selectedStation.dist / 40) * 60) : '--';
-        distText = selectedStation.dist ? selectedStation.dist.toFixed(2) : '--';
-    }
 
     return (
         <aside className="absolute bottom-4 left-4 right-4 sm:right-auto sm:bottom-8 sm:left-8 z-9999 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-700 sm:min-w-70 sm:max-w-sm transition-all duration-300">

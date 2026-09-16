@@ -55,6 +55,32 @@ const createClusterIcon = (cluster) => {
 };
 
 
+const gpsIcon = L.divIcon({
+  className: 'custom-gps-marker',
+  html: `
+    <div class="relative flex items-center justify-center w-8 h-8">
+      <div class="absolute inset-0 bg-blue-500 rounded-full opacity-50 animate-ping"></div>
+      <div class="relative w-4 h-4 bg-blue-600 border-2 border-white rounded-full shadow-md"></div>
+    </div>
+  `,
+  iconSize: [32, 32],
+  iconAnchor: [16, 16]
+});
+
+const manualIcon = L.divIcon({
+  className: 'custom-manual-marker',
+  html: `
+    <div class="relative flex flex-col items-center drop-shadow-md">
+      <div class="w-5 h-5 bg-rose-500 border-2 border-white rounded-full z-10 flex items-center justify-center">
+          <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
+      </div>
+      <div class="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-8 border-t-rose-500 -mt-1 z-0"></div>
+    </div>
+  `,
+  iconSize: [20, 28],
+  iconAnchor: [10, 28]
+});
+
 function LocationMarker() {
   const { t } = useTranslation();
   const { userPos, setUserPos, setLocationStr } = useStations();
@@ -76,34 +102,7 @@ function LocationMarker() {
     },
   });
 
-  const gpsIcon = L.divIcon({
-    className: 'custom-gps-marker',
-    html: `
-      <div class="relative flex items-center justify-center w-8 h-8">
-        <div class="absolute inset-0 bg-blue-500 rounded-full opacity-50 animate-ping"></div>
-        <div class="relative w-4 h-4 bg-blue-600 border-2 border-white rounded-full shadow-md"></div>
-      </div>
-    `,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16]
-  });
-
-  const manualIcon = L.divIcon({
-    className: 'custom-manual-marker',
-    html: `
-      <div class="relative flex flex-col items-center drop-shadow-md">
-        <div class="w-5 h-5 bg-rose-500 border-2 border-white rounded-full z-10 flex items-center justify-center">
-            <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
-        </div>
-        <div class="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-8 border-t-rose-500 -mt-1 z-0"></div>
-      </div>
-    `,
-    iconSize: [20, 28],
-    iconAnchor: [10, 28]
-  });
-
   const activeIcon = userPos && userPos.type === 'gps' ? gpsIcon : manualIcon;
-
   const position = useMemo(() => userPos ? [userPos.lat, userPos.lng] : null, [userPos]);
 
   return userPos ? (
@@ -113,7 +112,7 @@ function LocationMarker() {
   ) : null;
 }
 
-function StationMarkers({ stations }) {
+const StationMarkers = memo(function StationMarkers({ stations }) {
   const { t } = useTranslation();
   const { setSelectedStation } = useStations();
   
@@ -148,7 +147,7 @@ function StationMarkers({ stations }) {
         formatStationName={formatStationName}
     />
   ));
-}
+});
 
 const StationMarker = memo(function StationMarker({ st, i, createIcon, setSelectedStation, t, formatStationName }) {
     const position = useMemo(() => [st.lat, st.lng], [st.lat, st.lng]);
