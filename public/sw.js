@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fuelfinder-v1.4.2';
+const CACHE_NAME = 'fuelfinder-v1.5.0';
 const TILE_CACHE_NAME = 'fuelfinder-tiles-v1';
 const API_CACHE_NAME = 'fuelfinder-api-v1';
 
@@ -56,26 +56,30 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
 
-  // 1. Map Tiles (OpenStreetMap) -> Cache-First Strategy
+  // 1. Map Tiles (OpenStreetMap) -> Cache-First Strategy with Safe Network Fallback
   if (url.hostname === 'tile.openstreetmap.org' || url.hostname.endsWith('.tile.openstreetmap.org')) {
     event.respondWith(
-      caches.open(TILE_CACHE_NAME).then(async (cache) => {
-        const cachedResponse = await cache.match(request);
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-
+      (async () => {
         try {
+          const cache = await caches.open(TILE_CACHE_NAME);
+          const cachedResponse = await cache.match(request);
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+
           const networkResponse = await fetch(request);
-          if (networkResponse && networkResponse.status === 200) {
-            cache.put(request, networkResponse.clone());
-            trimCache(TILE_CACHE_NAME, MAX_TILES);
+          if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
+            cache.put(request, networkResponse.clone()).catch(() => {});
+            trimCache(TILE_CACHE_NAME, MAX_TILES).catch(() => {});
           }
           return networkResponse;
         } catch {
-          return cachedResponse || new Response('', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+          // On network failure or user abort during rapid zoom/pan
+          const cache = await caches.open(TILE_CACHE_NAME).catch(() => null);
+          const cachedFallback = cache ? await cache.match(request).catch(() => null) : null;
+          return cachedFallback || new Response('', { status: 204, statusText: 'No Content', headers: { 'Content-Type': 'image/png' } });
         }
-      })
+      })()
     );
     return;
   }
@@ -131,61 +135,75 @@ self.addEventListener('fetch', (event) => {
 
     if (isNavigation) {
       event.respondWith(
-        fetch(request)
-          .then(async (networkResponse) => {
+        (async () => {
+          try {
+            const networkResponse = await fetch(request);
             if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaqueredirect')) {
               const cache = await caches.open(CACHE_NAME);
               cache.put(request, networkResponse.clone()).catch(() => {});
             }
             return networkResponse;
-          })
-          .catch(async () => {
-            const cache = await caches.open(CACHE_NAME);
-            const cachedMatch =
-              (await cache.match(request)) ||
-              (await cache.match('/index.html')) ||
-              (await cache.match('/'));
+          } catch {
+            try {
+              const cache = await caches.open(CACHE_NAME);
+              const cachedMatch =
+                (await cache.match(request)) ||
+                (await cache.match('/index.html')) ||
+                (await cache.match('/'));
 
-            return (
-              cachedMatch ||
-              new Response(
-                '<!DOCTYPE html><html lang="it"><head><meta charset="utf-8"><title>Offline - FuelFinder</title></head><body><p>Applicazione offline. Riconnettiti per visualizzare i prezzi aggiornati.</p></body></html>',
-                {
-                  status: 200,
-                  headers: { 'Content-Type': 'text/html; charset=utf-8' }
-                }
-              )
+              if (cachedMatch) return cachedMatch;
+            } catch {}
+
+            return new Response(
+              '<!DOCTYPE html><html lang="it"><head><meta charset="utf-8"><title>Offline - FuelFinder</title></head><body><p>Applicazione offline. Riconnettiti per visualizzare i prezzi aggiornati.</p></body></html>',
+              {
+                status: 200,
+                headers: { 'Content-Type': 'text/html; charset=utf-8' }
+              }
             );
-          })
+          }
+        })()
       );
       return;
     }
 
     // 3b. Static Assets (CSS, JS, WebP, SVG, WOFF2) -> Stale-While-Revalidate
     event.respondWith(
-      caches.open(CACHE_NAME).then(async (cache) => {
-        const cachedResponse = await cache.match(request);
+      (async () => {
+        try {
+          const cache = await caches.open(CACHE_NAME);
+          const cachedResponse = await cache.match(request);
 
-        const networkFetch = fetch(request)
-          .then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
-              cache.put(request, networkResponse.clone()).catch(() => {});
-            }
-            return networkResponse;
-          })
-          .catch(() => {
-            return (
-              cachedResponse ||
+          const networkFetch = fetch(request)
+            .then((networkResponse) => {
+              if (networkResponse && networkResponse.status === 200) {
+                cache.put(request, networkResponse.clone()).catch(() => {});
+              }
+              return networkResponse;
+            })
+            .catch(() => {
+              return (
+                cachedResponse ||
+                new Response('', {
+                  status: 503,
+                  statusText: 'Service Unavailable',
+                  headers: { 'Content-Type': 'text/plain' }
+                })
+              );
+            });
+
+          return cachedResponse || networkFetch;
+        } catch {
+          return fetch(request).catch(
+            () =>
               new Response('', {
                 status: 503,
                 statusText: 'Service Unavailable',
                 headers: { 'Content-Type': 'text/plain' }
               })
-            );
-          });
-
-        return cachedResponse || networkFetch;
-      })
+          );
+        }
+      })()
     );
   }
 });
