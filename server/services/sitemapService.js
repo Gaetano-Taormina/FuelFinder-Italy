@@ -68,7 +68,6 @@ export class SitemapService {
         const hostCache = this.getHostCache(host);
         if (hostCache[lang]) return hostCache[lang];
 
-        let xml = this.getUrlsetStart();
         const isIt = lang === 'it';
         const altLang = isIt ? 'en' : 'it';
         const exploreSegment = isIt ? '/esplora' : '/explore';
@@ -76,8 +75,11 @@ export class SitemapService {
         const cityPrefix = isIt ? '/citta' : '/city';
         const altCityPrefix = isIt ? '/city' : '/citta';
 
-        xml += this.buildSingleLangUrl(host, '', altLang, '', 'daily', '1.0', lang);
-        xml += this.buildSingleLangUrl(host, exploreSegment, altLang, altExploreSegment, 'daily', '0.9', lang);
+        const chunks = [
+            this.getUrlsetStart(),
+            this.buildSingleLangUrl(host, '', altLang, '', 'daily', '1.0', lang),
+            this.buildSingleLangUrl(host, exploreSegment, altLang, altExploreSegment, 'daily', '0.9', lang)
+        ];
 
         for (const city of cities) {
             const lowerCity = city.toLowerCase();
@@ -86,7 +88,7 @@ export class SitemapService {
             const currentCitySegment = isIt ? citySegmentIt : citySegmentEn;
             const altCitySegment = isIt ? citySegmentEn : citySegmentIt;
 
-            xml += this.buildSingleLangUrl(
+            chunks.push(this.buildSingleLangUrl(
                 host, 
                 `${cityPrefix}/${encodeURIComponent(currentCitySegment)}`, 
                 altLang, 
@@ -94,10 +96,11 @@ export class SitemapService {
                 'daily', 
                 '0.8', 
                 lang
-            );
+            ));
         }
 
-        xml += `</urlset>`;
+        chunks.push('</urlset>');
+        const xml = chunks.join('');
         hostCache[lang] = xml;
         return xml;
     }
@@ -119,8 +122,10 @@ export class SitemapService {
         const cityPrefix = isIt ? '/citta' : '/city';
         const altCityPrefix = isIt ? '/city' : '/citta';
 
-        let xml = this.getUrlsetStart();
-        xml += this.buildSingleLangUrl(host, `/${encodeURIComponent(requestedFuel)}`, altLang, `/${encodeURIComponent(altFuel)}`, 'daily', '0.9', lang);
+        const chunks = [
+            this.getUrlsetStart(),
+            this.buildSingleLangUrl(host, `/${encodeURIComponent(requestedFuel)}`, altLang, `/${encodeURIComponent(altFuel)}`, 'daily', '0.9', lang)
+        ];
 
         for (const city of cities) {
             const lowerCity = city.toLowerCase();
@@ -129,7 +134,7 @@ export class SitemapService {
             const currentCitySegment = isIt ? citySegmentIt : citySegmentEn;
             const altCitySegment = isIt ? citySegmentEn : citySegmentIt;
 
-            xml += this.buildSingleLangUrl(
+            chunks.push(this.buildSingleLangUrl(
                 host, 
                 `${cityPrefix}/${encodeURIComponent(currentCitySegment)}/${encodeURIComponent(requestedFuel)}`, 
                 altLang, 
@@ -137,10 +142,11 @@ export class SitemapService {
                 'daily', 
                 '0.7', 
                 lang
-            );
+            ));
         }
 
-        xml += `</urlset>`;
+        chunks.push('</urlset>');
+        const xml = chunks.join('');
         cacheMap[requestedFuel] = xml;
         return xml;
     }

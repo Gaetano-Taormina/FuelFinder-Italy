@@ -1,6 +1,12 @@
 /* oxlint-disable no-console */
 import { parsePipeDelimitedStream } from "./nativeParser.js";
 
+const isStationUnchanged = (old, g, b, ti, ni, ind, c, p, lat, lng) => (
+    old.gestore === g && old.bandiera === b && old.tipo_impianto === ti &&
+    old.nome_impianto === ni && old.indirizzo === ind && old.comune === c &&
+    old.provincia === p && old.latitudine === lat && old.longitudine === lng
+);
+
 export async function processStationsDiff(filePath, existingStations, syncOps, seenStationIds, options) {
     console.log(`Parsing stations...`);
     await parsePipeDelimitedStream(filePath, (r) => {
@@ -19,13 +25,7 @@ export async function processStationsDiff(filePath, existingStations, syncOps, s
         seenStationIds.add(id);
 
         const old = existingStations.get(id);
-        if (!old) {
-            syncOps.upsertStations.push([id, gestore, bandiera, tipo_impianto, nome_impianto, indirizzo, comune, provincia, latitudine, longitudine]);
-        } else if (
-            old.gestore !== gestore || old.bandiera !== bandiera || old.tipo_impianto !== tipo_impianto ||
-            old.nome_impianto !== nome_impianto || old.indirizzo !== indirizzo || old.comune !== comune ||
-            old.provincia !== provincia || old.latitudine !== latitudine || old.longitudine !== longitudine
-        ) {
+        if (!old || !isStationUnchanged(old, gestore, bandiera, tipo_impianto, nome_impianto, indirizzo, comune, provincia, latitudine, longitudine)) {
             syncOps.upsertStations.push([id, gestore, bandiera, tipo_impianto, nome_impianto, indirizzo, comune, provincia, latitudine, longitudine]);
         }
     }, options);
