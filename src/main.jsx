@@ -10,6 +10,23 @@ import { registerServiceWorker } from './services/swRegistration.js'
 
 import { ErrorBoundary } from './components/ErrorBoundary.jsx'
 
+// Intercetta e silenzia i warning di deprecazione del motore Firefox per mozPressure e mozInputSource
+if (typeof window !== 'undefined' && typeof MouseEvent !== 'undefined') {
+  try {
+    const mozPressureDesc = Object.getOwnPropertyDescriptor(MouseEvent.prototype, 'mozPressure');
+    if (mozPressureDesc) {
+      Object.defineProperty(MouseEvent.prototype, 'mozPressure', {
+        get() { return this.pressure ?? 0; },
+        configurable: true
+      });
+      Object.defineProperty(MouseEvent.prototype, 'mozInputSource', {
+        get() { return this.pointerType ? 1 : 0; },
+        configurable: true
+      });
+    }
+  } catch {}
+}
+
 registerServiceWorker();
 
 const ExplorePage = lazy(() => import('./pages/ExplorePage.jsx'))

@@ -64,19 +64,19 @@ export default function RoutePanel() {
     if (!selectedStation) return null;
 
     return (
-        <aside className="absolute bottom-4 left-4 right-4 sm:right-auto sm:bottom-8 sm:left-8 z-9999 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-700 sm:min-w-70 sm:max-w-sm transition-all duration-300">
-            <div className="flex items-center justify-between mb-2 sm:mb-3">
-                <div className="flex items-center gap-2">
+        <aside className="absolute bottom-4 left-4 right-4 sm:right-auto sm:bottom-8 sm:left-8 z-9999 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-700 sm:min-w-80 sm:max-w-md transition-all duration-300">
+            <div className="flex items-center justify-between gap-3 mb-3">
+                <div className="flex items-center gap-2 min-w-0">
                     {isBest ? (
-                        <span className="text-sm sm:text-base font-black text-yellow-500 bg-yellow-100 dark:bg-yellow-900/30 px-2 py-0.5 rounded-md uppercase tracking-wider border border-yellow-200 dark:border-yellow-700/50">
+                        <span className="shrink-0 inline-flex items-center justify-center px-2.5 h-8 rounded-xl text-xs font-black uppercase tracking-wider text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/40 border border-yellow-300 dark:border-yellow-700/60 shadow-xs">
                             {t('rp_best_badge')}
                         </span>
                     ) : (
-                        <span className="text-sm sm:text-base font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded-md uppercase tracking-wider border border-blue-200 dark:border-blue-700/50">
+                        <span className="shrink-0 inline-flex items-center justify-center px-2.5 h-8 rounded-xl text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 border border-blue-300 dark:border-blue-700/60 shadow-xs">
                             {rankIndex >= 0 ? `#${rankIndex + 1}` : t('rp_station_badge')}
                         </span>
                     )}
-                    <h3 className="font-bold text-base sm:text-lg text-slate-800 dark:text-white leading-tight">
+                    <h3 className="font-bold text-sm sm:text-base text-slate-800 dark:text-white leading-tight whitespace-nowrap">
                         {isBest ? t('rp_title') : t('rp_selected_title')}
                     </h3>
                 </div>
@@ -87,14 +87,18 @@ export default function RoutePanel() {
                         type="button"
                         aria-label={t('btn_share')}
                         title={copied ? t('share_copied') : t('btn_share')}
-                        className={`p-1.5 rounded-lg border transition-all duration-200 flex items-center gap-1 text-xs font-bold ${copied ? 'bg-green-500 text-white border-green-600' : 'bg-slate-100 dark:bg-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/40 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 border-slate-200 dark:border-slate-600'}`}
+                        className={`shrink-0 w-8 h-8 rounded-xl border flex items-center justify-center transition-all duration-200 cursor-pointer shadow-xs ${
+                            copied
+                                ? 'bg-emerald-600 text-white border-emerald-600 scale-105'
+                                : 'bg-slate-100 dark:bg-slate-700/80 hover:bg-blue-50 dark:hover:bg-blue-900/40 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 border-slate-200 dark:border-slate-600'
+                        }`}
                     >
                         {copied ? (
-                            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+                            <svg className="w-4 h-4 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" /></svg>
                         ) : (
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+                            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
                         )}
-                        <span className="text-[10px] hidden sm:inline">{copied ? t('share_copied') : t('btn_share')}</span>
+                        {copied && <span className="sr-only">{t('share_copied')}</span>}
                     </button>
                 )}
             </div>
