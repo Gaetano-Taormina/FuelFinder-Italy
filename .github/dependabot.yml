@@ -46,7 +46,7 @@ updates:
           - "minor"
           - "patch"
 
-  # Aggiornamento automatico delle GitHub Actions
+  # Aggiornamento automatico delle GitHub Actions (solo versioni stabili minor e patch)
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -57,6 +57,9 @@ updates:
       - "dependencies"
     commit-message:
       prefix: "chore(ci)"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       actions:
         patterns:
