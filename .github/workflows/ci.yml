@@ -23,10 +23,10 @@ jobs:
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v7
+      uses: actions/checkout@v4
 
     - name: Install pnpm
-      uses: pnpm/action-setup@v6
+      uses: pnpm/action-setup@v4
       with:
         run_install: false
 
@@ -37,7 +37,7 @@ jobs:
         echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
     - name: Setup pnpm cache
-      uses: actions/cache@v6
+      uses: actions/cache@v4
       with:
         path: ${{ env.STORE_PATH }}
         key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -45,7 +45,7 @@ jobs:
           ${{ runner.os }}-pnpm-store-
 
     - name: Setup Node.js
-      uses: actions/setup-node@v7
+      uses: actions/setup-node@v4
       with:
         node-version: '22'
 
@@ -62,12 +62,12 @@ jobs:
       run: pnpm run build
 
     - name: Generate Build Attestation
-      uses: actions/attest-build-provenance@v4
+      uses: actions/attest-build-provenance@v2
       with:
         subject-path: 'dist/'
 
     - name: Upload Coverage Report
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: coverage-report
@@ -75,7 +75,7 @@ jobs:
         retention-days: 7
 
     - name: Upload Build Artifacts
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@v4
       with:
         name: build-dist
         path: dist/

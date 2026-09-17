@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fuelfinder-v1.5.0';
+const CACHE_NAME = 'fuelfinder-v1.5.1';
 const TILE_CACHE_NAME = 'fuelfinder-tiles-v1';
 const API_CACHE_NAME = 'fuelfinder-api-v1';
 
