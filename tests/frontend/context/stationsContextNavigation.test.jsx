@@ -91,7 +91,12 @@ describe('StationsContext - Navigation & OSRM Routing', () => {
 
   it('handles OSRM fetch rejection gracefully', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    global.fetch = vi.fn().mockRejectedValueOnce(new Error('Network error'));
+    global.fetch = vi.fn(async (url) => {
+      if (typeof url === 'string' && url.includes('router.project-osrm.org')) {
+        throw new Error('Network error');
+      }
+      return { ok: true, json: async () => ({}) };
+    });
 
     renderWithProvider();
 
@@ -105,6 +110,32 @@ describe('StationsContext - Navigation & OSRM Routing', () => {
     }, { interval: 5 });
 
     consoleSpy.mockRestore();
+  });
+
+  it('handles OSRM timeout and executes timeout rejection fallback', async () => {
+    vi.useFakeTimers();
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    global.fetch = vi.fn((url) => {
+      if (typeof url === 'string' && url.includes('router.project-osrm.org')) {
+        return new Promise(() => {});
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    });
+
+    renderWithProvider();
+
+    act(() => {
+      fireEvent.click(screen.getByText('Set Pos'));
+      fireEvent.click(screen.getByText('Set Selected Station'));
+    });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4000);
+    });
+
+    expect(consoleSpy).toHaveBeenCalledWith('OSRM Fetch Error:', expect.any(Error));
+    consoleSpy.mockRestore();
+    vi.useRealTimers();
   });
 
   it('handleNavigation uses Google Maps directions on Desktop (with origin if userPos set)', () => {

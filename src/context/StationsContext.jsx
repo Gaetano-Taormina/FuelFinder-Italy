@@ -107,25 +107,58 @@ export const StationsProvider = ({ children }) => {
     const abortController = new AbortController();
 
     const fetchRoute = async () => {
+      let timeoutId;
       try {
         const url = `https://router.project-osrm.org/route/v1/driving/${userPos.lng},${userPos.lat};${selectedStation.lng},${selectedStation.lat}?overview=full&geometries=geojson`;
-        const res = await fetch(url, { signal: abortController.signal });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data.routes && data.routes.length > 0) {
-          setRouteData({
-            geometry: data.routes[0].geometry,
-            distance: data.routes[0].distance,
-            duration: data.routes[0].duration
-          });
+        
+        const timeoutPromise = new Promise((_, reject) => {
+          timeoutId = setTimeout(() => reject(new Error('OSRM_TIMEOUT')), 3500);
+        });
+
+        const fetchPromise = fetch(url, { signal: abortController.signal });
+        const res = await Promise.race([fetchPromise, timeoutPromise]);
+        clearTimeout(timeoutId);
+
+        if (res && res.ok) {
+          const data = await res.json();
+          if (data && data.routes && data.routes.length > 0) {
+            setRouteData({
+              geometry: data.routes[0].geometry,
+              distance: data.routes[0].distance,
+              duration: data.routes[0].duration,
+              isFallback: false
+            });
+            return;
+          }
         }
       } catch (err) {
+        clearTimeout(timeoutId);
         if (err.name === 'AbortError') {
           return;
         }
         // oxlint-disable-next-line no-console
         console.error('OSRM Fetch Error:', err);
       }
+
+      // Graceful fallback: calculate straight-line Haversine route
+      const R = 6371000;
+      const dLat = (selectedStation.lat - userPos.lat) * (Math.PI / 180);
+      const dLng = (selectedStation.lng - userPos.lng) * (Math.PI / 180);
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(userPos.lat * Math.PI / 180) * Math.cos(selectedStation.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+      const distMeters = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const durationSec = Math.round((distMeters / 1000 / 45) * 3600);
+      setRouteData({
+        geometry: {
+          type: 'LineString',
+          coordinates: [
+            [userPos.lng, userPos.lat],
+            [selectedStation.lng, selectedStation.lat]
+          ]
+        },
+        distance: distMeters,
+        duration: durationSec,
+        isFallback: true
+      });
     };
     fetchRoute();
 

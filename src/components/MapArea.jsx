@@ -35,6 +35,8 @@ const europeBounds = [
 
 const geoJsonOutlineStyle = { color: '#1e3a8a', weight: 8, opacity: 0.6, lineCap: 'round', lineJoin: 'round' };
 const geoJsonInnerStyle = { color: '#3b82f6', weight: 5, opacity: 1, lineCap: 'round', lineJoin: 'round' };
+const geoJsonFallbackOutlineStyle = { ...geoJsonOutlineStyle, dashArray: '8, 8' };
+const geoJsonFallbackInnerStyle = { ...geoJsonInnerStyle, dashArray: '8, 8' };
 
 const createClusterIcon = (cluster) => {
   const hasBestPrice = cluster.getAllChildMarkers().some(m => m.options.icon.options.isBestPrice);
@@ -190,6 +192,19 @@ function MapFixer() {
   return null;
 }
 
+export const RouteLayer = memo(function RouteLayer({ geometry, isFallback }) {
+  if (!geometry) return null;
+  const outlineStyle = isFallback ? geoJsonFallbackOutlineStyle : geoJsonOutlineStyle;
+  const innerStyle = isFallback ? geoJsonFallbackInnerStyle : geoJsonInnerStyle;
+
+  return (
+    <>
+      <GeoJSON data={geometry} style={outlineStyle} />
+      <GeoJSON data={geometry} style={innerStyle} />
+    </>
+  );
+}, (prev, next) => prev.geometry === next.geometry && prev.isFallback === next.isFallback);
+
 export default function MapArea() {
   const { userPos, radius, routeData, loading } = useStations();
   const filteredStations = useDistanceLogic();
@@ -246,22 +261,7 @@ export default function MapArea() {
         >
           <StationMarkers stations={filteredStations} />
         </MarkerClusterGroup>
-        {routeData && (
-          <>
-            {/* Outline del percorso */}
-            <GeoJSON 
-              key={'outline-'+JSON.stringify(routeData.geometry)}
-              data={routeData.geometry} 
-              style={geoJsonOutlineStyle} 
-            />
-            {/* Linea interna del percorso */}
-            <GeoJSON 
-              key={'inner-'+JSON.stringify(routeData.geometry)}
-              data={routeData.geometry} 
-              style={geoJsonInnerStyle} 
-            />
-          </>
-        )}
+        {routeData && <RouteLayer geometry={routeData.geometry} isFallback={Boolean(routeData.isFallback)} />}
       </MapContainer>
     </div>
   );

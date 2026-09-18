@@ -10,7 +10,7 @@ const TestActionsConsumer = () => {
   const {
     stations, totalStations,
     fuelType, setFuelType,
-    setUserPos
+    setUserPos, setSelectedStation
   } = useStations();
 
   const location = useLocation();
@@ -25,6 +25,8 @@ const TestActionsConsumer = () => {
       <button onClick={() => setFuelType('Gasolio')}>Set Gasolio</button>
       <button onClick={() => setFuelType('Idrogeno')}>Set Idrogeno</button>
       <button onClick={() => setUserPos({ lat: 41, lng: 12 })}>Set Pos</button>
+      <button onClick={() => setSelectedStation({ id: 10, lat: 41.5, lng: 12.5 })}>Set Station</button>
+      <button onClick={() => setSelectedStation(null)}>Clear Station</button>
     </div>
   );
 };
@@ -253,6 +255,14 @@ describe('StationsContext - Fuel Actions & Data Fetching', () => {
     });
 
     delete global.navigator.modelContext;
+  });
+
+  it('setSelectedStation updates and clears selected station and route data', () => {
+    renderWithProvider(['/it/']);
+    act(() => {
+      fireEvent.click(screen.getByText('Set Station'));
+      fireEvent.click(screen.getByText('Clear Station'));
+    });
   });
 });
 

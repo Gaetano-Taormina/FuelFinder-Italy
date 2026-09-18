@@ -5,8 +5,8 @@ import L from 'leaflet';
 
 const capitals = [
     { name: 'Italy', capital: 'Rome', lat: 41.9028, lng: 12.4964, code: 'it', rotation: '12deg', isMirrored: false },
-    { name: 'San Marino', capital: 'San Marino', lat: 43.9424, lng: 12.4578, code: 'sm', rotation: '8deg', isMirrored: false },
-    { name: 'Vatican City', capital: 'Vatican', lat: 41.9022, lng: 12.4533, code: 'va', rotation: '-15deg', isMirrored: true, isSticker: false },
+    { name: 'San Marino', capital: 'San Marino', lat: 43.9424, lng: 12.4578, code: 'sm', rotation: '8deg', isMirrored: true },
+    { name: 'Vatican City', capital: 'Vatican', lat: 41.9022, lng: 12.4533, code: 'va', rotation: '-15deg', isMirrored: true, isSticker: true },
     { name: 'France', capital: 'Paris', lat: 48.8566, lng: 2.3522, code: 'fr', rotation: '-5deg', isMirrored: false },
     { name: 'Switzerland', capital: 'Bern', lat: 46.9480, lng: 7.4474, code: 'ch', rotation: '5deg', isMirrored: false },
     { name: 'Austria', capital: 'Vienna', lat: 48.2082, lng: 16.3738, code: 'at', rotation: '10deg', isMirrored: false },
