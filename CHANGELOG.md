@@ -11,14 +11,18 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.1.0/)
 - **Dynamic Active Station Sitemap Pruning:** Sfoltimento automatico delle sitemap che include solo i comuni e carburanti con distributori attivi ($>0$), abbattendo le URL da 110.000 a ~18.000 ad alta qualità.
 - **Thin Content Protection:** Direttiva automatica `<meta name="robots" content="noindex, follow">` per pagine comunali prive di distributori per preservare il Crawl Budget.
 - **Server Keep-Alive Heartbeat:** Meccanismo periodico anti-sleep e pre-riscaldamento sitemap all'avvio per eliminare timeout 504 su Render.
+- **Security Audit Rule SEC-006:** Aggiunta regola per rilevamento statico di unvalidated open redirect in `scripts/security-audit.js`.
 
 ### Changed
 
 - **Anti-Cloaking Markup:** Sostituzione dei link nascosti `display:none` con container `<nav>` semantici e visibili nella pagina Esplora SSR.
+- **Canonical Routing Badges & Tech Stack:** Aggiornamento approfondito di `README.md` e `public/llms.txt` con versioni specifiche dei framework e badge di certificazione.
 
 ### Fixed
 
 - **Trailing Slash 301 Normalization:** Redirect deterministico automatico per le varianti con slash finale, eliminando gli avvisi di canonical duplicate in Google Search Console.
+- **Shareable URL Canonicalization:** Auto-slugificazione dei toponimi e traduzione bilingue automatica dei carburanti per i link condivisibili delle schede distributore (`routes.js`).
+- **Open Redirect Mitigation (Security):** Validazione regex perimetrale su route relative e sanitizzazione query params in `seoRedirect.js` per risolvere l'avviso di sicurezza CodeQL.
 
 ## [1.5.2] - 2026-09-18
 
