@@ -270,5 +270,83 @@ describe('Backend Server API - GET /api/stations', () => {
         expect(await service.getStationById(null)).toBeNull();
         expect(await service.getStationById(0)).toBeNull();
     });
+
+    it('StationRepository resolves brand hierarchy: bandiera > nome_impianto > gestore > Distributore', async () => {
+        const { StationRepository } = await import('../../server/repositories/stationRepository.js');
+        const repo = new StationRepository(db);
+
+        await db.execute({
+            sql: `INSERT INTO stations (id, gestore, bandiera, tipo_impianto, nome_impianto, indirizzo, comune, provincia, latitudine, longitudine) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            args: [100, "Nuova Rete S.R.L.", "Esso", "Stradale", "Impianto 100", "Via Roma 100", "Roma", "RM", 41.9028, 12.4964]
+        });
+        await db.execute({
+            sql: `INSERT INTO prices (id_impianto, desc_carburante, prezzo, is_self, dt_comunicazione) VALUES (?, ?, ?, ?, ?)`,
+            args: [100, "Benzina", 1.820, 1, "2023-10-01 10:00:00"]
+        });
+
+        await db.execute({
+            sql: `INSERT INTO stations (id, gestore, bandiera, tipo_impianto, nome_impianto, indirizzo, comune, provincia, latitudine, longitudine) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            args: [101, "Nuova Rete S.R.L.", "", "Stradale", "Eni Express Roma", "Via Roma 101", "Roma", "RM", 41.9028, 12.4964]
+        });
+        await db.execute({
+            sql: `INSERT INTO prices (id_impianto, desc_carburante, prezzo, is_self, dt_comunicazione) VALUES (?, ?, ?, ?, ?)`,
+            args: [101, "Benzina", 1.830, 1, "2023-10-01 10:00:00"]
+        });
+
+        await db.execute({
+            sql: `INSERT INTO stations (id, gestore, bandiera, tipo_impianto, nome_impianto, indirizzo, comune, provincia, latitudine, longitudine) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            args: [102, "Keropetrol S.P.A.", "", "Stradale", "", "Via Roma 102", "Roma", "RM", 41.9028, 12.4964]
+        });
+        await db.execute({
+            sql: `INSERT INTO prices (id_impianto, desc_carburante, prezzo, is_self, dt_comunicazione) VALUES (?, ?, ?, ?, ?)`,
+            args: [102, "Benzina", 1.840, 1, "2023-10-01 10:00:00"]
+        });
+
+        await db.execute({
+            sql: `INSERT INTO stations (id, gestore, bandiera, tipo_impianto, nome_impianto, indirizzo, comune, provincia, latitudine, longitudine) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            args: [103, "", "", "Stradale", "", "Via Roma 103", "Roma", "RM", 41.9028, 12.4964]
+        });
+        await db.execute({
+            sql: `INSERT INTO prices (id_impianto, desc_carburante, prezzo, is_self, dt_comunicazione) VALUES (?, ?, ?, ?, ?)`,
+            args: [103, "Benzina", 1.850, 1, "2023-10-01 10:00:00"]
+        });
+
+        const s100 = await repo.findStationById(100);
+        expect(s100.brand).toBe('Esso');
+        expect(s100.bandiera).toBe('Esso');
+        expect(s100.gestore).toBe('Nuova Rete S.R.L.');
+
+        const s101 = await repo.findStationById(101);
+        expect(s101.brand).toBe('Eni Express Roma');
+
+        const s102 = await repo.findStationById(102);
+        expect(s102.brand).toBe('Keropetrol S.P.A.');
+
+        const s103 = await repo.findStationById(103);
+        expect(s103.brand).toBe('Distributore');
+
+        const nearby = await repo.findStationsNearby({
+            lat: 41.9028,
+            lng: 12.4964,
+            radius: 5,
+            minLat: 41.8,
+            maxLat: 42.0,
+            minLng: 12.4,
+            maxLng: 12.6,
+            fuelType: 'Benzina',
+            serviceType: '1',
+            limit: 10
+        });
+
+        const st100Nearby = nearby.find(s => s.id === 100);
+        expect(st100Nearby).toBeDefined();
+        expect(st100Nearby.brand).toBe('Esso');
+        expect(st100Nearby.bandiera).toBe('Esso');
+        expect(st100Nearby.gestore).toBe('Nuova Rete S.R.L.');
+    });
 });
 

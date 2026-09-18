@@ -12,7 +12,9 @@ export class StationRepository {
 
         const sql = `
             WITH geo_stations AS (
-                SELECT s.id, s.gestore as brand, s.bandiera, s.nome_impianto as name, s.indirizzo as address, 
+                SELECT s.id, 
+                       COALESCE(NULLIF(s.bandiera, ''), NULLIF(s.nome_impianto, ''), NULLIF(s.gestore, ''), 'Distributore') as brand, 
+                       s.bandiera, s.gestore, s.nome_impianto as name, s.indirizzo as address, 
                        s.comune, s.provincia, s.latitudine as lat, s.longitudine as lng,
                        p.prezzo as currentPrice, p.is_self as isSelf,
                        (6371 * acos(min(1.0, max(-1.0, 
@@ -27,7 +29,7 @@ export class StationRepository {
                   AND p.desc_carburante = ?
                   ${serviceCondition}
             )
-            SELECT id, brand, bandiera, name, address, comune, provincia, lat, lng, 
+            SELECT id, brand, bandiera, gestore, name, address, comune, provincia, lat, lng, 
                    currentPrice, isSelf, dist,
                    (currentPrice + (dist * 0.015)) AS convenienceScore
             FROM geo_stations
@@ -85,7 +87,9 @@ export class StationRepository {
         if (!this.db) return null;
         try {
             const stationRes = await this.db.execute({
-                sql: `SELECT s.id, s.gestore as brand, s.bandiera, s.nome_impianto as name, s.indirizzo as address, 
+                sql: `SELECT s.id, 
+                             COALESCE(NULLIF(s.bandiera, ''), NULLIF(s.nome_impianto, ''), NULLIF(s.gestore, ''), 'Distributore') as brand, 
+                             s.bandiera, s.gestore, s.nome_impianto as name, s.indirizzo as address, 
                              s.comune, s.provincia, s.latitudine as lat, s.longitudine as lng
                       FROM stations s
                       WHERE s.id = ? LIMIT 1`,

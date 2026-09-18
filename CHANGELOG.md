@@ -4,6 +4,17 @@ Tutte le modifiche rilevanti a questo progetto sono documentate in questo file.
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e aderisce a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.5] - 2026-09-18
+
+### Changed
+
+- **Commercial Brand Hierarchy Resolution:** Prioritizzazione automatica in query SQL di `bandiera` (marchio commerciale della pompa, es. *Esso*, *Eni*, *Q8*, *Pompe Bianche*) rispetto a `gestore` (ragione sociale del concessionario legale, es. *Nuova Rete S.R.L.*), garantendo piena conformità dei nomi visualizzati su mappa, tabelle ed export.
+- **External Navigation GPS Origin Guard:** Disattivazione del parametro di origine nei permalink e link diretti su Google Maps / Apple Maps quando le coordinate utente coincidono con la stazione di destinazione (`userPos.type === 'station'`), consentendo all'app di navigazione di acquisire nativamente il GPS reale del dispositivo.
+
+### Fixed
+
+- **Identical Origin/Destination Directions Error:** Risolto l'errore *"Spiacenti, non siamo riusciti a calcolare le indicazioni stradali"* su Google Maps e azzerato il routing OSRM a distanza zero.
+
 ## [1.5.4] - 2026-09-18
 
 ### Added

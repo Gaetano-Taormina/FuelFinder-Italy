@@ -98,7 +98,7 @@ export const StationsProvider = ({ children }) => {
 
   // Fetch route when a station is selected
   useEffect(() => {
-    if (!selectedStation || !userPos) {
+    if (!selectedStation || !userPos || (Math.abs(userPos.lat - selectedStation.lat) < 0.0001 && Math.abs(userPos.lng - selectedStation.lng) < 0.0001)) {
         // oxlint-disable-next-line react/set-state-in-effect
         setRouteData(null);
         return;
@@ -169,20 +169,26 @@ export const StationsProvider = ({ children }) => {
 
 
   const handleNavigation = useCallback((station) => {
+    if (!station || typeof station.lat !== 'number' || typeof station.lng !== 'number') return;
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const isAndroid = /Android/.test(navigator.userAgent);
     const stationName = encodeURIComponent(station.brand || station.name || 'Distributore');
+
+    // Avoid passing origin if userPos is identical to station (e.g. opened directly from station URL)
+    const isDifferentOrigin = userPos && 
+      (Math.abs(userPos.lat - station.lat) > 0.0001 || Math.abs(userPos.lng - station.lng) > 0.0001) &&
+      userPos.type !== 'station';
 
     if (isAndroid) {
       // Trigger native Android App Chooser (Google Maps, Waze, etc.)
       window.location.href = `geo:${station.lat},${station.lng}?q=${station.lat},${station.lng}(${stationName})`;
     } else if (isIOS) {
-      // Trigger native Apple Maps navigation on iOS with start (saddr) and destination (daddr)
-      const saddr = userPos ? `&saddr=${userPos.lat},${userPos.lng}` : '';
+      // Trigger native Apple Maps navigation on iOS with start (saddr) only if distinct origin
+      const saddr = isDifferentOrigin ? `&saddr=${userPos.lat},${userPos.lng}` : '';
       window.location.href = `maps://?daddr=${station.lat},${station.lng}${saddr}&q=${stationName}`;
     } else {
-      // Desktop / Web: open Google Maps Directions from origin to destination
-      const originParam = userPos ? `&origin=${userPos.lat},${userPos.lng}` : '';
+      // Desktop / Web: open Google Maps Directions (omit origin if same location so Maps uses device GPS)
+      const originParam = isDifferentOrigin ? `&origin=${userPos.lat},${userPos.lng}` : '';
       window.open(`https://www.google.com/maps/dir/?api=1${originParam}&destination=${station.lat},${station.lng}`, '_blank');
     }
   }, [userPos]);

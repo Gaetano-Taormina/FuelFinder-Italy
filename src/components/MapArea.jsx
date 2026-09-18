@@ -107,7 +107,7 @@ function LocationMarker() {
   const activeIcon = userPos && userPos.type === 'gps' ? gpsIcon : manualIcon;
   const position = useMemo(() => userPos ? [userPos.lat, userPos.lng] : null, [userPos]);
 
-  return userPos ? (
+  return userPos && userPos.type !== 'station' ? (
     <Marker position={position} icon={activeIcon}>
       <Popup>{t('your_position')}</Popup>
     </Marker>

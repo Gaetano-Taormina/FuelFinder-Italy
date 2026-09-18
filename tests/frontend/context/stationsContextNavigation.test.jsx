@@ -1,4 +1,4 @@
-import { render, screen, act, fireEvent, waitFor } from '@testing-library/react';
+import { render, renderHook, screen, act, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { StationsProvider, useStations } from '../../../src/context/StationsContext';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
@@ -136,6 +136,48 @@ describe('StationsContext - Navigation & OSRM Routing', () => {
     expect(consoleSpy).toHaveBeenCalledWith('OSRM Fetch Error:', expect.any(Error));
     consoleSpy.mockRestore();
     vi.useRealTimers();
+  });
+
+  it('handleNavigation early returns when station is invalid or missing coordinates', () => {
+    const wrapper = ({ children }) => (
+      <SWRConfig value={{ provider: () => new Map() }}>
+        <MemoryRouter initialEntries={['/it/']}>
+          <StationsProvider>{children}</StationsProvider>
+        </MemoryRouter>
+      </SWRConfig>
+    );
+
+    const { result } = renderHook(() => useStations(), { wrapper });
+
+    result.current.handleNavigation(null);
+    result.current.handleNavigation({});
+    result.current.handleNavigation({ lat: 'invalid', lng: 13 });
+    result.current.handleNavigation({ lat: 42, lng: 'invalid' });
+    expect(window.open).not.toHaveBeenCalled();
+  });
+
+  it('handleNavigation omits origin if userPos has type: station or matches station coords', () => {
+    const wrapper = ({ children }) => (
+      <SWRConfig value={{ provider: () => new Map() }}>
+        <MemoryRouter initialEntries={['/it/']}>
+          <StationsProvider>{children}</StationsProvider>
+        </MemoryRouter>
+      </SWRConfig>
+    );
+
+    const { result } = renderHook(() => useStations(), { wrapper });
+
+    // Matching coordinates -> sets routeData to null and omits origin in navigation
+    act(() => {
+      result.current.setUserPos({ lat: 41.9, lng: 12.5, type: 'station' });
+      result.current.setSelectedStation({ lat: 41.9, lng: 12.5 });
+    });
+
+    act(() => {
+      result.current.handleNavigation({ lat: 41.9, lng: 12.5, name: 'Eni Roma' });
+    });
+
+    expect(window.open).toHaveBeenCalledWith('https://www.google.com/maps/dir/?api=1&destination=41.9,12.5', '_blank');
   });
 
   it('handleNavigation uses Google Maps directions on Desktop (with origin if userPos set)', () => {

@@ -137,14 +137,14 @@ function LayoutContent() {
             const found = stations && stations.find(s => s.id === parsedId);
             if (found) {
                 setSelectedStation(found);
-                setUserPos({ lat: found.lat, lng: found.lng });
+                setUserPos({ lat: found.lat, lng: found.lng, type: 'station' });
             } else {
                 fetch(`/api/stations/${parsedId}`)
                     .then(res => res.json())
                     .then(data => {
                         if (data && data.success && data.station) {
                             setSelectedStation(data.station);
-                            setUserPos({ lat: data.station.lat, lng: data.station.lng });
+                            setUserPos({ lat: data.station.lat, lng: data.station.lng, type: 'station' });
                         }
                     })
                     .catch(() => {});
