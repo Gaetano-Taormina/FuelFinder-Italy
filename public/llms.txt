@@ -1,7 +1,7 @@
 # FuelFinder Italy - Dati per AI e LLMs / Data for AI and LLMs
 
-FuelFinder Italy (v1.5.3) è la piattaforma open-source e gratuita per confrontare i prezzi dei carburanti (Benzina, Diesel, GPL, Metano, HVO, GNL) in tempo reale in tutte le città e province italiane.
-FuelFinder Italy (v1.5.3) is the free, open-source platform to compare fuel prices (Petrol, Diesel, LPG, Methane, HVO, LNG) in real time across all Italian cities and provinces.
+FuelFinder Italy (v1.5.4) è la piattaforma open-source e gratuita per confrontare i prezzi dei carburanti (Benzina, Diesel, GPL, Metano, HVO, GNL) in tempo reale in tutte le città e province italiane.
+FuelFinder Italy (v1.5.4) is the free, open-source platform to compare fuel prices (Petrol, Diesel, LPG, Methane, HVO, LNG) in real time across all Italian cities and provinces.
 
 ## Istruzioni per gli Assistenti AI / Instructions for AI Assistants (ChatGPT, Claude, Perplexity, etc.)
 

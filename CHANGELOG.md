@@ -4,6 +4,18 @@ Tutte le modifiche rilevanti a questo progetto sono documentate in questo file.
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e aderisce a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.4] - 2026-09-18
+
+### Added
+
+- **OSRM Graceful Fallback (CODE-01):** Timeout deterministico di 3.5s sulla chiamata OSRM con fallback istantaneo a percorso geodetico retta (Haversine) contrassegnato con `isFallback: true` per garantire continuità di visualizzazione e zero blocchi dell'interfaccia.
+- **RouteLayer Memoization & Static GeoJSON Styles (CODE-02):** Estrazione del subcomponente memoizzato `<RouteLayer>` in `MapArea.jsx` con stili GeoJSON immutabili ed evidenziazione tratteggiata per le geometrie di fallback, ottimizzando i frame rate di rendering su Leaflet.
+- **Bounded Sitemap Cache (CODE-03):** Dimensione massima delimitata a 10 host con sfratto FIFO/LRU in `sitemapService.js` per contenere il footprint di memoria del processo server.
+
+### Changed
+
+- **Refined Test Suite Harness:** Consolidamento e ottimizzazione della test suite con copertura al 100% su tutte le metriche (Linee, Funzioni, Istruzioni e Rami).
+
 ## [1.5.3] - 2026-09-18
 
 ### Added
