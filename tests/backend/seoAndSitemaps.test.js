@@ -555,6 +555,16 @@ describe('SEO Service & SSR Controller', () => {
         const nullCombos = await nullRepo.getActiveCityFuelCombinations();
         expect(nullCombos).toEqual([]);
     });
+
+    it('bounds host cache in SitemapService to maximum 10 entries', () => {
+        const service = new SitemapService();
+        for (let i = 1; i <= 15; i++) {
+            service.getHostCache(`https://host${i}.example.com`);
+        }
+        expect(service.cacheByHost.size).toBe(10);
+        expect(service.cacheByHost.has('https://host1.example.com')).toBe(false);
+        expect(service.cacheByHost.has('https://host15.example.com')).toBe(true);
+    });
 });
 
 

@@ -39,6 +39,10 @@ export class SitemapService {
 
     getHostCache(host) {
         if (!this.cacheByHost.has(host)) {
+            if (this.cacheByHost.size >= 10) {
+                const oldestKey = this.cacheByHost.keys().next().value;
+                this.cacheByHost.delete(oldestKey);
+            }
             this.cacheByHost.set(host, {
                 index: null,
                 it: null,
