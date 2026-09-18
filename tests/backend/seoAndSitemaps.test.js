@@ -1,5 +1,5 @@
 /* oxlint-disable no-console */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import { SitemapService } from '../../server/services/sitemapService.js';
@@ -7,6 +7,8 @@ import { SeoService } from '../../server/services/seoService.js';
 import { SsrController } from '../../server/controllers/ssrController.js';
 import { slugify, escapeXml, getSafeHost } from '../../server/utils/seoHelpers.js';
 import { setupSitemapRoutes } from '../../server/routes/sitemaps.js';
+import { seoRedirectMiddleware } from '../../server/middlewares/seoRedirect.js';
+import { StationRepository } from '../../server/repositories/stationRepository.js';
 
 describe('SEO Helpers', () => {
     it('slugify transforms text accurately', () => {
@@ -451,6 +453,95 @@ describe('SEO Service & SSR Controller', () => {
         expect(controller.htmlCache.size).toBe(1);
         controller.clearCache();
         expect(controller.htmlCache.size).toBe(0);
+    });
+
+    it('filters language and fuel sitemaps dynamically with activeCities and activeCityFuels', () => {
+        const service = new SitemapService();
+        service.setActiveCities(new Set(['roma', 'milano']));
+        service.setActiveCityFuels(new Set(['roma_benzina', 'roma_gasolio']));
+
+        const itSitemap = service.getLanguageSitemap('https://example.com', 'it');
+        expect(itSitemap).toContain('/it/citta/roma');
+        expect(itSitemap).toContain('/it/citta/milano');
+        expect(itSitemap).not.toContain('/it/citta/napoli');
+
+        const benzinaSitemap = service.getFuelSitemap('https://example.com', 'it', 'benzina');
+        expect(benzinaSitemap).toContain('/it/citta/roma/benzina');
+        expect(benzinaSitemap).not.toContain('/it/citta/milano/benzina');
+
+        const gnlSitemap = service.getFuelSitemap('https://example.com', 'it', 'gnl');
+        expect(gnlSitemap).not.toContain('/it/citta/roma/gnl');
+    });
+
+    it('handles trailing slash redirect in seoRedirectMiddleware', () => {
+        const reqWithQuery = {
+            path: '/it/citta/roma/',
+            url: '/it/citta/roma/?test=1',
+            query: {}
+        };
+        const res1 = { redirect: vi.fn() };
+        const next1 = vi.fn();
+
+        seoRedirectMiddleware(reqWithQuery, res1, next1);
+        expect(res1.redirect).toHaveBeenCalledWith(301, '/it/citta/roma?test=1');
+        expect(next1).not.toHaveBeenCalled();
+
+        const reqWithoutQuery = {
+            path: '/it/citta/milano/',
+            url: '/it/citta/milano/',
+            query: {}
+        };
+        const res2 = { redirect: vi.fn() };
+        const next2 = vi.fn();
+
+        seoRedirectMiddleware(reqWithoutQuery, res2, next2);
+        expect(res2.redirect).toHaveBeenCalledWith(301, '/it/citta/milano');
+        expect(next2).not.toHaveBeenCalled();
+    });
+
+    it('injects noindex follow robots meta when noIndex is true', () => {
+        const seo = new SeoService();
+        const meta = seo.generateMetadata({
+            isCityPage: true,
+            isExplorePage: false,
+            isHomePage: false,
+            lang: 'it',
+            displayFuel: 'GNL',
+            cityCap: 'Rocca di Papa',
+            host: 'https://example.com',
+            pathSegment: '/it/citta/rocca-di-papa/gnl',
+            noIndex: true
+        });
+        expect(meta.noIndex).toBe(true);
+
+        const html = seo.injectSeoIntoHtml('<html><head></head><body><div id="root"></div></body></html>', {
+            metadata: meta,
+            crawlerHtml: '<div>empty</div>',
+            jsonLd: []
+        });
+        expect(html).toContain('<meta name="robots" content="noindex, follow" />');
+    });
+
+    it('queries active city fuel combinations in StationRepository and handles errors', async () => {
+        const mockDb = {
+            execute: vi.fn().mockResolvedValue({
+                rows: [{ comune: 'Roma', fuel: 'Benzina' }, { comune: 'Milano', fuel: 'Gasolio' }]
+            })
+        };
+        const repo = new StationRepository(mockDb);
+        const combos = await repo.getActiveCityFuelCombinations();
+        expect(combos).toHaveLength(2);
+
+        const errorDb = {
+            execute: vi.fn().mockRejectedValue(new Error('DB Failed'))
+        };
+        const errorRepo = new StationRepository(errorDb);
+        const errorCombos = await errorRepo.getActiveCityFuelCombinations();
+        expect(errorCombos).toEqual([]);
+
+        const nullRepo = new StationRepository(null);
+        const nullCombos = await nullRepo.getActiveCityFuelCombinations();
+        expect(nullCombos).toEqual([]);
     });
 });
 

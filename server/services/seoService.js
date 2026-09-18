@@ -6,7 +6,7 @@ import {
 } from '../utils/seoHelpers.js';
 
 export class SeoService {
-    generateMetadata({ isCityPage, isExplorePage, isHomePage, lang, displayFuel, cityCap, host, pathSegment }) {
+    generateMetadata({ isCityPage, isExplorePage, isHomePage, lang, displayFuel, cityCap, host, pathSegment, noIndex = false }) {
         let title = '';
         let desc = '';
 
@@ -41,6 +41,7 @@ export class SeoService {
             title,
             desc,
             currentUrl,
+            noIndex: Boolean(noIndex),
             safeTitle: escapeHtml(title),
             safeDesc: escapeHtml(desc),
             safeCurrentUrl: escapeHtml(currentUrl),
@@ -51,23 +52,23 @@ export class SeoService {
     generateCrawlerHtml({ isExplorePage, isHomePage, safeTitle, safeDesc, safeHost, lang }) {
         let staticHtml = `<div style="display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; padding: 20px; text-align: center; background-color: #f9fafb;">
             <h1 style="font-size: 1.8rem; font-weight: bold; color: #111827; margin-bottom: 10px;">${safeTitle}</h1>
-            <p style="font-size: 1rem; color: #4b5563; max-width: 600px; line-height: 1.5;">${safeDesc}</p>
-        </div>`;
+            <p style="font-size: 1rem; color: #4b5563; max-width: 600px; line-height: 1.5;">${safeDesc}</p>`;
         
         if (isExplorePage) {
-            let linksHtml = '<ul style="display:none;">';
             const cityBaseUrl = `${safeHost}/${lang}/${lang === 'it' ? 'citta' : 'city'}/`;
+            let linksHtml = `<nav aria-label="Elenco Città" style="margin-top: 20px; max-width: 800px; text-align: left;"><ul style="list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 8px;">`;
             for (const city of cities) {
                 const enName = itToEnCities[city.toLowerCase()] || city.toLowerCase();
                 const slug = slugify(lang === 'it' ? city.toLowerCase() : enName);
-                linksHtml += `<li><a href="${cityBaseUrl}${encodeURIComponent(slug)}">${escapeHtml(city)}</a></li>`;
+                linksHtml += `<li><a href="${cityBaseUrl}${encodeURIComponent(slug)}" style="color: #2563eb; text-decoration: none;">${escapeHtml(city)}</a></li>`;
             }
-            linksHtml += '</ul>';
+            linksHtml += '</ul></nav>';
             staticHtml += linksHtml;
         } else if (isHomePage) {
-            staticHtml += `<div style="display:none;"><a href="${safeHost}/${lang}/${lang === 'it' ? 'esplora' : 'explore'}">Esplora Città</a></div>`;
+            staticHtml += `<nav aria-label="Esplora" style="margin-top: 15px;"><a href="${safeHost}/${lang}/${lang === 'it' ? 'esplora' : 'explore'}" style="color: #2563eb; text-decoration: underline;">${lang === 'it' ? 'Esplora Città' : 'Explore Cities'}</a></nav>`;
         }
 
+        staticHtml += `</div>`;
         return staticHtml;
     }
 

@@ -184,6 +184,15 @@ export class SsrController {
                         safePath = `/${lang}/${lang === 'it' ? 'esplora' : 'explore'}`;
                     }
 
+                    let cityPrices = [];
+                    const db = this.getDb();
+                    if (cityMatch && db) {
+                        const enToItFuel = { 'petrol': 'Benzina', 'diesel': 'Gasolio', 'lpg': 'GPL', 'cng': 'Metano' };
+                        const dbFuelQuery = enToItFuel[rawFuel.toLowerCase()] || rawFuel;
+                        const stationRepo = new StationRepository(db);
+                        cityPrices = await stationRepo.findCityPricesForSeo(cityCap, dbFuelQuery);
+                    }
+
                     const metadata = seoService.generateMetadata({
                         isCityPage: Boolean(cityMatch),
                         isExplorePage: Boolean(exploreMatch),
@@ -192,7 +201,8 @@ export class SsrController {
                         displayFuel,
                         cityCap,
                         host,
-                        pathSegment: safePath
+                        pathSegment: safePath,
+                        noIndex: Boolean(cityMatch && cityPrices.length === 0)
                     });
 
                     const crawlerHtml = seoService.generateCrawlerHtml({
@@ -203,15 +213,6 @@ export class SsrController {
                         safeHost: metadata.safeHost,
                         lang
                     });
-
-                    let cityPrices = [];
-                    const db = this.getDb();
-                    if (cityMatch && db) {
-                        const enToItFuel = { 'petrol': 'Benzina', 'diesel': 'Gasolio', 'lpg': 'GPL', 'cng': 'Metano' };
-                        const dbFuelQuery = enToItFuel[rawFuel.toLowerCase()] || rawFuel;
-                        const stationRepo = new StationRepository(db);
-                        cityPrices = await stationRepo.findCityPricesForSeo(cityCap, dbFuelQuery);
-                    }
 
                     const jsonLd = seoService.generateJsonLd({
                         isCityPage: Boolean(cityMatch),
