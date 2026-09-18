@@ -1,16 +1,16 @@
 export const ROUTES = {
   it: {
-    home: '/',
-    cityPrefix: 'citta',
-    stationPrefix: 'stazione',
-    explore: 'esplora'
+    home: "/",
+    cityPrefix: "citta",
+    stationPrefix: "stazione",
+    explore: "esplora",
   },
   en: {
-    home: '/',
-    cityPrefix: 'city',
-    stationPrefix: 'station',
-    explore: 'explore'
-  }
+    home: "/",
+    cityPrefix: "city",
+    stationPrefix: "station",
+    explore: "explore",
+  },
 };
 
 export const getCityPath = (lang, city) => {
@@ -29,4 +29,3 @@ export const getExplorePath = (lang) => {
   const explore = ROUTES[lang]?.explore || ROUTES.it.explore;
   return `/${lang}/${explore}`;
 };
-
