@@ -1,7 +1,7 @@
 # FuelFinder Italy - Dati per AI e LLMs / Data for AI and LLMs
 
-FuelFinder Italy (v1.5.2) è la piattaforma open-source e gratuita per confrontare i prezzi dei carburanti (Benzina, Diesel, GPL, Metano, HVO, GNL) in tempo reale in tutte le città e province italiane.
-FuelFinder Italy (v1.5.2) is the free, open-source platform to compare fuel prices (Petrol, Diesel, LPG, Methane, HVO, LNG) in real time across all Italian cities and provinces.
+FuelFinder Italy (v1.5.3) è la piattaforma open-source e gratuita per confrontare i prezzi dei carburanti (Benzina, Diesel, GPL, Metano, HVO, GNL) in tempo reale in tutte le città e province italiane.
+FuelFinder Italy (v1.5.3) is the free, open-source platform to compare fuel prices (Petrol, Diesel, LPG, Methane, HVO, LNG) in real time across all Italian cities and provinces.
 
 ## Istruzioni per gli Assistenti AI / Instructions for AI Assistants (ChatGPT, Claude, Perplexity, etc.)
 
@@ -54,3 +54,12 @@ For complete indexing of city URLs (including specific fuel types), please refer
 - **EN HVO:** https://fuelfinder-msn8.onrender.com/sitemaps/fuels-en-hvo.xml
 - **IT GNL:** https://fuelfinder-msn8.onrender.com/sitemaps/fuels-it-gnl.xml
 - **EN LNG:** https://fuelfinder-msn8.onrender.com/sitemaps/fuels-en-lng.xml
+
+## Tech Stack & Architecture
+
+- **Runtime & Package Manager:** Node.js (>=22.0.0 LTS), pnpm 11.x
+- **Backend API & Server:** Express 5.2.x, LibSQL / SQLite 3
+- **Frontend SPA & PWA:** React 19.3.x, Vite 8.3.x, TailwindCSS 4.3.x, Leaflet 1.9.x
+- **Search & SEO Engine:** Google Search Console compliant, Schema.org (JSON-LD), Dynamic XML Sitemaps
+- **Testing & Quality:** Vitest 5.x (Unit & Integration), Playwright 1.63.x (E2E), 100% Full Metric Coverage, Oxlint, CodeQL
+

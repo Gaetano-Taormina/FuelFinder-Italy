@@ -1,10 +1,24 @@
 # FuelFinder Italia
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-Click_Here-blue?style=for-the-badge)](https://fuelfinder-msn8.onrender.com)
-[![Version](https://img.shields.io/badge/version-1.5.2-brightgreen?style=for-the-badge)](https://github.com/Gaetano-Taormina/FuelFinder-Italy/releases)
-[![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen?style=for-the-badge)](https://github.com/Gaetano-Taormina/FuelFinder-Italy)
-[![Node](https://img.shields.io/badge/node-%3E%3D22.0.0-informational?style=for-the-badge&logo=node.js)](https://nodejs.org/)
-[![pnpm](https://img.shields.io/badge/pnpm-11.x-orange?style=for-the-badge&logo=pnpm)](https://pnpm.io/)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Click_Here-0078D4?style=for-the-badge&logo=render&logoColor=white)](https://fuelfinder-msn8.onrender.com)
+[![Version](https://img.shields.io/badge/version-1.5.3-brightgreen?style=for-the-badge)](https://github.com/Gaetano-Taormina/FuelFinder-Italy/releases)
+[![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen?style=for-the-badge&logo=vitest&logoColor=white)](https://github.com/Gaetano-Taormina/FuelFinder-Italy)
+[![Lighthouse](https://img.shields.io/badge/lighthouse-100%2F100-success?style=for-the-badge&logo=lighthouse&logoColor=white)](https://fuelfinder-msn8.onrender.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![Node](https://img.shields.io/badge/node-%3E%3D22.0.0-informational?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![pnpm](https://img.shields.io/badge/pnpm-11.x-orange?style=for-the-badge&logo=pnpm&logoColor=white)](https://pnpm.io/)
+[![Express](https://img.shields.io/badge/express-5.x-lightgrey?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
+[![SQLite](https://img.shields.io/badge/sqlite-3.x-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://sqlite.org/)
+[![React](https://img.shields.io/badge/react-19.x-61dafb?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/vite-8.x-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev/)
+[![TailwindCSS](https://img.shields.io/badge/tailwind-4.x-38bdf8?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Leaflet](https://img.shields.io/badge/leaflet-1.9.x-199900?style=for-the-badge&logo=leaflet&logoColor=white)](https://leafletjs.com/)
+[![Google Search Console](https://img.shields.io/badge/Search_Console-Optimized-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://search.google.com/search-console)
+[![Schema.org](https://img.shields.io/badge/schema.org-JSON--LD-008080?style=for-the-badge&logo=json&logoColor=white)](https://schema.org/)
+[![PWA](https://img.shields.io/badge/PWA-Ready-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)](https://web.dev/explore/progressive-web-apps)
+[![Open Data MIMIT](https://img.shields.io/badge/MIMIT-Open_Data-green?style=for-the-badge)](https://www.mimit.gov.it/it/open-data)
+[![CodeQL](https://img.shields.io/badge/CodeQL-Zero_Alerts-blueviolet?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Gaetano-Taormina/FuelFinder-Italy/actions)
+[![Playwright](https://img.shields.io/badge/playwright-e2e_tested-45ba4b?style=for-the-badge&logo=playwright&logoColor=white)](https://playwright.dev/)
 
 **Choose your language / Scegli la tua lingua:**
 
