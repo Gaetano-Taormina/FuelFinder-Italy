@@ -20,6 +20,8 @@ import { setupApiRoutes } from './routes/api.js';
 import { setupSitemapRoutes } from './routes/sitemaps.js';
 import { setupSsrRoutes } from './routes/ssr.js';
 import { sitemapService } from './services/sitemapService.js';
+import { StationRepository } from './repositories/stationRepository.js';
+import { slugify } from './utils/seoHelpers.js';
 
 import { downloadDatabase } from './services/dbDownloadService.js';
 import { sync } from './sync/index.js';
@@ -153,10 +155,35 @@ async function initServer() {
         // --- GLOBAL ERROR HANDLER ---
         app.use(globalErrorHandler);
 
+        // --- SITEMAP PRE-FILTERING (CRAWL BUDGET OPTIMIZATION) ---
+        if (db) {
+            try {
+                const repo = new StationRepository(db);
+                const activeCombos = await repo.getActiveCityFuelCombinations();
+                const activeCityFuels = new Set();
+                const activeCities = new Set();
+                for (const row of activeCombos) {
+                    if (row.comune) {
+                        const citySlug = slugify(row.comune);
+                        activeCities.add(citySlug);
+                        if (row.fuel) {
+                            activeCityFuels.add(`${citySlug}_${slugify(row.fuel)}`);
+                        }
+                    }
+                }
+                sitemapService.setActiveCities(activeCities);
+                sitemapService.setActiveCityFuels(activeCityFuels);
+                console.info(`🗺️ Sitemaps: Pre-filtered ${activeCities.size} cities and ${activeCityFuels.size} active fuel routes`);
+            } catch (err) {
+                console.warn('⚠️ Could not pre-filter sitemaps:', err.message);
+            }
+        }
+
         isReady = true;
         console.info("✨ [Ready] All subsystems initialized. Server accepting requests.");
 
         scheduleDailySync();
+        scheduleKeepAliveHeartbeat(PORT);
     } catch (e) {
         console.error("❌ [FATAL] Critical error during initialization:", e);
         process.exit(1);
@@ -164,6 +191,17 @@ async function initServer() {
 }
 
 initServer();
+
+function scheduleKeepAliveHeartbeat(port) {
+    if (process.env.NODE_ENV !== 'production' && process.env.ENABLE_HEARTBEAT !== 'true') {
+        return;
+    }
+    const intervalMs = 10 * 60 * 1000; // 10 minuti
+    setInterval(() => {
+        const pingUrl = process.env.RENDER_EXTERNAL_URL || `http://127.0.0.1:${port}`;
+        fetch(`${pingUrl}/healthz`).catch(() => {});
+    }, intervalMs).unref();
+}
 
 function scheduleDailySync() {
     const now = new Date();

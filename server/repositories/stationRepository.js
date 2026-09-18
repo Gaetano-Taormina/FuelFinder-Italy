@@ -121,5 +121,20 @@ export class StationRepository {
             return null;
         }
     }
+
+    async getActiveCityFuelCombinations() {
+        if (!this.db) return [];
+        try {
+            const result = await this.db.execute(`
+                SELECT DISTINCT s.comune as comune, p.desc_carburante as fuel
+                FROM stations s
+                INNER JOIN prices p ON s.id = p.id_impianto
+            `);
+            return result.rows;
+        } catch (e) {
+            console.error("Errore query getActiveCityFuelCombinations:", e);
+            return [];
+        }
+    }
 }
 

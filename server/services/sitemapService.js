@@ -5,9 +5,36 @@ import {
     escapeXml 
 } from '../utils/seoHelpers.js';
 
+export const fuelToDbCategory = Object.freeze({
+    'benzina': 'benzina',
+    'petrol': 'benzina',
+    'gasolio': 'gasolio',
+    'diesel': 'gasolio',
+    'gpl': 'gpl',
+    'lpg': 'gpl',
+    'metano': 'metano',
+    'cng': 'metano',
+    'methane': 'metano',
+    'hvo': 'hvo',
+    'gnl': 'gnl',
+    'lng': 'gnl'
+});
+
 export class SitemapService {
     constructor() {
         this.cacheByHost = new Map();
+        this.activeCityFuels = null;
+        this.activeCities = null;
+    }
+
+    setActiveCityFuels(set) {
+        this.activeCityFuels = set;
+        this.clearCache();
+    }
+
+    setActiveCities(set) {
+        this.activeCities = set;
+        this.clearCache();
     }
 
     getHostCache(host) {
@@ -84,6 +111,9 @@ export class SitemapService {
         for (const city of cities) {
             const lowerCity = city.toLowerCase();
             const citySegmentIt = slugify(lowerCity);
+            if (this.activeCities && !this.activeCities.has(citySegmentIt)) {
+                continue;
+            }
             const citySegmentEn = slugify(itToEnCities[lowerCity] || lowerCity);
             const currentCitySegment = isIt ? citySegmentIt : citySegmentEn;
             const altCitySegment = isIt ? citySegmentEn : citySegmentIt;
@@ -127,9 +157,15 @@ export class SitemapService {
             this.buildSingleLangUrl(host, `/${encodeURIComponent(requestedFuel)}`, altLang, `/${encodeURIComponent(altFuel)}`, 'daily', '0.9', lang)
         ];
 
+        const canonicalFuelIt = fuelToDbCategory[requestedFuel.toLowerCase()];
+
         for (const city of cities) {
             const lowerCity = city.toLowerCase();
             const citySegmentIt = slugify(lowerCity);
+            const fuelKey = `${citySegmentIt}_${canonicalFuelIt}`;
+            if (this.activeCityFuels && !this.activeCityFuels.has(fuelKey)) {
+                continue;
+            }
             const citySegmentEn = slugify(itToEnCities[lowerCity] || lowerCity);
             const currentCitySegment = isIt ? citySegmentIt : citySegmentEn;
             const altCitySegment = isIt ? citySegmentEn : citySegmentIt;
