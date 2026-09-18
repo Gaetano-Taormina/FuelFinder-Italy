@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStations } from '../../context/StationsContext';
 import { useNominatim } from '../../hooks/useNominatim';
@@ -11,6 +11,13 @@ export default function LocationInput() {
     
     const [showSuggestions, setShowSuggestions] = useState(false);
     const { suggestions, fetchSuggestions, clearSuggestions, searchCoords } = useNominatim();
+
+    useEffect(() => {
+        return () => {
+            clearSuggestions();
+        };
+    }, [clearSuggestions]);
+
 
     const handleInputChange = useCallback((e) => {
         const val = e.target.value;

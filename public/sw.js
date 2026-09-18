@@ -11,8 +11,13 @@ const STATIC_ASSETS = [
 
 // Max map tiles to store in CacheStorage
 const MAX_TILES = 500;
+const TRIM_INTERVAL = 25; // Trim only every 25 network tile downloads
+let tileFetchCounter = 0;
+let isTrimming = false;
 
 async function trimCache(cacheName, maxItems) {
+  if (isTrimming) return;
+  isTrimming = true;
   try {
     const cache = await caches.open(cacheName);
     const keys = await cache.keys();
@@ -23,8 +28,11 @@ async function trimCache(cacheName, maxItems) {
     }
   } catch {
     // Ignore cache trimming errors in background
+  } finally {
+    isTrimming = false;
   }
 }
+
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -70,8 +78,12 @@ self.addEventListener('fetch', (event) => {
           const networkResponse = await fetch(request);
           if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
             cache.put(request, networkResponse.clone()).catch(() => {});
-            trimCache(TILE_CACHE_NAME, MAX_TILES).catch(() => {});
+            tileFetchCounter++;
+            if (tileFetchCounter % TRIM_INTERVAL === 0) {
+              trimCache(TILE_CACHE_NAME, MAX_TILES).catch(() => {});
+            }
           }
+
           return networkResponse;
         } catch {
           // On network failure or user abort during rapid zoom/pan

@@ -104,10 +104,13 @@ export const StationsProvider = ({ children }) => {
         return;
     }
 
+    const abortController = new AbortController();
+
     const fetchRoute = async () => {
       try {
         const url = `https://router.project-osrm.org/route/v1/driving/${userPos.lng},${userPos.lat};${selectedStation.lng},${selectedStation.lat}?overview=full&geometries=geojson`;
-        const res = await fetch(url);
+        const res = await fetch(url, { signal: abortController.signal });
+        if (!res.ok) return;
         const data = await res.json();
         if (data.routes && data.routes.length > 0) {
           setRouteData({
@@ -117,12 +120,20 @@ export const StationsProvider = ({ children }) => {
           });
         }
       } catch (err) {
+        if (err.name === 'AbortError') {
+          return;
+        }
         // oxlint-disable-next-line no-console
         console.error('OSRM Fetch Error:', err);
       }
     };
     fetchRoute();
+
+    return () => {
+      abortController.abort();
+    };
   }, [selectedStation, userPos]);
+
 
   const handleNavigation = useCallback((station) => {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;

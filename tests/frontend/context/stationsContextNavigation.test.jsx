@@ -82,8 +82,12 @@ describe('StationsContext - Navigation & OSRM Routing', () => {
       expect(screen.getByTestId('routeData').textContent).toBe('100'); 
     }, { interval: 5 });
 
-    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('router.project-osrm.org/route/v1/driving/'));
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('router.project-osrm.org/route/v1/driving/'),
+      expect.objectContaining({ signal: expect.any(Object) })
+    );
   });
+
 
   it('handles OSRM fetch rejection gracefully', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -240,4 +244,74 @@ describe('StationsContext - Navigation & OSRM Routing', () => {
       expect(screen.getByTestId('routeData').textContent).toBe('null');
     }, { interval: 5 });
   });
+
+  it('handles res.ok false from OSRM without crashing', async () => {
+    global.fetch = vi.fn(async (url) => {
+      if (typeof url === 'string' && url.startsWith('https://router.project-osrm.org/')) {
+        return { ok: false };
+      }
+      return { ok: true, json: async () => ({}) };
+    });
+
+    renderWithProvider();
+
+    act(() => {
+      fireEvent.click(screen.getByText('Set Pos'));
+      fireEvent.click(screen.getByText('Set Selected Station'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('routeData').textContent).toBe('null');
+    }, { interval: 5 });
+  });
+
+  it('handles AbortError from OSRM fetch gracefully without logging error', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    global.fetch = vi.fn((url) => {
+      if (typeof url === 'string' && url.startsWith('https://router.project-osrm.org/')) {
+        const abortErr = new Error('Request aborted');
+        abortErr.name = 'AbortError';
+        return Promise.reject(abortErr);
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    });
+
+    renderWithProvider();
+
+    act(() => {
+      fireEvent.click(screen.getByText('Set Pos'));
+      fireEvent.click(screen.getByText('Set Selected Station'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('routeData').textContent).toBe('null');
+    }, { interval: 5 });
+
+    expect(consoleSpy).not.toHaveBeenCalled();
+    consoleSpy.mockRestore();
+  });
+
+  it('handles generic network rejection and logs error', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    global.fetch = vi.fn((url) => {
+      if (typeof url === 'string' && url.startsWith('https://router.project-osrm.org/')) {
+        return Promise.reject(new Error('Network failure'));
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    });
+
+    renderWithProvider();
+
+    act(() => {
+      fireEvent.click(screen.getByText('Set Pos'));
+      fireEvent.click(screen.getByText('Set Selected Station'));
+    });
+
+    await waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith('OSRM Fetch Error:', expect.any(Error));
+    }, { interval: 5 });
+
+    consoleSpy.mockRestore();
+  });
 });
+
