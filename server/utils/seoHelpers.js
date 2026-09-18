@@ -1,9 +1,22 @@
 import path from 'path';
 import fs from 'fs';
 
+export const slugify = (text) => {
+    return text.toString().toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/['\s_]+/g, '-')
+        .replace(/[^\w-]+/g, '')
+        .replace(/--+/g, '-')
+        .replace(/^-+/, '')
+        .replace(/-+$/, '');
+};
+
 const citiesDataPath = path.join(process.cwd(), 'server', 'data', 'cities.json');
 const citiesData = JSON.parse(fs.readFileSync(citiesDataPath, 'utf8'));
 export const cities = citiesData.map(c => c.name);
+export const citySlugMap = new Map(citiesData.map(c => [slugify(c.name), c.name]));
+
+
 
 export const REGEX_EXPLORE = /^\/(it|en)\/(esplora|explore)\/?$/;
 export const REGEX_CITY = /^\/(it|en)\/(citta|city)\/([^/]+)\/?(?:([^/]+)\/?)?$/;
@@ -48,15 +61,6 @@ export const fuelToEn = Object.freeze({
     'GNL': 'LNG'
 });
 
-export const slugify = (text) => {
-    return text.toString().toLowerCase()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-        .replace(/['\s_]+/g, '-')
-        .replace(/[^\w-]+/g, '')
-        .replace(/--+/g, '-')
-        .replace(/^-+/, '')
-        .replace(/-+$/, '');
-};
 
 export const escapeXml = (str) => {
     if (typeof str !== 'string') return '';

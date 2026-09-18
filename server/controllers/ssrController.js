@@ -6,7 +6,7 @@ import { trackStaticVisit } from '../middlewares/analytics.js';
 import { StationRepository } from '../repositories/stationRepository.js';
 import { seoService } from '../services/seoService.js';
 import { 
-    cities, 
+    citySlugMap,
     itToEnCities, 
     enToItCities, 
     fuelToEn, 
@@ -17,6 +17,7 @@ import {
     REGEX_STATION,
     REGEX_HOME_LANG
 } from '../utils/seoHelpers.js';
+
 
 function generateETag(content) {
     return `"${crypto.createHash('sha1').update(content).digest('base64url').slice(0, 16)}"`;
@@ -101,11 +102,12 @@ export class SsrController {
                 
                 // Normalizza input
                 const normalizedSlug = slugify(citySlug);
-                const realCityObj = cities.find(c => slugify(c) === normalizedSlug);
+                const realCityObj = citySlugMap.get(normalizedSlug);
                 
                 if (!realCityObj) {
                     return res.status(404).sendFile(this.indexPath);
                 }
+
                 
                 // Redirect slug mal formattati
                 const expectedOriginalSlug = lang === 'en' ? slugify(itToEnCities[normalizedSlug] || normalizedSlug) : normalizedSlug;

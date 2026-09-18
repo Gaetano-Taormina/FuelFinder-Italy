@@ -8,14 +8,21 @@ import { StationService } from '../services/stationService.js';
 
 let cityDataCache = null;
 let cityDataEtag = null;
+let citySlugMap = null;
 const getCityData = () => {
     if (!cityDataCache) {
         const citiesPath = path.join(process.cwd(), 'server', 'data', 'cities.json');
         cityDataCache = JSON.parse(fs.readFileSync(citiesPath, 'utf8'));
         cityDataEtag = `"${crypto.createHash('md5').update(JSON.stringify(cityDataCache)).digest('hex')}"`;
+        
+        citySlugMap = new Map();
+        for (const city of cityDataCache) {
+            citySlugMap.set(slugify(city.name), city);
+        }
     }
     return cityDataCache;
 };
+
 
 const slugify = (text) => {
     return text.toString().toLowerCase()
@@ -126,18 +133,19 @@ export class ApiController {
 
     getCities = (req, res, next) => {
         try {
-            const cities = getCityData();
+            getCityData();
             const slug = req.query?.slug;
 
             if (slug) {
                 const normalizedSlug = slugify(slug);
-                const realCityObj = cities.find(c => slugify(c.name) === normalizedSlug);
+                const realCityObj = citySlugMap.get(normalizedSlug);
                 res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
                 if (realCityObj) {
                     return res.json({ valid: true, city: realCityObj });
                 }
                 return res.json({ valid: false });
             }
+
 
             res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
             if (cityDataEtag) {

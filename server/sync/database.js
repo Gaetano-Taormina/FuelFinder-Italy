@@ -72,13 +72,16 @@ export async function loadExistingData(db, localDb) {
   
   const existingPrices = new Map();
   try {
-      const prRes = await targetDb.execute("SELECT id_impianto, desc_carburante, is_self, prezzo, dt_comunicazione FROM prices");
-      for (const r of prRes.rows) existingPrices.set(`${r.id_impianto}_${r.desc_carburante}_${r.is_self}`, r);
+      const prRes = await targetDb.execute("SELECT id_impianto, desc_carburante, is_self, prezzo FROM prices");
+      for (const r of prRes.rows) {
+          existingPrices.set(`${r.id_impianto}_${r.desc_carburante}_${r.is_self}`, { prezzo: r.prezzo });
+      }
   } catch {}
 
   console.log(`Loaded: ${existingStations.size} stations, ${existingPrices.size} prices.`);
   return { existingStations, existingPrices };
 }
+
 
 export async function applyChanges(db, syncOps) {
     const batchedQueries = [];
