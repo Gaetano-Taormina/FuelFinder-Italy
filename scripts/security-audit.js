@@ -123,6 +123,23 @@ export const SECURITY_RULES = [
       });
       return matches;
     }
+  },
+  {
+    id: 'SEC-006-OPEN-REDIRECT',
+    name: 'Unvalidated Server-Side URL Redirect',
+    severity: 'MEDIUM',
+    description: 'Passing untrusted req.path or req.url directly to res.redirect() without validation against relative routes.',
+    check: (content, filePath) => {
+      if (!filePath.includes('server') || filePath.includes('tests')) return [];
+      const matches = [];
+      const lines = content.split('\n');
+      lines.forEach((line, idx) => {
+        if (/res\.redirect\s*\(\s*(301|302)?\s*,\s*`?\$\{(req\.path|req\.url|cleanPath|queryStr)\}/.test(line)) {
+          matches.push({ line: idx + 1, snippet: line.trim() });
+        }
+      });
+      return matches;
+    }
   }
 ];
 

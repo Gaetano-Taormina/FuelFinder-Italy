@@ -477,7 +477,7 @@ describe('SEO Service & SSR Controller', () => {
         const reqWithQuery = {
             path: '/it/citta/roma/',
             url: '/it/citta/roma/?test=1',
-            query: {}
+            query: { test: '1' }
         };
         const res1 = { redirect: vi.fn() };
         const next1 = vi.fn();
@@ -497,6 +497,18 @@ describe('SEO Service & SSR Controller', () => {
         seoRedirectMiddleware(reqWithoutQuery, res2, next2);
         expect(res2.redirect).toHaveBeenCalledWith(301, '/it/citta/milano');
         expect(next2).not.toHaveBeenCalled();
+
+        // Open redirect attempt with invalid chars or protocol-relative path
+        const reqUnsafe = {
+            path: '//evil.com/',
+            url: '//evil.com/',
+            query: {}
+        };
+        const res3 = { redirect: vi.fn() };
+        const next3 = vi.fn();
+        seoRedirectMiddleware(reqUnsafe, res3, next3);
+        expect(res3.redirect).not.toHaveBeenCalled();
+        expect(next3).toHaveBeenCalled();
     });
 
     it('injects noindex follow robots meta when noIndex is true', () => {

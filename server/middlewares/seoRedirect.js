@@ -51,8 +51,14 @@ export function seoRedirectMiddleware(req, res, next) {
     // Strip trailing slash for consistency (e.g. /it/citta/roma/ -> /it/citta/roma)
     if (req.path.length > 1 && req.path.endsWith('/')) {
         const cleanPath = req.path.slice(0, -1);
-        const queryStr = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
-        return res.redirect(301, `${cleanPath}${queryStr}`);
+        // Guard against Open Redirect: strictly allow relative alphanumeric path segments
+        if (/^\/[a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*$/.test(cleanPath)) {
+            const queryParams = req.query && Object.keys(req.query).length > 0
+                ? new URLSearchParams(req.query).toString()
+                : '';
+            const safeRedirect = queryParams ? `${cleanPath}?${queryParams}` : cleanPath;
+            return res.redirect(301, safeRedirect);
+        }
     }
     
     next();
