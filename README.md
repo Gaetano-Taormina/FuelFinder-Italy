@@ -1,7 +1,7 @@
 # FuelFinder Italia
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Click_Here-blue?style=for-the-badge)](https://fuelfinder-msn8.onrender.com)
-[![Version](https://img.shields.io/badge/version-1.5.1-brightgreen?style=for-the-badge)](https://github.com/Gaetano-Taormina/FuelFinder-Italy/releases)
+[![Version](https://img.shields.io/badge/version-1.5.2-brightgreen?style=for-the-badge)](https://github.com/Gaetano-Taormina/FuelFinder-Italy/releases)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen?style=for-the-badge)](https://github.com/Gaetano-Taormina/FuelFinder-Italy)
 [![Node](https://img.shields.io/badge/node-%3E%3D22.0.0-informational?style=for-the-badge&logo=node.js)](https://nodejs.org/)
 [![pnpm](https://img.shields.io/badge/pnpm-11.x-orange?style=for-the-badge&logo=pnpm)](https://pnpm.io/)
@@ -10,6 +10,7 @@
 
 - [English Version](#english-version)
 - [Versione Italiana](#versione-italiana)
+- [Changelog](CHANGELOG.md)
 
 ---
 
@@ -22,11 +23,13 @@ The data shown is real and based on official Open Data from the Italian Ministry
 
 - **Geolocated Search:** Search for stations by entering a city/zip code or using the device's GPS.
 - **Smart Autocomplete:** Instant location suggestions while typing, powered by OpenStreetMap Nominatim with client-side LRU caching and `AbortController` cancellation.
+- **Pre-Indexed Municipal Lookups:** $O(1)$ lookup performance via pre-indexed maps (`citySlugMap`) across SSR and REST API endpoints.
+- **WebMCP Integration:** Built-in Web Model Context Protocol (WebMCP) bridge enabling AI assistants and client tools to discover real-time fuel prices.
 - **Localized Station Routes & Sharing:** Direct localized URLs for each station (`/:lang/:cityPrefix/:city/:stationPrefix/:stationId/:fuel?`) with 1-click clipboard sharing and GasStation JSON-LD structured schema.
 - **Station Detail API:** Dedicated endpoint (`GET /api/stations/:id`) providing full station metadata, pricing history, and breakdown by Self-Service / Served.
-- **Route Calculation:** Integrated OSRM (Open Source Routing Machine) to automatically trace the optimal route on the map, calculating distance and travel time from the user to the selected station.
+- **Route Calculation:** Integrated OSRM (Open Source Routing Machine) to automatically trace the optimal route on the map, calculating distance and travel time from the user to the selected station with race condition prevention.
 - **Advanced Filters:** Filter by radius (3, 5, 10, 20 km), fuel type (Petrol, Diesel, LPG, Methane, HVO, LNG), and service type (Self-Service or Served).
-- **Interactive Map & Offline Tile Caching:** Clear map visualization (powered by Leaflet) with dynamic point-of-interest clustering and batch Service Worker Cache-First map tile caching (LRU 500 items).
+- **Interactive Map & Offline Tile Caching:** Clear map visualization (powered by Leaflet) with dynamic point-of-interest clustering and throttled LRU Service Worker map tile caching (500 items).
 - **Off-thread Geo Web Worker:** Offloads heavy Haversine distance computations and convenience score sorting to a background Web Worker (`geoWorkerService.js`), maintaining 60+ FPS UI fluidity.
 - **PWA & Native Storage:** Pure Vanilla IndexedDB for search history and favorite stations with full offline service worker caching for map routes and assets.
 - **Multi-language:** Native internationalization (i18next) for both English and Italian.
@@ -37,10 +40,10 @@ The data shown is real and based on official Open Data from the Italian Ministry
 - **Zero Cloud Costs & Fast Local DB:** Pre-compiled SQLite snapshot is downloaded automatically on startup from GitHub Releases, eliminating cloud fees and ensuring sub-millisecond query responses with composite covering indexes.
 - **Privacy-Friendly Analytics:** Native backend counter utilizing irreversible SHA-256 hashing to track daily visits without requiring GDPR cookie banners.
 - **Security Hardened & Local CodeQL Audit:** Integrated Rate Limiting against DDoS/Scraping attacks, React Error Boundaries for crash prevention, protective HTTP Security Headers, and local CodeQL zero-alert pre-flight auditor (`pnpm run security`).
-- **Advanced SEO & Crawl Protection:** Highly optimized for search engines featuring JSON-LD Structured Data, multi-host isolated `sitemap.xml`, dynamic Meta Tags, `robots.txt`, and automatic SSR cache invalidation upon sync.
+- **Advanced SEO & LLM Ready:** Highly optimized for search engines and AI bots featuring JSON-LD Structured Data, dynamic `sitemap.xml`, `robots.txt`, and machine-readable `llms.txt`.
 - **Admin Dashboard:** Secure passkey-protected panel at `/admin-stats` for visualizing site traffic and usage stats.
 - **Lighthouse 100/100:** Next-gen image formats (WebP), deferred CSS, and fine-tuned manual chunks.
-- **3-Tier Testing Architecture & 100% Coverage:** Comprehensive testing suite divided into Component/Unit (Vitest), Integration Flow, and E2E in real browser (Playwright), achieving 100% global coverage across lines, statements, functions, and branches.
+- **3-Tier Testing Architecture & 100% Full Metric Coverage:** Comprehensive testing suite (Vitest + Playwright) achieving 100.0% coverage across lines, statements, functions, and branches.
 - **Automated CI/CD & Cryptographic Attestations:** GitHub Actions with automatic run cancellation (`concurrency`), Node 22 LTS environment, cryptographic SLSA provenance build attestations, and smart Dependabot PR grouping.
 
 ### 📱 Quick Mobile Install (PWA)
@@ -107,11 +110,13 @@ I dati mostrati sono reali e basati sugli Open Data ufficiali del Ministero dell
 
 - **Ricerca Georeferenziata:** Cerca distributori inserendo una città/CAP o utilizzando il GPS del dispositivo.
 - **Completamento Automatico:** Suggerimenti intelligenti in tempo reale durante la digitazione delle località tramite OpenStreetMap Nominatim con caching LRU client-side e cancellazione delle richieste tramite `AbortController`.
+- **Risoluzione Toponimi Pre-Indicizzata:** Prestazioni di lookup a $O(1)$ tramite mappa pre-calcolata (`citySlugMap`) sia su rotte SSR che API REST.
+- **Integrazione WebMCP:** Bridge nativo Web Model Context Protocol (WebMCP) per consentire agli assistenti AI di consultare stazioni e prezzi in tempo reale.
 - **Schede Dettaglio Stazione & Condivisione:** URL dedicati e localizzati per ogni distributore (`/:lang/:cityPrefix/:city/:stationPrefix/:stationId/:fuel?`) con condivisione immediata del link e dati strutturati Schema.org GasStation.
 - **API Dettaglio Stazione:** Endpoint dedicato (`GET /api/stations/:id`) con anagrafica completa, storico prezzi e suddivisione Self-Service e Servito.
-- **Calcolo del Percorso:** Integrazione con OSRM (Open Source Routing Machine) per tracciare automaticamente il tragitto ottimale sulla mappa, calcolando distanza e tempi di percorrenza dall'utente al distributore.
+- **Calcolo del Percorso:** Integrazione con OSRM (Open Source Routing Machine) per tracciare automaticamente il tragitto ottimale sulla mappa, calcolando distanza e tempi di percorrenza dall'utente al distributore con protezione anti-race condition.
 - **Filtri Avanzati:** Filtra per raggio di distanza (3, 5, 10, 20 km), tipo di carburante (Benzina, Gasolio, GPL, Metano, HVO, GNL) e tipologia di servizio (Self-Service o Servito).
-- **Mappa Interattiva & Cache Tile Offline:** Visualizzazione chiara sulla mappa (Leaflet) con raggruppamento dinamico (clustering) dei punti di interesse e caching batch delle tile cartografiche tramite Service Worker (LRU 500 elementi).
+- **Mappa Interattiva & Cache Tile Offline:** Visualizzazione chiara sulla mappa (Leaflet) con raggruppamento dinamico (clustering) dei punti di interesse e caching LRU throttled delle tile cartografiche tramite Service Worker (500 elementi).
 - **Web Worker Geospaziale:** Calcoli matematici pesanti (formula di Haversine e ranking di convenienza) delegati in background a un Web Worker dedicato (`geoWorkerService.js`), garantendo un'interfaccia a 60+ FPS fissi.
 - **PWA & Storage Nativo:** Supporto PWA per installazione rapida su Home Screen, persistenza IndexedDB pura per cronologia e preferiti, e cache offline per rotte OSRM.
 - **Multilingua:** Supporto nativo (i18next) per Italiano e Inglese.
@@ -122,10 +127,10 @@ I dati mostrati sono reali e basati sugli Open Data ufficiali del Ministero dell
 - **Zero Costi Cloud & SQLite Standalone:** Download automatico all'avvio su Render da GitHub Releases con query locali istantanee e zero costi fissi di database con indici di copertura perimetrali.
 - **Statistiche GDPR-Friendly:** Contatore visite nativo lato server basato su hash crittografico SHA-256 irreversibile per garantire il 100% dell'anonimato senza richiedere banner sui cookie.
 - **Sicurezza e Pre-Flight CodeQL:** Rate Limiting contro attacchi DDoS/scraping, Error Boundaries in React, intestazioni HTTP protettive e validatore di sicurezza CodeQL locale (`pnpm run security`).
-- **SEO Strutturata & Protezione Crawl Budget:** Ottimizzazione profonda per Google tramite Dati Strutturati (JSON-LD), mappa `sitemap.xml` multi-host, `robots.txt`, Open Graph e invalidazione automatica della cache SSR dopo ogni sincronizzazione.
+- **SEO Strutturata & Predisposizione LLM:** Ottimizzazione profonda per motori di ricerca e modelli linguistici tramite Dati Strutturati (JSON-LD), `sitemap.xml` dinamica, `robots.txt` e file `llms.txt`.
 - **Dashboard Admin:** Pannello protetto da passkey sicura alla rotta `/admin-stats` per monitorare il traffico e l'utilizzo del sito.
 - **Lighthouse 100/100:** Formati immagine di nuova generazione (WebP), CSS differito e chunking avanzato delle librerie.
-- **Testing a 3 Livelli & 100% Coverage:** Suite completa di test suddivisa in Component/Unit (Vitest), Group/Integration ed E2E su browser reale (Playwright), con copertura globale del 100% su linee, statement, funzioni e branch.
+- **Testing a 3 Livelli & 100% Coverage Globale:** Suite completa di test suddivisa in Component/Unit (Vitest), Group/Integration ed E2E su browser reale (Playwright), con copertura globale del 100% su linee, statement, funzioni e branch.
 - **Workflow CI/CD & Attestazioni Crittografiche:** Pipeline GitHub Actions con cancellazione automatica dei task obsoleti (`concurrency`), Node 22 LTS, attestazioni crittografiche SLSA di build e raggruppamenti intelligenti per Dependabot.
 
 ### 📱 Installazione Rapida su Smartphone (PWA)

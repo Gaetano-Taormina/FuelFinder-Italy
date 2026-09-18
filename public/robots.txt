@@ -1,8 +1,10 @@
 User-agent: Googlebot
 Allow: /
+Allow: /llms.txt
 
 User-agent: *
 Allow: /
+Allow: /llms.txt
 Disallow: /api/
 Disallow: /admin-stats
 
