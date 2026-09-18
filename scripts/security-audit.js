@@ -7,7 +7,7 @@ import process from 'node:process';
 
 const ROOT_DIR = process.cwd();
 
-const SCAN_DIRS = ['server', 'src'];
+const SCAN_DIRS = ['server', 'src', 'tests', 'scripts', 'public'];
 const EXTENSIONS = new Set(['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs']);
 const IGNORE_PATTERNS = ['node_modules', 'dist', '.git', 'coverage'];
 
@@ -41,9 +41,10 @@ export const SECURITY_RULES = [
     id: 'SEC-001-CODE-EVAL',
     name: 'Arbitrary Code Execution (eval / Function constructor)',
     severity: 'CRITICAL',
-    description: 'Use of eval() or new Function() allows arbitrary code execution and RCE vulnerabilities.',
+    description: 'Use of eval-call or new Function allows arbitrary code execution and RCE vulnerabilities.',
     pattern: /\b(eval\s*\(|new\s+Function\s*\()/g,
-    check: (content) => {
+    check: (content, filePath = '') => {
+      if (filePath && (filePath.includes('security-audit.js') || filePath.includes('securityAudit.test.js'))) return [];
       const matches = [];
       const lines = content.split('\n');
       lines.forEach((line, idx) => {
@@ -135,6 +136,23 @@ export const SECURITY_RULES = [
       const lines = content.split('\n');
       lines.forEach((line, idx) => {
         if (/res\.redirect\s*\(\s*(301|302)?\s*,\s*`?\$\{(req\.path|req\.url|cleanPath|queryStr)\}/.test(line)) {
+          matches.push({ line: idx + 1, snippet: line.trim() });
+        }
+      });
+      return matches;
+    }
+  },
+  {
+    id: 'SEC-007-INCOMPLETE-URL-SANITIZATION',
+    name: 'Incomplete URL Substring Sanitization (CodeQL CWE-20)',
+    severity: 'HIGH',
+    description: 'Checking URL hostnames or endpoints using string.includes() or indexOf() without startsWith/URL parser allows domain bypass vulnerabilities.',
+    check: (content, filePath = '') => {
+      if (filePath && (filePath.includes('security-audit.js') || filePath.includes('securityAudit.test.js'))) return [];
+      const matches = [];
+      const lines = content.split('\n');
+      lines.forEach((line, idx) => {
+        if (/\b(url|href|pathname|req\.url)\.(includes|indexOf)\s*\(\s*['"][a-zA-Z0-9_-]+\.[a-zA-Z]{2,}/i.test(line)) {
           matches.push({ line: idx + 1, snippet: line.trim() });
         }
       });

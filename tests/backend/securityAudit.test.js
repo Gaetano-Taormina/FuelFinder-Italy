@@ -42,6 +42,16 @@ describe('Local Security Audit Script (scripts/security-audit.js)', () => {
     expect(timingRule.check('crypto.timingSafeEqual(a, b)', 'server/test.js')).toEqual([]);
     expect(timingRule.check('if (clientPasskey === adminPasskey)', 'server/test.js').length).toBe(1);
     expect(timingRule.check('if (clientPasskey === adminPasskey)', 'tests/test.js')).toEqual([]);
+
+    const redirectRule = SECURITY_RULES.find(r => r.id === 'SEC-006-OPEN-REDIRECT');
+    expect(redirectRule.check('res.redirect(301, "/safe/path")', 'server/test.js')).toEqual([]);
+    expect(redirectRule.check('res.redirect(301, `${req.url}`)', 'server/test.js').length).toBe(1);
+    expect(redirectRule.check('res.redirect(301, `${req.url}`)', 'tests/test.js')).toEqual([]);
+
+    const urlRule = SECURITY_RULES.find(r => r.id === 'SEC-007-INCOMPLETE-URL-SANITIZATION');
+    expect(urlRule.check('url.startsWith("https://domain.com")', 'src/test.js')).toEqual([]);
+    expect(urlRule.check('if (url.includes("example.com"))', 'src/test.js').length).toBe(1);
+    expect(urlRule.check('if (url.includes("example.com"))', 'scripts/security-audit.js')).toEqual([]);
   });
 
   it('runs static security audit and reports clean codebase', () => {

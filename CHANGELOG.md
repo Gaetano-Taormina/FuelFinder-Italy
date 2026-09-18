@@ -16,6 +16,10 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.1.0/)
 
 - **Refined Test Suite Harness:** Consolidamento e ottimizzazione della test suite con copertura al 100% su tutte le metriche (Linee, Funzioni, Istruzioni e Rami).
 
+### Fixed
+
+- **CodeQL Incomplete URL Sanitization:** Sostituzione dei controlli `url.includes()` con `url.startsWith()` per gli endpoint OSRM nei mock di navigazione e introduzione della regola statica preventiva `SEC-007` in `scripts/security-audit.js`.
+
 ## [1.5.3] - 2026-09-18
 
 ### Added

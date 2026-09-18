@@ -34,7 +34,7 @@ test.describe('E2E: Zero Console Errors & Service Worker Audit', () => {
     page.on('requestfailed', (req) => {
       // Ignora richieste opzionali di telemetria o tile esterne non critiche se fallite per timeout offline
       const url = req.url();
-      if (url.includes('localhost') || url.includes('/assets/') || url.includes('/sw.js') || url.includes('/it/')) {
+      if (url.startsWith('http://localhost') || url.includes('/assets/') || url.includes('/sw.js') || url.includes('/it/')) {
         errorLogs.push(`[RequestFailed] ${req.url()} - ${req.failure()?.errorText}`);
       }
     });

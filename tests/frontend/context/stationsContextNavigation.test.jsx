@@ -92,7 +92,7 @@ describe('StationsContext - Navigation & OSRM Routing', () => {
   it('handles OSRM fetch rejection gracefully', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     global.fetch = vi.fn(async (url) => {
-      if (typeof url === 'string' && url.includes('router.project-osrm.org')) {
+      if (typeof url === 'string' && url.startsWith('https://router.project-osrm.org/')) {
         throw new Error('Network error');
       }
       return { ok: true, json: async () => ({}) };
@@ -116,7 +116,7 @@ describe('StationsContext - Navigation & OSRM Routing', () => {
     vi.useFakeTimers();
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     global.fetch = vi.fn((url) => {
-      if (typeof url === 'string' && url.includes('router.project-osrm.org')) {
+      if (typeof url === 'string' && url.startsWith('https://router.project-osrm.org/')) {
         return new Promise(() => {});
       }
       return Promise.resolve({ ok: true, json: async () => ({}) });
