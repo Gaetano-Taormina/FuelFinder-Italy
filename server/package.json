@@ -1,0 +1,20 @@
+{
+  "name": "server",
+  "private": true,
+  "version": "1.6.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js",
+    "sync": "node sync-cli.js",
+    "stats": "node stats-cli.js"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.18.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "escape-html": "^1.0.3",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0"
+  }
+}

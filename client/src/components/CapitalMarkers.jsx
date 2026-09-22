@@ -1,4 +1,3 @@
-
 import { Marker, Popup } from 'react-leaflet';
 import { memo, useMemo } from 'react';
 import L from 'leaflet';
@@ -6,38 +5,14 @@ import L from 'leaflet';
 const capitals = [
     { name: 'Italy', capital: 'Rome', lat: 41.9028, lng: 12.4964, code: 'it', rotation: '12deg', isMirrored: false },
     { name: 'San Marino', capital: 'San Marino', lat: 43.9424, lng: 12.4578, code: 'sm', rotation: '8deg', isMirrored: true },
-    { name: 'Vatican City', capital: 'Vatican', lat: 41.9022, lng: 12.4533, code: 'va', rotation: '-15deg', isMirrored: true, isSticker: true },
+    { name: 'Vatican City', capital: 'Vatican', lat: 41.9022, lng: 12.4533, code: 'va', rotation: '-15deg', isMirrored: true },
     { name: 'France', capital: 'Paris', lat: 48.8566, lng: 2.3522, code: 'fr', rotation: '-5deg', isMirrored: false },
     { name: 'Switzerland', capital: 'Bern', lat: 46.9480, lng: 7.4474, code: 'ch', rotation: '5deg', isMirrored: false },
     { name: 'Austria', capital: 'Vienna', lat: 48.2082, lng: 16.3738, code: 'at', rotation: '10deg', isMirrored: false },
     { name: 'Slovenia', capital: 'Ljubljana', lat: 46.0569, lng: 14.5058, code: 'si', rotation: '-8deg', isMirrored: false }
 ];
 
-
-
-const capitalIcon = (code, rotation, isMirrored = false, isSticker = false) => {
-    if (isSticker) {
-        return L.divIcon({
-            className: 'custom-capital-container',
-            html: `
-                <div class="hover:scale-110 transition-transform duration-300 z-50 flex flex-col items-center justify-end" 
-                     style="width: 40px; height: 60px; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.5));">
-                    <svg viewBox="0 0 24 24" fill="#fbbf24" stroke="#78350f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width: 100%; height: 100%;">
-                        <path d="M4 22h16v-8l-8-5-8 5v8z" />
-                        <path d="M10 22v-5a2 2 0 0 1 4 0v5" fill="#78350f" />
-                        <path d="M8 9l4-3 4 3V4h-8z" />
-                        <circle cx="12" cy="6.5" r="1.5" fill="#78350f" />
-                        <path d="M12 1v3" />
-                        <path d="M10.5 2.5h3" />
-                    </svg>
-                    <div style="width: 6px; height: 6px; background: #78350f; border-radius: 50%; margin-top: -3px; z-index: 10;"></div>
-                </div>
-            `,
-            iconSize: [40, 60],
-            iconAnchor: [20, 60]
-        });
-    }
-
+const capitalIcon = (code, _rotation, isMirrored = false) => {
     const anchorX = isMirrored ? 46 : 2;
     const typeClass = isMirrored ? 'mirrored' : 'normal';
     const waveClass = isMirrored ? 'animate-wave-mirrored' : 'animate-wave';
@@ -63,7 +38,7 @@ const capitalIcon = (code, rotation, isMirrored = false, isSticker = false) => {
 
 const CapitalMarker = memo(function CapitalMarker({ cap }) {
     const position = useMemo(() => [cap.lat, cap.lng], [cap.lat, cap.lng]);
-    const icon = useMemo(() => capitalIcon(cap.code, cap.rotation, cap.isMirrored, cap.isSticker), [cap.code, cap.rotation, cap.isMirrored, cap.isSticker]);
+    const icon = useMemo(() => capitalIcon(cap.code, cap.rotation, cap.isMirrored), [cap.code, cap.rotation, cap.isMirrored]);
     const bgStyle = useMemo(() => ({ backgroundImage: `url('https://flagcdn.com/${cap.code}.svg')` }), [cap.code]);
 
     return (
