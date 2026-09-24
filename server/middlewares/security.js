@@ -22,9 +22,12 @@ export const shouldSkipRateLimit = (req) => {
     return userAgent.includes('googlebot') || userAgent.includes('bingbot') || userAgent.includes('yandexbot');
 };
 
+const windowMs = process.env.RATE_LIMIT_WINDOW_MS ? Number(process.env.RATE_LIMIT_WINDOW_MS) : 60 * 1000;
+const limit = process.env.RATE_LIMIT_MAX ? Number(process.env.RATE_LIMIT_MAX) : 600;
+
 export const rateLimiter = rateLimit({
-    windowMs: 60 * 1000, // 1 minuto
-    limit: 600, // Massimo 600 richieste al minuto per IP
+    windowMs, // Durata finestra temporale in ms
+    limit, // Massimo richieste per IP nella finestra
     standardHeaders: true, // Ritorna le intestazioni standard RateLimit-*
     legacyHeaders: false, // Disabilita X-RateLimit-* deprecate
     skip: shouldSkipRateLimit,

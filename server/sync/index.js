@@ -2,7 +2,14 @@
 import { createClient } from "@libsql/client";
 import path from "path";
 import fs from "fs";
-import "dotenv/config";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, "..", "..", ".env") });
+dotenv.config();
+
+const defaultServerDir = path.join(__dirname, "..");
 
 import { URL_ANAGRAFICA, URL_PREZZI, checkUpdates, downloadFile } from "./network.js";
 import { initSchema, getLastModified, loadExistingData, applyChanges, setLastModified } from "./database.js";
@@ -21,7 +28,7 @@ export async function sync(dbClient, retries = 3, options = {}) {
   }
 
   if (!dbClient) {
-    const localDbPath = path.join(process.env.DATA_DIR || path.join(process.cwd(), "server"), "database.sqlite");
+    const localDbPath = path.join(process.env.DATA_DIR || defaultServerDir, "database.sqlite");
     dbClient = createClient({ url: `file:${localDbPath}` });
   }
 
@@ -44,7 +51,7 @@ async function doSync(db, options = {}) {
   console.time('⏱️ Sync Completed In');
 
   try {
-    const localDbPath = path.join(process.env.DATA_DIR || path.join(process.cwd(), "server"), "database.sqlite");
+    const localDbPath = path.join(process.env.DATA_DIR || defaultServerDir, "database.sqlite");
     let localDb = db;
     if (fs.existsSync(localDbPath)) {
       try {

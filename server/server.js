@@ -3,7 +3,13 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
-import 'dotenv/config';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+dotenv.config();
+
 import { createClient } from '@libsql/client';
 
 import { modernCompression } from './middlewares/modernCompression.js';
@@ -72,20 +78,22 @@ app.use(createInitBlockerMiddleware(() => isReady));
 
 // 4. Global Middlewares
 app.use(modernCompression());
-app.use(cors());
+const corsOrigin = process.env.CORS_ORIGIN || '*';
+app.use(cors({ origin: corsOrigin === '*' ? '*' : corsOrigin.split(',').map((s) => s.trim()) }));
 app.use(express.json());
-app.use(timeoutMiddleware(10000));
+app.use(timeoutMiddleware());
 app.use(securityHeaders);
 app.use(rateLimiter);
 app.use(analyticsMiddleware);
 
 // 5. Database Initialization
-const localDbPath = path.join(process.env.DATA_DIR || path.join(process.cwd(), 'server'), 'database.sqlite');
-const PORT = process.env.PORT || 3001;
+const localDbPath = path.join(process.env.DATA_DIR || __dirname, 'database.sqlite');
+const PORT = Number(process.env.PORT || process.env.SERVER_PORT) || 3001;
+const HOST = process.env.HOST || '0.0.0.0';
 
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, HOST, () => {
     console.group('🚀 FuelFinder Italy Server');
-    console.info(`Status: Starting up (Port: ${PORT})`);
+    console.info(`Status: Starting up (Host: ${HOST}, Port: ${PORT})`);
     console.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
     console.groupEnd();
 });
@@ -132,19 +140,24 @@ async function initServer() {
         // --- SITEMAPS (XML) ---
         setupSitemapRoutes(app);
 
-        // --- FRONTEND STATIC ASSETS ---
-        const distPath = path.join(process.cwd(), 'dist');
-        app.use(express.static(distPath, {
-            index: false,
-            maxAge: '1y',
-            setHeaders: (res, filePath) => {
-                if (filePath.includes('/assets/') || filePath.endsWith('.png') || filePath.endsWith('.webp') || filePath.endsWith('.svg') || filePath.endsWith('.js') || filePath.endsWith('.css')) {
-                    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-                } else {
-                    res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+        // --- FRONTEND STATIC ASSETS (Se presenti in locale o container condiviso) ---
+        const clientDistPath = path.join(process.cwd(), 'client', 'dist');
+        const rootDistPath = path.join(process.cwd(), 'dist');
+        const distPath = fs.existsSync(clientDistPath) ? clientDistPath : rootDistPath;
+
+        if (fs.existsSync(distPath)) {
+            app.use(express.static(distPath, {
+                index: false,
+                maxAge: '1y',
+                setHeaders: (res, filePath) => {
+                    if (filePath.includes('/assets/') || filePath.endsWith('.png') || filePath.endsWith('.webp') || filePath.endsWith('.svg') || filePath.endsWith('.js') || filePath.endsWith('.css')) {
+                        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+                    } else {
+                        res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+                    }
                 }
-            }
-        }));
+            }));
+        }
 
         // --- SEO REDIRECTS ---
         app.use(seoRedirectMiddleware);

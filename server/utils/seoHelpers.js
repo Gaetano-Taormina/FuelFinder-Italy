@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 
 export const slugify = (text) => {
     return text.toString().toLowerCase()
@@ -11,7 +12,8 @@ export const slugify = (text) => {
         .replace(/-+$/, '');
 };
 
-const citiesDataPath = path.join(process.cwd(), 'server', 'data', 'cities.json');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const citiesDataPath = path.join(__dirname, '..', 'data', 'cities.json');
 const citiesData = JSON.parse(fs.readFileSync(citiesDataPath, 'utf8'));
 export const cities = citiesData.map(c => c.name);
 export const citySlugMap = new Map(citiesData.map(c => [slugify(c.name), c.name]));

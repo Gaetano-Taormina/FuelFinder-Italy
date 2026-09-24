@@ -27,7 +27,12 @@ export class SsrController {
     constructor(dbProvider) {
         this.dbProvider = dbProvider;
         this.htmlCache = new Map();
-        this.indexPath = path.join(process.cwd(), 'dist', 'index.html');
+    }
+
+    getIndexPath() {
+        const clientDist = path.join(process.cwd(), 'client', 'dist', 'index.html');
+        if (fs.existsSync(clientDist)) return clientDist;
+        return path.join(process.cwd(), 'dist', 'index.html');
     }
 
     getDb() {
@@ -87,7 +92,8 @@ export class SsrController {
                     station = await stationRepo.findStationById(stationId);
                 }
                 if (!station) {
-                    return res.status(404).sendFile(this.indexPath);
+                    const indexPath = this.getIndexPath();
+                    return fs.existsSync(indexPath) ? res.status(404).sendFile(indexPath) : res.status(404).json({ error: 'Station not found' });
                 }
                 cacheKey = `${lang}_station_${station.id}_${stationMatch[6] ? slugify(rawFuel) : 'all'}`;
             } else if (cityMatch) {
@@ -105,7 +111,8 @@ export class SsrController {
                 const realCityObj = citySlugMap.get(normalizedSlug);
                 
                 if (!realCityObj) {
-                    return res.status(404).sendFile(this.indexPath);
+                    const indexPath = this.getIndexPath();
+                    return fs.existsSync(indexPath) ? res.status(404).sendFile(indexPath) : res.status(404).json({ error: 'City not found' });
                 }
 
                 
@@ -137,7 +144,11 @@ export class SsrController {
             }
             
             try {
-                const templateHtml = await fs.promises.readFile(this.indexPath, 'utf-8');
+                const indexPath = this.getIndexPath();
+                if (!fs.existsSync(indexPath)) {
+                    return res.status(200).json({ status: 'FuelFinder Headless API Online', route: req.path });
+                }
+                const templateHtml = await fs.promises.readFile(indexPath, 'utf-8');
                 const host = getSafeHost(req);
 
                 let renderedHtml = '';
@@ -259,6 +270,10 @@ export class SsrController {
         }
 
         // Fallback per tutte le rotte non gestite o 404
-        res.status(404).sendFile(this.indexPath);
+        const indexPath = this.getIndexPath();
+        if (fs.existsSync(indexPath)) {
+            return res.status(404).sendFile(indexPath);
+        }
+        res.status(404).json({ error: 'Not Found' });
     }
 }

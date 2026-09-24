@@ -1,9 +1,15 @@
 /* oxlint-disable no-console */
 import * as readline from 'node:readline/promises';
 import crypto from 'crypto';
-import 'dotenv/config';
-import { createClient } from '@libsql/client';
 import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+dotenv.config();
+
+import { createClient } from '@libsql/client';
 
 const ADMIN_PASSKEY = process.env.ADMIN_PASSKEY;
 
@@ -39,9 +45,8 @@ const rl = readline.createInterface({
     const daysInput = await rl.question('Quanti giorni indietro vuoi analizzare? (es. 7, premi Invio per tutti): ');
     const daysLimit = parseInt(daysInput.trim(), 10) || Infinity;
     
-    rl.close();
-
-    const dbPath = path.join(process.env.DATA_DIR || path.join(process.cwd(), 'server'), 'database.sqlite');
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const dbPath = path.join(process.env.DATA_DIR || __dirname, 'database.sqlite');
     
     try {
         const db = createClient({ url: `file:${dbPath}` });

@@ -1,5 +1,5 @@
 /* oxlint-disable no-console */
-export const timeoutMiddleware = (ms = 10000) => {
+export const timeoutMiddleware = (ms = process.env.REQUEST_TIMEOUT_MS ? Number(process.env.REQUEST_TIMEOUT_MS) : 10000) => {
     return (req, res, next) => {
         // Express non ha un timeout nativo che interrompe l'esecuzione lato server,
         // ma possiamo rispondere 504 se supera la soglia.

@@ -1,12 +1,17 @@
 /* oxlint-disable no-console */
 import { createClient } from '@libsql/client';
 import path from 'path';
-import 'dotenv/config';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+dotenv.config();
 
 async function migrate() {
     console.log("[INFO] Inizio migrazione schema database locale...");
     
-    const dbPath = path.join(process.env.DATA_DIR || path.join(process.cwd(), 'server'), 'database.sqlite');
+    const dbPath = path.join(process.env.DATA_DIR || __dirname, 'database.sqlite');
     const client = createClient({
         url: `file:${dbPath}`
     });

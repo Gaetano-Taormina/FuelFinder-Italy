@@ -31,13 +31,15 @@ export async function checkUpdates(lastModifiedHeader, timeoutMs = 30000) {
   return { shouldUpdate: true, newLastModified };
 }
 
+import os from "node:os";
+
 export async function downloadFile(url, timeoutMs = 60000) {
   const response = await fetch(url, {
     signal: AbortSignal.timeout(timeoutMs)
   });
   if (!response.ok) throw new Error(`Errore Server MIMIT - HTTP ${response.status}`);
 
-  const tmpFile = path.join(process.cwd(), "server", `temp_${Date.now()}.csv`);
+  const tmpFile = path.join(os.tmpdir(), `fuelfinder_temp_${Date.now()}.csv`);
   const webStream = Readable.fromWeb(response.body);
   await pipeline(webStream, fs.createWriteStream(tmpFile));
   

@@ -1,13 +1,19 @@
 /* oxlint-disable no-console */
-import 'dotenv/config';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import dotenv from 'dotenv';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+dotenv.config();
+
 import { createClient } from '@libsql/client';
 import { sync } from './sync/index.js';
 
 const args = new Set(process.argv.slice(2));
 const isDryRun = args.has('--dry-run');
 
-const localDbPath = path.join(process.env.DATA_DIR || path.join(process.cwd(), 'server'), 'database.sqlite');
+const localDbPath = path.join(process.env.DATA_DIR || __dirname, 'database.sqlite');
 
 console.group('⚙️ [CLI] Database Sync Runner');
 console.info(`Mode: LOCAL SQLite`);

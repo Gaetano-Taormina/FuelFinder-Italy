@@ -1,17 +1,21 @@
 /* oxlint-disable no-console */
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import crypto from 'node:crypto';
 import { getDailyStats } from '../middlewares/analytics.js';
 import { validateStationsInput } from '../validators/apiValidator.js';
 import { StationService } from '../services/stationService.js';
+import { slugify } from '../utils/seoHelpers.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 let cityDataCache = null;
 let cityDataEtag = null;
 let citySlugMap = null;
 const getCityData = () => {
     if (!cityDataCache) {
-        const citiesPath = path.join(process.cwd(), 'server', 'data', 'cities.json');
+        const citiesPath = path.join(__dirname, '..', 'data', 'cities.json');
         cityDataCache = JSON.parse(fs.readFileSync(citiesPath, 'utf8'));
         cityDataEtag = `"${crypto.createHash('md5').update(JSON.stringify(cityDataCache)).digest('hex')}"`;
         
@@ -21,17 +25,6 @@ const getCityData = () => {
         }
     }
     return cityDataCache;
-};
-
-
-const slugify = (text) => {
-    return text.toString().toLowerCase()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-        .replace(/['\s_]+/g, '-')
-        .replace(/[^\w-]+/g, '')
-        .replace(/--+/g, '-')
-        .replace(/^-+/, '')
-        .replace(/-+$/, '');
 };
 
 const CACHE_TTL = 15 * 60 * 1000; // 15 minuti
