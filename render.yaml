@@ -1,0 +1,38 @@
+services:
+  # --- 1. BACKEND HEADLESS (Web Service Free Tier) ---
+  - type: web
+    name: fuelfinder-backend
+    env: node
+    plan: free
+    rootDir: server
+    buildCommand: pnpm install --prod
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: HOST
+        value: 0.0.0.0
+      - key: CORS_ORIGIN
+        value: "*"
+      - key: DB_DOWNLOAD_URL
+        value: https://github.com/Gaetano-Taormina/FuelFinder-Italy/releases/download/latest-data/database.sqlite.gz
+
+  # --- 2. FRONTEND CLIENT (Static Site Free Tier - 0ms Always On) ---
+  - type: static
+    name: fuelfinder-frontend
+    plan: free
+    rootDir: client
+    buildCommand: pnpm install && pnpm build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: fuelfinder-backend
+          property: host
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
