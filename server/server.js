@@ -64,9 +64,14 @@ app.use(createHealthcheckMiddleware({
     }
 }));
 
+// Serve robots.txt for Googlebot validation during migration
+app.get('/robots.txt', (req, res) => {
+    res.type('text/plain').send('User-agent: *\nAllow: /\n');
+});
+
 // Permanent 301 Redirect for Google Search Console Migration
 app.use((req, res, next) => {
-    if (req.path === '/healthz' || req.path === '/api/health/recover') {
+    if (req.path === '/healthz' || req.path === '/api/health/recover' || req.path === '/robots.txt') {
         return next();
     }
     return res.redirect(301, `https://fuelfinder-italia.onrender.com${req.originalUrl}`);
