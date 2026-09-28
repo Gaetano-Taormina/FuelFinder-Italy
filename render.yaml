@@ -25,7 +25,6 @@ services:
   - type: web
     name: fuelfinder-frontend
     runtime: static
-    plan: free
     branch: publication
     rootDir: client
     buildCommand: pnpm install && pnpm build
