@@ -3,6 +3,7 @@ services:
   - type: web
     name: fuelfinder-backend
     runtime: docker
+    region: frankfurt
     plan: free
     branch: publication
     rootDir: server
