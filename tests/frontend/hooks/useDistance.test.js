@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import { calculateDistance, getDistance, useDistanceLogic } from '../../../src/hooks/useDistance';
+import { calculateDistance, getDistance, useDistanceLogic } from '../../../client/src/hooks/useDistance';
 import { renderHook } from '@testing-library/react';
 
-vi.mock('../../../src/context/StationsContext', () => ({
+vi.mock('../../../client/src/context/StationsContext', () => ({
   useStations: () => ({
     stations: [{ id: 1, name: 'Station 1' }, { id: 2, name: 'Station 2' }]
   })

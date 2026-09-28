@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { fetchStationsNearby } from '../../../src/services/geoWorkerService.js';
+import { fetchStationsNearby } from '../../../client/src/services/geoWorkerService.js';
 
 describe('GeoWorkerService (Shift-Left Backend API)', () => {
   beforeEach(() => {

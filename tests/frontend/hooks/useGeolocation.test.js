@@ -1,7 +1,7 @@
 /* oxlint-disable no-console */
 import { act, renderHook } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { useGeolocation } from '../../../src/hooks/useGeolocation';
+import { useGeolocation } from '../../../client/src/hooks/useGeolocation';
 
 describe('useGeolocation Hook', () => {
     let originalGeolocation;

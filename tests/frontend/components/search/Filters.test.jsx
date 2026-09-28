@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import Filters from '../../../../src/components/search/Filters';
-import * as StationsContext from '../../../../src/context/StationsContext';
+import Filters from '../../../../client/src/components/search/Filters';
+import * as StationsContext from '../../../../client/src/context/StationsContext';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key) => key })

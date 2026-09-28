@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { isWebMcpSupported, registerWebMcpTools } from '../../../src/services/webMcpService';
+import { isWebMcpSupported, registerWebMcpTools } from '../../../client/src/services/webMcpService';
 
 describe('WebMCP Service', () => {
     beforeEach(() => {

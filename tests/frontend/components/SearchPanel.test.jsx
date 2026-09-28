@@ -1,8 +1,8 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import SearchPanel from '../../../src/components/SearchPanel';
+import SearchPanel from '../../../client/src/components/SearchPanel';
 import { BrowserRouter } from 'react-router-dom';
-import * as StationsContext from '../../../src/context/StationsContext';
+import * as StationsContext from '../../../client/src/context/StationsContext';
 
 // Mock delle traduzioni
 vi.mock('react-i18next', () => ({
@@ -19,10 +19,10 @@ vi.mock('react-i18next', () => ({
 }));
 
 // Mock dei componenti figli per isolare il test su SearchPanel
-vi.mock('../../../src/components/search/LocationInput', () => ({
+vi.mock('../../../client/src/components/search/LocationInput', () => ({
   default: () => <div data-testid="location-input-mock">Input</div>
 }));
-vi.mock('../../../src/components/search/Filters', () => ({
+vi.mock('../../../client/src/components/search/Filters', () => ({
   default: () => <div data-testid="filters-mock">Filtri</div>
 }));
 

@@ -8,7 +8,7 @@ import {
   removeFavoriteStation,
   getFavoriteStations,
   isFavoriteStation
-} from '../../../src/services/storageService.js';
+} from '../../../client/src/services/storageService.js';
 
 describe('Storage Service (IndexedDB Persistence)', () => {
   beforeEach(() => {

@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import LocationAutocomplete from '../../../../src/components/search/LocationAutocomplete';
+import LocationAutocomplete from '../../../../client/src/components/search/LocationAutocomplete';
 
 vi.mock('react-i18next', () => ({
     useTranslation: () => ({

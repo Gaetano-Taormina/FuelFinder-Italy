@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import RoutePanel from '../../../src/components/RoutePanel';
-import * as StationsContext from '../../../src/context/StationsContext';
+import RoutePanel from '../../../client/src/components/RoutePanel';
+import * as StationsContext from '../../../client/src/context/StationsContext';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key) => key })

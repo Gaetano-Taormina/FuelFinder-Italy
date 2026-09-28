@@ -5,7 +5,7 @@ import {
   getCityPath,
   getExplorePath,
   getStationPath,
-} from "../../../src/config/routes";
+} from "../../../client/src/config/routes";
 
 describe("routes config", () => {
   it("ROUTES should contain it and en configurations", () => {

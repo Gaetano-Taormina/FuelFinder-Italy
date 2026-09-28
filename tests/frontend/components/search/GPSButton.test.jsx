@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import GPSButton from '../../../../src/components/search/GPSButton';
-import * as GeoHook from '../../../../src/hooks/useGeolocation';
+import GPSButton from '../../../../client/src/components/search/GPSButton';
+import * as GeoHook from '../../../../client/src/hooks/useGeolocation';
 
 vi.mock('react-i18next', () => ({
     useTranslation: () => ({

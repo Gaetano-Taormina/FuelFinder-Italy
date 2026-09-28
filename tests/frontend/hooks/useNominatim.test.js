@@ -1,7 +1,7 @@
 /* oxlint-disable no-console */
 import { act, renderHook } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { useNominatim, clearNominatimCache } from '../../../src/hooks/useNominatim';
+import { useNominatim, clearNominatimCache } from '../../../client/src/hooks/useNominatim';
 
 describe('useNominatim Hook', () => {
     beforeEach(() => {

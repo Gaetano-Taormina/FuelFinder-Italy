@@ -2,12 +2,18 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["client/src/*", "src/*"]
     },
     "jsx": "react-jsx",
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Bundler"
   },
-  "include": ["src/**/*", "tests/**/*", "vite.config.js"]
+  "include": [
+    "client/src/**/*",
+    "server/**/*",
+    "tests/**/*",
+    "client/vite.config.js",
+    "vitest.config.js"
+  ]
 }

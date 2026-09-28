@@ -1,15 +1,15 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, fireEvent } from '@testing-library/react';
-import MapArea, { RouteLayer } from '../../../src/components/MapArea';
+import MapArea, { RouteLayer } from '../../../client/src/components/MapArea';
 
 let mockStationsState = {};
 
-vi.mock('../../../src/context/StationsContext', () => ({
+vi.mock('../../../client/src/context/StationsContext', () => ({
   useStations: () => mockStationsState
 }));
 
-vi.mock('../../../src/hooks/useDistance', () => ({
+vi.mock('../../../client/src/hooks/useDistance', () => ({
   useDistanceLogic: () => mockStationsState.stations || []
 }));
 

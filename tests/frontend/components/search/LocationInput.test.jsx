@@ -1,11 +1,11 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import LocationInput from '../../../../src/components/search/LocationInput';
-import { StationsProvider } from '../../../../src/context/StationsContext';
-import { useNominatim } from '../../../../src/hooks/useNominatim';
+import LocationInput from '../../../../client/src/components/search/LocationInput';
+import { StationsProvider } from '../../../../client/src/context/StationsContext';
+import { useNominatim } from '../../../../client/src/hooks/useNominatim';
 
-vi.mock('../../../../src/hooks/useNominatim', () => ({
+vi.mock('../../../../client/src/hooks/useNominatim', () => ({
     useNominatim: vi.fn()
 }));
 

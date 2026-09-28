@@ -2,8 +2,8 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { SWRConfig } from 'swr';
-import SearchPanel from '../../src/components/SearchPanel';
-import { StationsProvider } from '../../src/context/StationsContext';
+import SearchPanel from '../../client/src/components/SearchPanel';
+import { StationsProvider } from '../../client/src/context/StationsContext';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({

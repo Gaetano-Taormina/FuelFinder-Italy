@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { registerServiceWorker, unregisterServiceWorker } from '../../../src/services/swRegistration.js';
+import { registerServiceWorker, unregisterServiceWorker } from '../../../client/src/services/swRegistration.js';
 
 describe('Service Worker Registration Service', () => {
   const originalEnv = process.env.NODE_ENV;

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import Footer from '../../../src/components/Footer';
+import Footer from '../../../client/src/components/Footer';
 
 // Mock i18n
 vi.mock('react-i18next', () => ({

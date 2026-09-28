@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import Header from '../../../src/components/Header';
+import Header from '../../../client/src/components/Header';
 import { BrowserRouter, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -8,7 +8,7 @@ vi.mock('react-i18next', () => ({
   useTranslation: vi.fn()
 }));
 
-vi.mock('../../../src/components/Sidebar', () => ({
+vi.mock('../../../client/src/components/Sidebar', () => ({
   default: ({ isOpen, cityName, onClose }) => (
     <div data-testid="mock-sidebar">
       Status: {isOpen ? 'Open' : 'Closed'}, City: {cityName}

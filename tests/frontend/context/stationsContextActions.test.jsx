@@ -1,6 +1,6 @@
 import { render, screen, act, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { StationsProvider, useStations } from '../../../src/context/StationsContext';
+import { StationsProvider, useStations } from '../../../client/src/context/StationsContext';
 import { MemoryRouter, useLocation, Routes, Route, useNavigate } from 'react-router-dom';
 import { SWRConfig } from 'swr';
 

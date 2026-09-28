@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import Sidebar from '../../../src/components/Sidebar';
+import Sidebar from '../../../client/src/components/Sidebar';
 import { BrowserRouter } from 'react-router-dom';
 
 vi.mock('react-i18next', () => ({

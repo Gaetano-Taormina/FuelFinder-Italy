@@ -7,7 +7,7 @@ import process from 'node:process';
 
 const ROOT_DIR = process.cwd();
 
-const SCAN_DIRS = ['server', 'src', 'tests', 'scripts', 'public'];
+const SCAN_DIRS = ['server', 'client', 'src', 'tests', 'scripts', 'public'];
 const EXTENSIONS = new Set(['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs']);
 const IGNORE_PATTERNS = ['node_modules', 'dist', '.git', 'coverage'];
 

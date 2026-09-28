@@ -1,6 +1,6 @@
 /* oxlint-disable no-console */
 import { describe, it, expect } from 'vitest';
-import { formatStationName } from '../../../src/utils/formatters';
+import { formatStationName } from '../../../client/src/utils/formatters';
 
 describe('formatStationName', () => {
     it('returns "Distributore" when station name is null or empty', () => {

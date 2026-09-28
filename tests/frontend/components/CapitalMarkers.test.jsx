@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/react';
-import CapitalMarkers from '../../../src/components/CapitalMarkers';
+import CapitalMarkers from '../../../client/src/components/CapitalMarkers';
 
 vi.mock('react-leaflet', () => ({
   Marker: ({ children, position }) => (
