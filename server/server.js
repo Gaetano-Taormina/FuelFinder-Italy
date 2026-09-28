@@ -78,8 +78,34 @@ app.use(createInitBlockerMiddleware(() => isReady));
 
 // 4. Global Middlewares
 app.use(modernCompression());
-const corsOrigin = process.env.CORS_ORIGIN || '*';
-app.use(cors({ origin: corsOrigin === '*' ? '*' : corsOrigin.split(',').map((s) => s.trim()) }));
+
+const ALLOWED_ORIGINS = [
+    'https://fuelfinder-italia.onrender.com',
+    'https://fuelfinder-msn8.onrender.com',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:3001'
+];
+
+if (process.env.CORS_ORIGIN && process.env.CORS_ORIGIN !== '*') {
+    process.env.CORS_ORIGIN.split(',').forEach((o) => {
+        const trimmed = o.trim();
+        if (trimmed && !ALLOWED_ORIGINS.includes(trimmed)) {
+            ALLOWED_ORIGINS.push(trimmed);
+        }
+    });
+}
+
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error('CORS policy: Origin not allowed.'));
+    },
+    methods: ['GET', 'HEAD', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'If-None-Match']
+}));
 app.use(express.json());
 app.use(timeoutMiddleware());
 app.use(securityHeaders);

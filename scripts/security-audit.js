@@ -158,6 +158,23 @@ export const SECURITY_RULES = [
       });
       return matches;
     }
+  },
+  {
+    id: 'SEC-008-PERMISSIVE-CORS',
+    name: 'Permissive CORS Wildcard Configuration (CodeQL js/permissive-cors)',
+    severity: 'MEDIUM',
+    description: 'Using wildcard origin (*) in CORS middleware enables untrusted cross-origin access.',
+    check: (content, filePath = '') => {
+      if (!filePath.includes('server') || filePath.includes('tests') || filePath.includes('security-audit.js')) return [];
+      const matches = [];
+      const lines = content.split('\n');
+      lines.forEach((line, idx) => {
+        if (/cors\s*\(\s*\{\s*origin\s*:\s*['"]\*['"]/.test(line) || /corsOrigin\s*===\s*['"]\*['"]\s*\?\s*['"]\*['"]/.test(line)) {
+          matches.push({ line: idx + 1, snippet: line.trim() });
+        }
+      });
+      return matches;
+    }
   }
 ];
 
