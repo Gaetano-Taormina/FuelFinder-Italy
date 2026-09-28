@@ -64,6 +64,14 @@ app.use(createHealthcheckMiddleware({
     }
 }));
 
+// Permanent 301 Redirect for Google Search Console Migration
+app.use((req, res, next) => {
+    if (req.path === '/healthz' || req.path === '/api/health/recover') {
+        return next();
+    }
+    return res.redirect(301, `https://fuelfinder-italia.onrender.com${req.originalUrl}`);
+});
+
 // 2. Maintenance Mode (503 SEO-friendly)
 app.use(maintenanceMiddleware);
 
