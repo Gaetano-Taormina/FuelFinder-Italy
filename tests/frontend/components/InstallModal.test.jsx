@@ -69,7 +69,7 @@ describe('InstallModal Component', () => {
       fireEvent.click(copyBtn);
     });
 
-    expect(mockWriteText).toHaveBeenCalledWith('https://fuelfinder-msn8.onrender.com/');
+    expect(mockWriteText).toHaveBeenCalledWith('https://fuelfinder-italia.onrender.com/');
     expect(screen.getByText('install_link_copied')).toBeInTheDocument();
 
     act(() => {

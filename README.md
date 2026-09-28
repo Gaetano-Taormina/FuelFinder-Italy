@@ -1,9 +1,9 @@
 # FuelFinder Italia
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-Click_Here-0078D4?style=for-the-badge&logo=render&logoColor=white)](https://fuelfinder-msn8.onrender.com)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Click_Here-0078D4?style=for-the-badge&logo=render&logoColor=white)](https://fuelfinder-italia.onrender.com)
 [![Version](https://img.shields.io/badge/Release-Latest-brightgreen?style=for-the-badge)](https://github.com/Gaetano-Taormina/FuelFinder-Italy/releases)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen?style=for-the-badge&logo=vitest&logoColor=white)](https://github.com/Gaetano-Taormina/FuelFinder-Italy)
-[![Lighthouse](https://img.shields.io/badge/lighthouse-100%2F100-success?style=for-the-badge&logo=lighthouse&logoColor=white)](https://fuelfinder-msn8.onrender.com)
+[![Lighthouse](https://img.shields.io/badge/lighthouse-100%2F100-success?style=for-the-badge&logo=lighthouse&logoColor=white)](https://fuelfinder-italia.onrender.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Node](https://img.shields.io/badge/node-runtime-informational?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![pnpm](https://img.shields.io/badge/pnpm-workspace-orange?style=for-the-badge&logo=pnpm&logoColor=white)](https://pnpm.io/)
@@ -64,7 +64,7 @@ The data shown is real and based on official Open Data from the Italian Ministry
 
 Scan the QR Code below with your smartphone camera to open FuelFinder Italy and install it directly onto your Home Screen:
 
-![FuelFinder Mobile QR Code](https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&data=https%3A%2F%2Ffuelfinder-msn8.onrender.com%2F)
+![FuelFinder Mobile QR Code](https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&data=https%3A%2F%2Ffuelfinder-italia.onrender.com%2F)
 
 ### Scripts and Commands
 
@@ -151,7 +151,7 @@ I dati mostrati sono reali e basati sugli Open Data ufficiali del Ministero dell
 
 Inquadra il codice QR con la fotocamera del tuo smartphone per aprire FuelFinder Italia e aggiungerlo alla schermata Home:
 
-![FuelFinder QR Code Mobile](https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&data=https%3A%2F%2Ffuelfinder-msn8.onrender.com%2F)
+![FuelFinder QR Code Mobile](https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&data=https%3A%2F%2Ffuelfinder-italia.onrender.com%2F)
 
 ### Script e Comandi
 

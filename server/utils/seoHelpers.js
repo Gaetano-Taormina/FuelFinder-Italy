@@ -80,5 +80,5 @@ export const getSafeHost = (req) => {
         const proto = req.protocol === 'http' && (rawHost.startsWith('localhost') || rawHost.startsWith('127.0.0.1')) ? 'http' : 'https';
         return `${proto}://${rawHost}`;
     }
-    return 'https://fuelfinder-msn8.onrender.com';
+    return 'https://fuelfinder-italia.onrender.com';
 };

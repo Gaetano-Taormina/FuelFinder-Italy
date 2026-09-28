@@ -26,8 +26,8 @@ describe('SEO Helpers', () => {
     it('getSafeHost validates protocols and hosts', () => {
         expect(getSafeHost({ get: () => 'localhost:3000', protocol: 'http' })).toBe('http://localhost:3000');
         expect(getSafeHost({ get: () => 'example.com', protocol: 'https' })).toBe('https://example.com');
-        expect(getSafeHost({ get: () => 'invalid host with spaces', protocol: 'https' })).toBe('https://fuelfinder-msn8.onrender.com');
-        expect(getSafeHost(null)).toBe('https://fuelfinder-msn8.onrender.com');
+        expect(getSafeHost({ get: () => 'invalid host with spaces', protocol: 'https' })).toBe('https://fuelfinder-italia.onrender.com');
+        expect(getSafeHost(null)).toBe('https://fuelfinder-italia.onrender.com');
     });
 });
 

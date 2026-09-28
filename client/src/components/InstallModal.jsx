@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 const InstallModal = memo(function InstallModal({ isOpen, onClose }) {
     const { t } = useTranslation();
     const [copied, setCopied] = useState(false);
-    const appUrl = 'https://fuelfinder-msn8.onrender.com/';
+    const appUrl = 'https://fuelfinder-italia.onrender.com/';
     const qrCodeUrl = '/assets/img/qr-code.svg';
 
     const handleCopy = useCallback(async () => {
