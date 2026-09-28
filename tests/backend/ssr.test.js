@@ -4,7 +4,7 @@ import request from 'supertest';
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import { createClient } from '@libsql/client';
+import { createTestDb } from '../helpers/testDbFactory.js';
 import { setupSsrRoutes } from '../../server/routes/ssr.js';
 import { seoRedirectMiddleware } from '../../server/middlewares/seoRedirect.js';
 import { SsrController } from '../../server/controllers/ssrController.js';
@@ -14,6 +14,8 @@ describe('SSR Routes & Controller & SEO Redirects', () => {
     let db;
     let distDir;
     let indexPath;
+    let clientDistDir;
+    let clientIndexPath;
 
     beforeAll(async () => {
         distDir = path.join(process.cwd(), 'dist');
@@ -25,31 +27,16 @@ describe('SSR Routes & Controller & SEO Redirects', () => {
             fs.writeFileSync(indexPath, `<!DOCTYPE html><html><head><title>FuelFinder</title><link rel="canonical" href="old"><meta name="description" content="old"></head><body><div id="root"></div></body></html>`, 'utf-8');
         }
 
-        db = createClient({ url: 'file::memory:' });
-        await db.execute(`
-            CREATE TABLE IF NOT EXISTS stations (
-                id INTEGER PRIMARY KEY,
-                gestore TEXT,
-                bandiera TEXT,
-                tipo_impianto TEXT,
-                nome_impianto TEXT,
-                indirizzo TEXT,
-                comune TEXT,
-                provincia TEXT,
-                latitudine REAL,
-                longitudine REAL
-            );
-        `);
-        await db.execute(`
-            CREATE TABLE IF NOT EXISTS prices (
-                id_impianto INTEGER,
-                desc_carburante TEXT,
-                prezzo REAL,
-                is_self INTEGER,
-                dt_comunicazione TEXT,
-                UNIQUE(id_impianto, desc_carburante, is_self)
-            );
-        `);
+        clientDistDir = path.join(process.cwd(), 'client', 'dist');
+        clientIndexPath = path.join(clientDistDir, 'index.html');
+        if (!fs.existsSync(clientDistDir)) {
+            fs.mkdirSync(clientDistDir, { recursive: true });
+        }
+        if (!fs.existsSync(clientIndexPath)) {
+            fs.writeFileSync(clientIndexPath, `<!DOCTYPE html><html><head><title>FuelFinder</title><link rel="canonical" href="old"><meta name="description" content="old"></head><body><div id="root"></div></body></html>`, 'utf-8');
+        }
+
+        db = await createTestDb({ seedDefault: false });
         await db.execute({
             sql: `INSERT INTO stations VALUES (1, 'Eni', 'Eni', 'Stradale', 'Eni Roma', 'Via Roma 1', 'Roma', 'RM', 41.9, 12.5)`,
             args: []
@@ -344,6 +331,21 @@ describe('SSR Routes & Controller & SEO Redirects', () => {
         expect(resMiss304.status).toBe(304);
         expect(resMiss304.text).toBe('');
     });
+
+    it('resolves getIndexPath correctly when client/dist exists or falls back to dist', () => {
+        const controller = new SsrController(() => db);
+        const resolvedPath = controller.getIndexPath();
+        expect(resolvedPath).toBe(clientIndexPath);
+
+        // Temporarily remove client/dist/index.html to trigger fallback to dist/index.html
+        fs.rmSync(clientIndexPath, { force: true });
+        const fallbackPath = controller.getIndexPath();
+        expect(fallbackPath).toBe(indexPath);
+
+        // Restore client/dist/index.html
+        fs.writeFileSync(clientIndexPath, '<!DOCTYPE html><html><head><title>FuelFinder</title></head><body><div id="root"></div></body></html>', 'utf-8');
+    });
 });
+
 
 

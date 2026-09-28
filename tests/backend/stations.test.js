@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import request from 'supertest';
 import express from 'express';
-import { createClient } from '@libsql/client';
+import { createTestDb } from '../helpers/testDbFactory.js';
 import { setupApiRoutes } from '../../server/routes/api.js';
 import { globalErrorHandler } from '../../server/middlewares/errorHandler.js';
 
@@ -13,33 +13,7 @@ let consoleSpy;
 beforeAll(async () => {
     consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    db = createClient({ url: 'file::memory:' });
-
-    await db.execute(`
-        CREATE TABLE IF NOT EXISTS stations (
-            id INTEGER PRIMARY KEY,
-            gestore TEXT,
-            bandiera TEXT,
-            tipo_impianto TEXT,
-            nome_impianto TEXT,
-            indirizzo TEXT,
-            comune TEXT,
-            provincia TEXT,
-            latitudine REAL,
-            longitudine REAL
-        );
-    `);
-    
-    await db.execute(`
-        CREATE TABLE IF NOT EXISTS prices (
-            id_impianto INTEGER,
-            desc_carburante TEXT,
-            prezzo REAL,
-            is_self INTEGER,
-            dt_comunicazione TEXT,
-            UNIQUE(id_impianto, desc_carburante, is_self)
-        );
-    `);
+    db = await createTestDb({ seedDefault: false });
 
     await db.execute({
         sql: `INSERT INTO stations (id, gestore, bandiera, tipo_impianto, nome_impianto, indirizzo, comune, provincia, latitudine, longitudine) 

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import express from 'express';
 import supertest from 'supertest';
-import { createClient } from '@libsql/client';
+import { createTestDb } from '../helpers/testDbFactory.js';
 import { modernCompression } from '../../server/middlewares/modernCompression.js';
 import { ApiController } from '../../server/controllers/apiController.js';
 
@@ -10,31 +10,7 @@ describe('Integration Pipeline: Express Server API + Controller + SQLite + Compr
     let db;
 
     beforeEach(async () => {
-        db = createClient({ url: 'file::memory:' });
-
-        // Inizializza schema tabelle in memoria
-        await db.batch([
-            `CREATE TABLE stations (
-                id INTEGER PRIMARY KEY,
-                gestore TEXT,
-                bandiera TEXT,
-                tipo_impianto TEXT,
-                nome_impianto TEXT,
-                indirizzo TEXT,
-                comune TEXT,
-                provincia TEXT,
-                latitudine REAL,
-                longitudine REAL
-            );`,
-            `CREATE TABLE prices (
-                id_impianto INTEGER,
-                desc_carburante TEXT,
-                prezzo REAL,
-                is_self INTEGER,
-                dt_comunicazione TEXT,
-                UNIQUE(id_impianto, desc_carburante, is_self)
-            );`
-        ], 'write');
+        db = await createTestDb({ seedDefault: false });
 
         // Popola con stazioni test
         await db.execute({
