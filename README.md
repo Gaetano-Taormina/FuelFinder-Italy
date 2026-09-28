@@ -24,7 +24,14 @@
 
 - [English Version](#english-version)
 - [Versione Italiana](#versione-italiana)
+- [Architecture Evolution & Engineering Retrospective (Deep-Dive)](ARCHITECTURE_EVOLUTION.md)
 - [Changelog](CHANGELOG.md)
+
+---
+
+## 🎬 App Preview / Anteprima
+
+![FuelFinder Italy Interactive Map & Pricing Preview](client/public/assets/img/demo.svg)
 
 ---
 

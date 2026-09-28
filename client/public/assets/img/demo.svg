@@ -1,0 +1,382 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 820" width="100%" height="100%" style="background:#0f172a; font-family:ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+  <defs>
+    <!-- Shadow & Glow Filters -->
+    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.35" />
+    </filter>
+    <filter id="routeGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="pulseGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <style>
+    @keyframes gpsPulse {
+      0% { r: 6px; opacity: 0.8; }
+      100% { r: 22px; opacity: 0; }
+    }
+    @keyframes routeFlow {
+      from { stroke-dashoffset: 40; }
+      to { stroke-dashoffset: 0; }
+    }
+    .gps-ring { animation: gpsPulse 2s cubic-bezier(0.2, 0.8, 0.2, 1) infinite; }
+    .route-animated { stroke-dasharray: 8, 6; animation: routeFlow 1.8s linear infinite; }
+  </style>
+
+  <!-- ================= 1. APP HEADER ================= -->
+  <!-- Header Background with border-b-4 border-slate-600 -->
+  <rect x="0" y="0" width="1280" height="74" fill="#1e293b" />
+  <line x1="0" y1="72" x2="1280" y2="72" stroke="#475569" stroke-width="4" />
+
+  <!-- Italian Slanted Flag Accent (Top Right) -->
+  <g transform="translate(1060, 0) skewX(-40)" opacity="0.45">
+    <rect x="0" y="0" width="55" height="72" fill="#009246" />
+    <rect x="55" y="0" width="55" height="72" fill="#e2e8f0" />
+    <rect x="110" y="0" width="55" height="72" fill="#ce2b37" />
+  </g>
+
+  <!-- Header Inner (max-w-7xl) -->
+  <g transform="translate(48, 14)">
+    <!-- App Logo Icon -->
+    <rect x="0" y="0" width="44" height="44" rx="12" fill="#2563eb" filter="url(#cardShadow)" />
+    <!-- Fuel Pump & Droplet Icon -->
+    <path d="M 14 11 L 26 11 C 28 11 29 12 29 14 L 29 33 L 11 33 L 11 14 C 11 12 12 11 14 11 Z" fill="#ffffff" />
+    <rect x="14" y="14" width="8" height="7" rx="1" fill="#1e293b" />
+    <path d="M 26 17 L 31 22 L 31 29" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    <circle cx="31" cy="30" r="1.5" fill="#38bdf8" />
+
+    <!-- App Title -->
+    <text x="56" y="28" fill="#ffffff" font-size="24" font-weight="900" letter-spacing="-0.5">FuelFinder</text>
+
+    <!-- Glassmorphic Badge: Dati Ufficiali MIMIT -->
+    <g transform="translate(200, 4)">
+      <rect x="0" y="0" width="310" height="34" rx="17" fill="#1e293b" fill-opacity="0.85" stroke="#475569" stroke-width="1" />
+      <text x="18" y="21" fill="#e2e8f0" font-size="12" font-weight="700">Dati Ufficiali MIMIT • Aggiornati Ogni 2 Ore</text>
+      <circle cx="282" cy="17" r="3" fill="#94a3b8" />
+    </g>
+  </g>
+
+  <!-- ================= 2. SEARCH PANEL (card-panel) ================= -->
+  <g transform="translate(48, 92)">
+    <rect width="1184" height="114" rx="16" fill="#1e293b" stroke="#334155" stroke-width="1.5" filter="url(#cardShadow)" />
+    
+    <!-- Location Search Box -->
+    <g transform="translate(20, 16)">
+      <text x="0" y="12" fill="#cbd5e1" font-size="11" font-weight="700">COMUNE O INDIRIZZO</text>
+      
+      <!-- Input Wrapper -->
+      <g transform="translate(0, 18)">
+        <rect width="320" height="42" rx="10" fill="#0f172a" stroke="#475569" stroke-width="1.5" />
+        <circle cx="18" cy="21" r="5.5" stroke="#94a3b8" stroke-width="1.8" fill="none" />
+        <line x1="22" y1="25" x2="27" y2="30" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round" />
+        <text x="36" y="26" fill="#f8fafc" font-size="14" font-weight="600">Roma, RM</text>
+        
+        <!-- Clear "X" -->
+        <circle cx="298" cy="21" r="8" fill="#334155" />
+        <text x="298" y="25" fill="#94a3b8" font-size="11" font-weight="800" text-anchor="middle">×</text>
+      </g>
+
+      <!-- Search Button (Cerca) -->
+      <g transform="translate(330, 18)">
+        <rect width="84" height="42" rx="10" fill="#2563eb" />
+        <text x="42" y="26" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle">Cerca</text>
+      </g>
+
+      <!-- GPS Button -->
+      <g transform="translate(422, 18)">
+        <rect width="90" height="42" rx="10" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5" />
+        <text x="45" y="26" fill="#60a5fa" font-size="13" font-weight="700" text-anchor="middle">📍 GPS</text>
+      </g>
+    </g>
+
+    <!-- Filters: Radius, Fuel, Service -->
+    <g transform="translate(560, 16)">
+      <!-- Radius Select -->
+      <g transform="translate(0, 0)">
+        <text x="0" y="12" fill="#cbd5e1" font-size="11" font-weight="700">RAGGIO</text>
+        <g transform="translate(0, 18)">
+          <rect width="180" height="42" rx="10" fill="#0f172a" stroke="#475569" stroke-width="1.5" />
+          <text x="14" y="26" fill="#f8fafc" font-size="13" font-weight="600">5 km</text>
+          <path d="M 152 18 L 158 24 L 164 18" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" fill="none" />
+        </g>
+      </g>
+
+      <!-- Fuel Select -->
+      <g transform="translate(196, 0)">
+        <text x="0" y="12" fill="#cbd5e1" font-size="11" font-weight="700">CARBURANTE</text>
+        <g transform="translate(0, 18)">
+          <rect width="200" height="42" rx="10" fill="#0f172a" stroke="#475569" stroke-width="1.5" />
+          <text x="14" y="26" fill="#f8fafc" font-size="13" font-weight="600">Benzina</text>
+          <path d="M 172 18 L 178 24 L 184 18" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" fill="none" />
+        </g>
+      </g>
+
+      <!-- Service Select -->
+      <g transform="translate(412, 0)">
+        <text x="0" y="12" fill="#cbd5e1" font-size="11" font-weight="700">SERVIZIO</text>
+        <g transform="translate(0, 18)">
+          <rect width="190" height="42" rx="10" fill="#0f172a" stroke="#475569" stroke-width="1.5" />
+          <text x="14" y="26" fill="#f8fafc" font-size="13" font-weight="600">Self-Service</text>
+          <path d="M 162 18 L 168 24 L 174 18" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" fill="none" />
+        </g>
+      </g>
+    </g>
+
+    <!-- Search Summary Status Row -->
+    <g transform="translate(20, 90)">
+      <text x="0" y="12" fill="#cbd5e1" font-size="13" font-weight="500">
+        Trovati <tspan fill="#60a5fa" font-weight="800" font-size="15">18</tspan> <tspan fill="#94a3b8">(su 18)</tspan> distributori con prezzi aggiornati
+      </text>
+    </g>
+  </g>
+
+  <!-- ================= 3. TOGGLES & CONTROLS BAR ================= -->
+  <g transform="translate(48, 218)">
+    <!-- Left: Theme Toggle Circle (Dark mode active) -->
+    <circle cx="20" cy="20" r="20" fill="#1e293b" stroke="#64748b" stroke-width="1.5" filter="url(#cardShadow)" />
+    <!-- Moon Icon -->
+    <path d="M 23 13 A 8 8 0 1 1 14 26 A 9 9 0 0 0 23 13 Z" fill="#cbd5e1" />
+
+    <!-- Center: View Mode Segmented Controls -->
+    <g transform="translate(460, 2)">
+      <rect width="264" height="38" rx="12" fill="#1e293b" stroke="#475569" stroke-width="1.5" />
+      
+      <!-- Active: Mappa -->
+      <rect x="4" y="4" width="82" height="30" rx="8" fill="#1d4ed8" filter="url(#cardShadow)" />
+      <g transform="translate(14, 11)">
+        <path d="M 4 14 L 0 12 L 0 2 L 4 4 L 8 2 L 12 4 L 12 14 L 8 12 Z" stroke="#ffffff" stroke-width="1.5" fill="none" />
+      </g>
+      <text x="48" y="23" fill="#ffffff" font-size="12" font-weight="700">Mappa</text>
+
+      <!-- Lista -->
+      <text x="130" y="23" fill="#94a3b8" font-size="12" font-weight="600">Lista</text>
+      
+      <!-- Entrambi -->
+      <text x="208" y="23" fill="#94a3b8" font-size="12" font-weight="600">Entrambi</text>
+    </g>
+
+    <!-- Right: Language Toggle Circle (ITA) -->
+    <g transform="translate(1144, 0)">
+      <circle cx="20" cy="20" r="20" fill="#1e293b" stroke="#64748b" stroke-width="1.5" filter="url(#cardShadow)" />
+      <text x="20" y="25" fill="#60a5fa" font-size="11" font-weight="900" text-anchor="middle">ITA</text>
+    </g>
+  </g>
+
+  <!-- ================= 4. MAP AREA CONTAINER (rounded-[30px] border-4 border-slate-600) ================= -->
+  <g transform="translate(48, 268)">
+    <rect width="1184" height="526" rx="28" fill="#0b1324" stroke="#475569" stroke-width="4" filter="url(#cardShadow)" />
+    
+    <clipPath id="mapAreaClip">
+      <rect width="1184" height="526" rx="28" />
+    </clipPath>
+
+    <g clip-path="url(#mapAreaClip)">
+      <!-- Map CartoDB Dark Tiles Grid Background -->
+      <rect width="1184" height="526" fill="#0d172a" />
+      
+      <!-- Fiume Tevere / River Geometry -->
+      <path d="M 320 0 Q 360 140 440 240 T 560 380 T 640 526" fill="none" stroke="#162b45" stroke-width="36" stroke-linecap="round" />
+      <path d="M 320 0 Q 360 140 440 240 T 560 380 T 640 526" fill="none" stroke="#0e1f33" stroke-width="26" stroke-linecap="round" />
+      <text x="490" y="320" fill="#1e3a5f" font-size="11" font-weight="700" font-style="italic" transform="rotate(38 490 320)">Fiume Tevere</text>
+
+      <!-- Urban Building Blocks (Dark Matter theme) -->
+      <g fill="#132038" opacity="0.7">
+        <rect x="60" y="40" width="160" height="90" rx="6" />
+        <rect x="250" y="30" width="120" height="80" rx="6" />
+        <rect x="420" y="50" width="180" height="70" rx="6" />
+        <rect x="640" y="40" width="220" height="110" rx="6" />
+        <rect x="900" y="60" width="180" height="90" rx="6" />
+
+        <rect x="80" y="160" width="190" height="120" rx="6" />
+        <rect x="680" y="180" width="160" height="130" rx="6" />
+        <rect x="880" y="190" width="220" height="100" rx="6" />
+
+        <rect x="90" y="310" width="140" height="110" rx="6" />
+        <rect x="260" y="340" width="170" height="120" rx="6" />
+        <rect x="690" y="340" width="210" height="120" rx="6" />
+        <rect x="930" y="320" width="180" height="140" rx="6" />
+      </g>
+
+      <!-- Minor Street Network -->
+      <g stroke="#1e293b" stroke-width="3" stroke-linecap="round">
+        <line x1="0" y1="90" x2="1184" y2="90" />
+        <line x1="0" y1="180" x2="1184" y2="180" />
+        <line x1="0" y1="300" x2="1184" y2="300" />
+        <line x1="0" y1="440" x2="1184" y2="440" />
+
+        <line x1="180" y1="0" x2="180" y2="526" />
+        <line x1="400" y1="0" x2="400" y2="526" />
+        <line x1="620" y1="0" x2="620" y2="526" />
+        <line x1="840" y1="0" x2="840" y2="526" />
+        <line x1="1040" y1="0" x2="1040" y2="526" />
+      </g>
+
+      <!-- Major Arterial Roads -->
+      <g stroke="#334155" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+        <!-- Tangenziale Est -->
+        <path d="M 120 526 L 360 380 L 640 250 L 920 180 L 1184 140" fill="none" />
+        <!-- Via Salaria / SS4 -->
+        <path d="M 460 526 L 560 360 L 720 220 L 860 80 L 980 0" fill="none" />
+        <!-- Corso Trieste -->
+        <path d="M 0 320 Q 380 280 720 340 T 1184 310" fill="none" />
+      </g>
+      <!-- Road Inner Stroke -->
+      <g stroke="#475569" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M 120 526 L 360 380 L 640 250 L 920 180 L 1184 140" fill="none" />
+        <path d="M 460 526 L 560 360 L 720 220 L 860 80 L 980 0" fill="none" />
+        <path d="M 0 320 Q 380 280 720 340 T 1184 310" fill="none" />
+      </g>
+
+      <!-- Street Names Labels -->
+      <text x="390" y="440" fill="#64748b" font-size="11" font-weight="700" letter-spacing="1" transform="rotate(-32 390 440)">TANGENZIALE EST</text>
+      <text x="630" y="300" fill="#64748b" font-size="11" font-weight="700" letter-spacing="1" transform="rotate(-40 630 300)">VIA SALARIA (SS4)</text>
+      <text x="960" y="330" fill="#64748b" font-size="11" font-weight="700" letter-spacing="1">CORSO TRIESTE</text>
+
+      <!-- ================= LEAFLET / OSRM ROUTE (GeoJSON Style) ================= -->
+      <!-- Outer route casing (weight 8, color #1e3a8a) -->
+      <path d="M 380 370 L 460 340 L 560 260 L 680 180 L 790 120" fill="none" stroke="#1e3a8a" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" opacity="0.8" filter="url(#routeGlow)" />
+      <!-- Inner route line (weight 5, color #3b82f6) -->
+      <path d="M 380 370 L 460 340 L 560 260 L 680 180 L 790 120" fill="none" stroke="#38bdf8" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+      <!-- Route animated dashing line -->
+      <path d="M 380 370 L 460 340 L 560 260 L 680 180 L 790 120" class="route-animated" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+
+      <!-- ================= MAP PINS & CLUSTERS ================= -->
+      <!-- Leaflet Cluster Icon (Golden / Best price in cluster) -->
+      <g transform="translate(1020, 210)" filter="url(#cardShadow)">
+        <circle cx="0" cy="0" r="26" fill="#f59e0b" opacity="0.3" />
+        <circle cx="0" cy="0" r="22" fill="#d97706" stroke="#fef08a" stroke-width="3" />
+        <circle cx="0" cy="0" r="15" fill="#451a03" stroke="#f59e0b" stroke-width="2" />
+        <text x="0" y="5" fill="#fef08a" font-size="14" font-weight="900" text-anchor="middle">12</text>
+      </g>
+
+      <!-- Secondary Cluster (Blue) -->
+      <g transform="translate(210, 160)" filter="url(#cardShadow)">
+        <circle cx="0" cy="0" r="22" fill="#2563eb" opacity="0.3" />
+        <circle cx="0" cy="0" r="18" fill="#1d4ed8" stroke="#93c5fd" stroke-width="2.5" />
+        <text x="0" y="5" fill="#ffffff" font-size="13" font-weight="900" text-anchor="middle">6</text>
+      </g>
+
+      <!-- Secondary Station Marker 1: IP -->
+      <g transform="translate(620, 380)" filter="url(#cardShadow)">
+        <path d="M 0 -30 C -11 -30 -20 -21 -20 -10 C -20 5 0 20 0 20 C 0 20 20 5 20 -10 C 20 -21 11 -30 0 -30 Z" fill="#2563eb" stroke="#ffffff" stroke-width="2" />
+        <circle cx="0" cy="-11" r="5" fill="#ffffff" />
+        <rect x="-34" y="-52" width="68" height="20" rx="5" fill="#1e293b" stroke="#3b82f6" stroke-width="1" />
+        <text x="0" y="-38" fill="#ffffff" font-size="10" font-weight="800" text-anchor="middle">1.704 €</text>
+      </g>
+
+      <!-- Secondary Station Marker 2: Q8 -->
+      <g transform="translate(930, 90)" filter="url(#cardShadow)">
+        <path d="M 0 -30 C -11 -30 -20 -21 -20 -10 C -20 5 0 20 0 20 C 0 20 20 5 20 -10 C 20 -21 11 -30 0 -30 Z" fill="#2563eb" stroke="#ffffff" stroke-width="2" />
+        <circle cx="0" cy="-11" r="5" fill="#ffffff" />
+        <rect x="-34" y="-52" width="68" height="20" rx="5" fill="#1e293b" stroke="#3b82f6" stroke-width="1" />
+        <text x="0" y="-38" fill="#ffffff" font-size="10" font-weight="800" text-anchor="middle">1.712 €</text>
+      </g>
+
+      <!-- ================= USER GPS LOCATION (Start of Route) ================= -->
+      <g transform="translate(380, 370)">
+        <circle cx="0" cy="0" r="18" fill="#3b82f6" class="gps-ring" />
+        <circle cx="0" cy="0" r="8" fill="#2563eb" stroke="#ffffff" stroke-width="2.5" filter="url(#cardShadow)" />
+      </g>
+
+      <!-- ================= TARGET STATION MARKER: ENI (Selected) ================= -->
+      <g transform="translate(790, 120)">
+        <!-- Green Radar Pulse -->
+        <circle cx="0" cy="0" r="26" fill="#10b981" opacity="0.35" filter="url(#pulseGlow)" />
+        
+        <!-- Large Glowing Pin -->
+        <path d="M 0 -42 C -16 -42 -28 -30 -28 -14 C -28 8 0 30 0 30 C 0 30 28 8 28 -14 C 28 -30 16 -42 0 -42 Z" fill="#059669" stroke="#ffffff" stroke-width="2.5" filter="url(#cardShadow)" />
+        <circle cx="0" cy="-16" r="10" fill="#ffffff" />
+        <path d="M -4 -20 L 2 -20 C 3 -20 4 -19 4 -18 L 4 -12 L -4 -12 Z" fill="#064e3b" />
+        
+        <!-- Price Pill Tooltip on Top -->
+        <g transform="translate(0, -58)">
+          <rect x="-60" y="-14" width="120" height="28" rx="8" fill="#064e3b" stroke="#34d399" stroke-width="1.5" filter="url(#cardShadow)" />
+          <text x="0" y="5" fill="#ffffff" font-size="12" font-weight="900" text-anchor="middle">ENI: 1.689 €</text>
+        </g>
+      </g>
+
+      <!-- ================= 5. FLOATING ROUTEPANEL (Exact client/src/components/RoutePanel.jsx layout) ================= -->
+      <g transform="translate(32, 190)" filter="url(#cardShadow)">
+        <rect width="360" height="304" rx="24" fill="#1e293b" fill-opacity="0.96" stroke="#334155" stroke-width="1.5" />
+        
+        <g transform="translate(20, 20)">
+          <!-- Top Row: Best Price Badge + Title + Share Button -->
+          <g transform="translate(0, 0)">
+            <!-- Yellow Best Badge -->
+            <rect x="0" y="0" width="112" height="28" rx="8" fill="#78350f" fill-opacity="0.5" stroke="#ca8a04" stroke-width="1" />
+            <text x="56" y="19" fill="#facc15" font-size="10" font-weight="900" text-anchor="middle">★ PIÙ ECONOMICO</text>
+
+            <text x="122" y="20" fill="#ffffff" font-size="13" font-weight="800">Miglior Prezzo a Roma</text>
+
+            <!-- Share Button -->
+            <g transform="translate(288, -2)">
+              <rect width="32" height="32" rx="10" fill="#334155" stroke="#475569" stroke-width="1" />
+              <!-- Share Icon -->
+              <circle cx="12" cy="16" r="2" fill="#94a3b8" />
+              <circle cx="21" cy="11" r="2" fill="#94a3b8" />
+              <circle cx="21" cy="21" r="2" fill="#94a3b8" />
+              <line x1="12" y1="16" x2="21" y2="11" stroke="#94a3b8" stroke-width="1.5" />
+              <line x1="12" y1="16" x2="21" y2="21" stroke="#94a3b8" stroke-width="1.5" />
+            </g>
+          </g>
+
+          <!-- Station Name & Address -->
+          <g transform="translate(0, 44)">
+            <text x="0" y="16" fill="#60a5fa" font-size="15" font-weight="800" text-decoration="underline">ENI Station - Via Salaria</text>
+            <text x="0" y="34" fill="#cbd5e1" font-size="11" font-weight="500">Via Salaria, 721 - Roma (RM)</text>
+          </g>
+
+          <!-- Price Highlight Box (Amber bg-amber-900/30) -->
+          <g transform="translate(-4, 94)">
+            <rect width="328" height="38" rx="8" fill="#78350f" fill-opacity="0.35" />
+            <text x="14" y="24" fill="#fbbf24" font-size="13" font-weight="600">Prezzo Benzina (Self):</text>
+            <text x="314" y="25" fill="#f59e0b" font-size="17" font-weight="900" text-anchor="end">1.689 €/L</text>
+          </g>
+
+          <!-- Dist & Travel Time Rows -->
+          <g transform="translate(0, 150)">
+            <text x="0" y="14" fill="#60a5fa" font-size="13" font-weight="600">Distanza:</text>
+            <text x="320" y="14" fill="#ffffff" font-size="13" font-weight="800" text-anchor="end">1.20 km</text>
+            
+            <line x1="0" y1="26" x2="320" y2="26" stroke="#334155" stroke-width="1" />
+
+            <text x="0" y="44" fill="#60a5fa" font-size="13" font-weight="600">Tempo stimato:</text>
+            <text x="320" y="44" fill="#ffffff" font-size="13" font-weight="800" text-anchor="end">4 min</text>
+          </g>
+
+          <!-- Close / Action Button -->
+          <g transform="translate(0, 218)">
+            <rect width="320" height="36" rx="10" fill="#334155" />
+            <text x="160" y="23" fill="#cbd5e1" font-size="12" font-weight="700" text-anchor="middle">Chiudi</text>
+          </g>
+        </g>
+      </g>
+
+      <!-- Leaflet Map Zoom Controls (Top-Right) -->
+      <g transform="translate(1136, 18)" filter="url(#cardShadow)">
+        <rect width="30" height="60" rx="8" fill="#1e293b" stroke="#475569" stroke-width="1" />
+        <text x="15" y="22" fill="#f8fafc" font-size="16" font-weight="700" text-anchor="middle">+</text>
+        <line x1="4" y1="30" x2="26" y2="30" stroke="#475569" stroke-width="1" />
+        <text x="15" y="48" fill="#f8fafc" font-size="16" font-weight="700" text-anchor="middle">−</text>
+      </g>
+
+      <!-- Leaflet Scale Bar -->
+      <g transform="translate(970, 496)">
+        <rect width="80" height="3" fill="#94a3b8" />
+        <line x1="0" y1="492" x2="0" y2="500" stroke="#94a3b8" stroke-width="2" />
+        <line x1="80" y1="492" x2="80" y2="500" stroke="#94a3b8" stroke-width="2" />
+        <text x="40" y="-4" fill="#94a3b8" font-size="10" font-weight="600" text-anchor="middle">500 m</text>
+      </g>
+
+      <!-- Leaflet / OSM Attribution -->
+      <g transform="translate(860, 506)">
+        <rect width="310" height="18" rx="4" fill="#0f172a" fill-opacity="0.85" />
+        <text x="155" y="13" fill="#64748b" font-size="9" font-weight="500" text-anchor="middle">© Leaflet | © OpenStreetMap contributors | MIMIT Open Data</text>
+      </g>
+    </g>
+  </g>
+</svg>
