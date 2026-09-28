@@ -4,6 +4,24 @@ Tutte le modifiche rilevanti a questo progetto sono documentate in questo file.
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e aderisce a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-09-28
+
+### Added
+
+- **Monorepo Workspace Architecture (`pnpm-workspace.yaml`):** Separazione fisica dell'applicazione in package isolati (`client/` per React 19 + Vite e `server/` per Express 5 + SQLite).
+- **Multi-Stage Dockerization & Render Blueprint (`render.yaml`):** Containerizzazione ottimizzata con Nginx Alpine per il frontend (~25 MB) e Node 22 Alpine per il backend headless (~100 MB), configurati per deployment 100% gratuito su Render.
+- **Dynamic Port & Host Binding:** Parametrizzazione completa tramite `process.env` (`CLIENT_PORT`, `SERVER_PORT`, `HOST`, `CORS_ORIGIN`).
+
+### Changed
+
+- **Deterministic Module Path Resolution:** Sostituzione dei percorsi fragili `process.cwd()` con `import.meta.url` / `__dirname` in tutti i moduli backend.
+- **Security Hardened README Badges:** Rimozione della divulgazione esplicita dei numeri di versione dello stack tecnologico nei badge pubblici.
+
+### Fixed
+
+- **Identifier Collision in API Controller:** Rimossa dichiarazione duplicata di `slugify` in `server/controllers/apiController.js`.
+- **Vatican City Map Marker:** Ripristinata la bandiera ufficiale animata su asta al posto dell'icona chiesa.
+
 ## [1.5.5] - 2026-09-18
 
 ### Changed
