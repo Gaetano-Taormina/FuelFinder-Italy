@@ -1,8 +1,9 @@
 version: 2
 updates:
-  # Dipendenze JavaScript/Node.js gestite con pnpm
+  # Dipendenze Workspace Root
   - package-ecosystem: "npm"
     directory: "/"
+    target-branch: "publication"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -46,9 +47,36 @@ updates:
           - "minor"
           - "patch"
 
-  # Aggiornamento automatico delle GitHub Actions (solo versioni stabili minor e patch)
+  # Dipendenze Frontend Workspace
+  - package-ecosystem: "npm"
+    directory: "/client"
+    target-branch: "publication"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "client"
+    commit-message:
+      prefix: "chore(deps-client)"
+
+  # Dipendenze Backend Workspace
+  - package-ecosystem: "npm"
+    directory: "/server"
+    target-branch: "publication"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "server"
+    commit-message:
+      prefix: "chore(deps-server)"
+
+  # Aggiornamento automatico delle GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
+    target-branch: "publication"
     schedule:
       interval: "weekly"
       day: "monday"

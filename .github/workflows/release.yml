@@ -65,7 +65,11 @@ jobs:
 
       - name: Package Dist Bundle
         run: |
-          cd dist && zip -r ../fuelfinder-dist-${{ github.ref_name }}.zip ./* && cd ..
+          if [ -d "client/dist" ]; then
+            cd client/dist && zip -r ../../fuelfinder-dist-${{ github.ref_name }}.zip ./* && cd ../..
+          else
+            cd dist && zip -r ../fuelfinder-dist-${{ github.ref_name }}.zip ./* && cd ..
+          fi
 
       - name: Generate Release Attestation
         uses: actions/attest-build-provenance@v2
