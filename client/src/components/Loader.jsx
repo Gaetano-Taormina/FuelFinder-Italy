@@ -73,7 +73,7 @@ export default function Loader() {
                 
                 {/* Icona con animazione morbida e rilassante (Zero sfarfallio) */}
                 <div className="relative mb-6 flex items-center justify-center">
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600/90 to-indigo-700/90 flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.3)] border border-blue-400/25 transition-transform duration-700 hover:scale-105">
+                    <div className="w-20 h-20 rounded-2xl bg-linear-to-br from-blue-600/90 to-indigo-700/90 flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.3)] border border-blue-400/25 transition-transform duration-700 hover:scale-105">
                         <img 
                             src="/assets/img/icon-192.webp" 
                             alt="FuelFinder Logo" 
@@ -110,7 +110,7 @@ export default function Loader() {
 
                     <div className="w-full bg-slate-700/50 rounded-full h-2.5 overflow-hidden p-0.5 border border-slate-600/40">
                         <div 
-                            className="bg-gradient-to-r from-blue-500 via-sky-400 to-emerald-400 h-full rounded-full transition-all duration-300 ease-out shadow-sm"
+                            className="bg-linear-to-r from-blue-500 via-sky-400 to-emerald-400 h-full rounded-full transition-all duration-300 ease-out shadow-sm"
                             style={{ width: `${progress}%` }}
                         />
                     </div>
