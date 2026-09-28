@@ -60,18 +60,19 @@ Disallow: /
 User-agent: ZoominfoBot
 Disallow: /
 
-Sitemap: https://fuelfinder-msn8.onrender.com/sitemap.xml
-Sitemap: https://fuelfinder-msn8.onrender.com/sitemaps/it.xml
-Sitemap: https://fuelfinder-msn8.onrender.com/sitemaps/en.xml
-Sitemap: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-it-benzina.xml
-Sitemap: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-en-petrol.xml
-Sitemap: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-it-gasolio.xml
-Sitemap: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-en-diesel.xml
-Sitemap: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-it-gpl.xml
-Sitemap: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-en-lpg.xml
-Sitemap: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-it-metano.xml
-Sitemap: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-en-methane.xml
-Sitemap: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-it-hvo.xml
-Sitemap: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-en-hvo.xml
-Sitemap: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-it-gnl.xml
-Sitemap: https://fuelfinder-msn8.onrender.com/sitemaps/fuels-en-lng.xml
+Sitemap: https://fuelfinder-italia.onrender.com/sitemap.xml
+Sitemap: https://fuelfinder-italia.onrender.com/sitemaps/it.xml
+Sitemap: https://fuelfinder-italia.onrender.com/sitemaps/en.xml
+Sitemap: https://fuelfinder-italia.onrender.com/sitemaps/fuels-it-benzina.xml
+Sitemap: https://fuelfinder-italia.onrender.com/sitemaps/fuels-en-petrol.xml
+Sitemap: https://fuelfinder-italia.onrender.com/sitemaps/fuels-it-gasolio.xml
+Sitemap: https://fuelfinder-italia.onrender.com/sitemaps/fuels-en-diesel.xml
+Sitemap: https://fuelfinder-italia.onrender.com/sitemaps/fuels-it-gpl.xml
+Sitemap: https://fuelfinder-italia.onrender.com/sitemaps/fuels-en-lpg.xml
+Sitemap: https://fuelfinder-italia.onrender.com/sitemaps/fuels-it-metano.xml
+Sitemap: https://fuelfinder-italia.onrender.com/sitemaps/fuels-en-methane.xml
+Sitemap: https://fuelfinder-italia.onrender.com/sitemaps/fuels-it-hvo.xml
+Sitemap: https://fuelfinder-italia.onrender.com/sitemaps/fuels-en-hvo.xml
+Sitemap: https://fuelfinder-italia.onrender.com/sitemaps/fuels-it-gnl.xml
+Sitemap: https://fuelfinder-italia.onrender.com/sitemaps/fuels-en-lng.xml
+
