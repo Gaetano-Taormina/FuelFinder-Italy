@@ -50,7 +50,7 @@ The data shown is real and based on official Open Data from the Italian Ministry
 - **Modern UX:** Features Optimistic UI rendering, Skeleton Loaders, CSS-only Tooltips, and SWR caching for a fluid, app-like feel.
 - **Dual Pre-compression:** Vite-integrated Brotli and Gzip pre-compression along with runtime multi-format support (`zstd`, `br`, `gzip`, `deflate`).
 - **Path Aliasing & IDE Support:** Native `@/*` path mapping across frontend and tests with clean editor configuration.
-- **Dark/Light Theme:** Modern UI (React 19 + TailwindCSS v4) that adapts to user preferences.
+- **Dark/Light Theme:** Modern UI (React + TailwindCSS) that adapts to user preferences.
 - **Zero Cloud Costs & Fast Local DB:** Pre-compiled SQLite snapshot is downloaded automatically on startup from GitHub Releases, eliminating cloud fees and ensuring sub-millisecond query responses with composite covering indexes.
 - **Privacy-Friendly Analytics:** Native backend counter utilizing irreversible SHA-256 hashing to track daily visits without requiring GDPR cookie banners.
 - **Security Hardened & Local CodeQL Audit:** Integrated Rate Limiting against DDoS/Scraping attacks, React Error Boundaries for crash prevention, protective HTTP Security Headers, and local CodeQL zero-alert pre-flight auditor (`pnpm run security`).
@@ -58,7 +58,7 @@ The data shown is real and based on official Open Data from the Italian Ministry
 - **Admin Dashboard:** Secure passkey-protected panel at `/admin-stats` for visualizing site traffic and usage stats.
 - **Lighthouse 100/100:** Next-gen image formats (WebP), deferred CSS, and fine-tuned manual chunks.
 - **3-Tier Testing Architecture & 100% Full Metric Coverage:** Comprehensive testing suite (Vitest + Playwright) achieving 100.0% coverage across lines, statements, functions, and branches.
-- **Automated CI/CD & Cryptographic Attestations:** GitHub Actions with automatic run cancellation (`concurrency`), Node 22 LTS environment, cryptographic SLSA provenance build attestations, and smart Dependabot PR grouping.
+- **Automated CI/CD & Cryptographic Attestations:** GitHub Actions with automatic run cancellation (`concurrency`), Node.js LTS environment, cryptographic SLSA provenance build attestations, and smart Dependabot PR grouping.
 
 ### 📱 Quick Mobile Install (PWA)
 
@@ -107,10 +107,10 @@ pnpm run release
 
 ### Architecture and Structure
 
-The project features a high-performance **Full-Stack** architecture:
+The project features a decoupled monorepo workspace architecture:
 
-- **Frontend (Client):** Developed in React 19 (via Vite 8) with TailwindCSS v4 for a fast, fluid, and 100% mobile-responsive design.
-- **Backend (API):** Managed by a Node.js server with the Express 5 framework.
+- **Frontend (Client):** Located in `client/`, powered by React and Vite with TailwindCSS for a fast, fluid, and 100% mobile-responsive design.
+- **Backend (API):** Located in `server/`, powered by Node.js and Express with automated MIMIT Open Data ingestion.
 - **Database:** High-performance local **SQLite** database. On production/Render, a pre-compiled SQLite snapshot is downloaded automatically on startup from GitHub Releases.
 
 ---
@@ -137,7 +137,7 @@ I dati mostrati sono reali e basati sugli Open Data ufficiali del Ministero dell
 - **UX Moderna:** Rendering Optimistic UI, Skeleton Loaders, Tooltip in puro CSS e Caching SWR per navigazione istantanea senza scatti.
 - **Doppia Pre-compressione:** Compressione statica integrata in build con Brotli e Gzip, unita al supporto runtime multi-formato (`zstd`, `br`, `gzip`, `deflate`).
 - **Path Aliasing & Supporto IDE:** Alias `@/*` per import puliti e configurazione di File Nesting per VS Code.
-- **Tema Scuro/Chiaro:** Interfaccia utente moderna (React 19 + TailwindCSS v4) che si adatta alle preferenze visive del sistema.
+- **Tema Scuro/Chiaro:** Interfaccia utente moderna (React + TailwindCSS) che si adatta alle preferenze visive del sistema.
 - **Zero Costi Cloud & SQLite Standalone:** Download automatico all'avvio su Render da GitHub Releases con query locali istantanee e zero costi fissi di database con indici di copertura perimetrali.
 - **Statistiche GDPR-Friendly:** Contatore visite nativo lato server basato su hash crittografico SHA-256 irreversibile per garantire il 100% dell'anonimato senza richiedere banner sui cookie.
 - **Sicurezza e Pre-Flight CodeQL:** Rate Limiting contro attacchi DDoS/scraping, Error Boundaries in React, intestazioni HTTP protettive e validatore di sicurezza CodeQL locale (`pnpm run security`).
@@ -145,7 +145,7 @@ I dati mostrati sono reali e basati sugli Open Data ufficiali del Ministero dell
 - **Dashboard Admin:** Pannello protetto da passkey sicura alla rotta `/admin-stats` per monitorare il traffico e l'utilizzo del sito.
 - **Lighthouse 100/100:** Formati immagine di nuova generazione (WebP), CSS differito e chunking avanzato delle librerie.
 - **Testing a 3 Livelli & 100% Coverage Globale:** Suite completa di test suddivisa in Component/Unit (Vitest), Group/Integration ed E2E su browser reale (Playwright), con copertura globale del 100% su linee, statement, funzioni e branch.
-- **Workflow CI/CD & Attestazioni Crittografiche:** Pipeline GitHub Actions con cancellazione automatica dei task obsoleti (`concurrency`), Node 22 LTS, attestazioni crittografiche SLSA di build e raggruppamenti intelligenti per Dependabot.
+- **Workflow CI/CD & Attestazioni Crittografiche:** Pipeline GitHub Actions con cancellazione automatica dei task obsoleti (`concurrency`), runtime Node.js LTS, attestazioni crittografiche SLSA di build e raggruppamenti intelligenti per Dependabot.
 
 ### 📱 Installazione Rapida su Smartphone (PWA)
 
@@ -194,8 +194,8 @@ pnpm run release
 
 ### Architettura e Struttura
 
-Il progetto è sviluppato su una solida architettura **Full-Stack** ad alte prestazioni:
+Il progetto è sviluppato su una solida architettura monorepo disaccoppiata ad alte prestazioni:
 
-- **Frontend (Client):** Sviluppato in React 19 (tramite Vite 8) con TailwindCSS v4 per un design rapido, fluido e responsivo al 100% su Mobile.
-- **Backend (API):** Gestito da un server Node.js con framework Express 5.
+- **Frontend (Client):** Collocato nella cartella `client/`, basato su React e Vite con TailwindCSS per un design rapido, fluido e responsivo al 100% su Mobile.
+- **Backend (API):** Collocato nella cartella `server/`, gestito da un server Node.js con framework Express.
 - **Database:** Motore **SQLite** locale ad altissime prestazioni. Su Render il database viene scaricato automaticamente all'avvio da GitHub Releases, azzerando le latenze e i costi di terze parti.

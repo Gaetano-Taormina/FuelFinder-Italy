@@ -64,7 +64,7 @@ jobs:
     - name: Generate Build Attestation
       uses: actions/attest-build-provenance@v2
       with:
-        subject-path: 'dist/'
+        subject-path: 'client/dist/'
 
     - name: Upload Coverage Report
       uses: actions/upload-artifact@v4
@@ -78,5 +78,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: build-dist
-        path: dist/
+        path: client/dist/
         retention-days: 7
