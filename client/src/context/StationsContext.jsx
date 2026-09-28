@@ -83,10 +83,12 @@ export const StationsProvider = ({ children }) => {
     ? `/api/stations?lat=${userPos.lat}&lng=${userPos.lng}&radius=${radius}&fuelType=${encodeURIComponent(fuelType)}&serviceType=${serviceType}` 
     : null;
 
-  const { data: stationsData, error, isLoading, isValidating } = useSWR(stationsUrl, fetcher, {
+  const { data: stationsData, error, isLoading, isValidating, mutate: refreshStations } = useSWR(stationsUrl, fetcher, {
     keepPreviousData: true, // Optimistic UI
     revalidateOnFocus: false,
-    dedupingInterval: 10000
+    dedupingInterval: 10000,
+    errorRetryCount: 5,
+    errorRetryInterval: 4000
   });
 
   const stations = useMemo(() => stationsData?.stations || (Array.isArray(stationsData) ? stationsData : []), [stationsData]);
@@ -209,7 +211,7 @@ export const StationsProvider = ({ children }) => {
 
   const contextValue = useMemo(() => ({
       stations, totalStations,
-      loading, isFetchingBackground, error,
+      loading, isFetchingBackground, error, refreshStations,
       locationStr, setLocationStr,
       radius, setRadius,
       fuelType, setFuelType,
@@ -219,7 +221,7 @@ export const StationsProvider = ({ children }) => {
       routeData,
       handleNavigation
   }), [
-      stations, totalStations, loading, isFetchingBackground, error,
+      stations, totalStations, loading, isFetchingBackground, error, refreshStations,
       locationStr, radius, fuelType, serviceType, userPos, selectedStation, routeData,
       setFuelType, handleNavigation, setSelectedStation
   ]);
