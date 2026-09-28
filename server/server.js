@@ -47,7 +47,7 @@ process.on('SIGINT', () => {
     process.exit(0);
 });
 
-let isReady = false;
+let isReady = true;
 let db = null;
 
 const app = express();
@@ -57,7 +57,6 @@ app.set('trust proxy', 1);
 app.use(createHealthcheckMiddleware({
     isReadyGetter: () => isReady,
     onRecover: () => {
-        isReady = false;
         setupDatabase().then(() => {
             console.info("♻️ [Healthcheck] DB reinitialized after manual recovery request.");
         }).catch(e => console.error("❌ [Healthcheck Recovery Error]", e));
@@ -69,8 +68,15 @@ app.get('/robots.txt', (req, res) => {
     res.type('text/plain').send('User-agent: *\nAllow: /\n');
 });
 
-// Permanent 301 Redirect for Google Search Console Migration
+// Permanent 301 Redirect for Google Search Console Migration (production external traffic)
 app.use((req, res, next) => {
+    if (process.env.NODE_ENV === 'test' || process.env.VITEST) {
+        return next();
+    }
+    const host = req.get('host') || '';
+    if (host.startsWith('localhost') || host.startsWith('127.0.0.1')) {
+        return next();
+    }
     if (req.path === '/healthz' || req.path === '/api/health/recover' || req.path === '/robots.txt') {
         return next();
     }
@@ -104,6 +110,10 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 async function setupDatabase(forceDownload = false) {
+    if (process.env.MIGRATION_REDIRECTOR === 'true' || process.env.SKIP_DB_INIT === 'true') {
+        console.info('⏩ [Migration Redirector] Skipping SQLite database download and initialization.');
+        return;
+    }
     if (process.env.DB_DOWNLOAD_URL) {
         console.group('📥 Remote Database Download');
         console.info(`Source: ${process.env.DB_DOWNLOAD_URL}`);
@@ -136,6 +146,10 @@ let ssrController = null;
 // 6. Asynchronous Server Init & Route Binding
 async function initServer() {
     try {
+        if (process.env.MIGRATION_REDIRECTOR === 'true' || process.env.SKIP_DB_INIT === 'true') {
+            console.info("✨ [Migration Redirector] Ready. Redirecting all incoming traffic to https://fuelfinder-italia.onrender.com");
+            return;
+        }
         await setupDatabase();
         await setAnalyticsDb(db);
 
