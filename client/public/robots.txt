@@ -80,5 +80,4 @@ Sitemap: https://fuelfinder-italia.onrender.com/sitemaps/fuels-en-hvo.xml
 Sitemap: https://fuelfinder-italia.onrender.com/sitemaps/fuels-it-gnl.xml
 Sitemap: https://fuelfinder-italia.onrender.com/sitemaps/fuels-en-lng.xml
 
-Agentmap: https://fuelfinder-italia.onrender.com/.well-known/ai-catalog.json
-
+# AI Agent Discovery Catalog (RFC 8615 / WebMCP): https://fuelfinder-italia.onrender.com/.well-known/ai-catalog.json
