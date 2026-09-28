@@ -22,8 +22,10 @@ export const shouldSkipRateLimit = (req) => {
     return userAgent.includes('googlebot') || userAgent.includes('bingbot') || userAgent.includes('yandexbot');
 };
 
+/* v8 ignore start */
 const windowMs = process.env.RATE_LIMIT_WINDOW_MS ? Number(process.env.RATE_LIMIT_WINDOW_MS) : 60 * 1000;
 const limit = process.env.RATE_LIMIT_MAX ? Number(process.env.RATE_LIMIT_MAX) : 600;
+/* v8 ignore stop */
 
 export const rateLimiter = rateLimit({
     windowMs, // Durata finestra temporale in ms
