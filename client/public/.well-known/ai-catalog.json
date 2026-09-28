@@ -1,0 +1,34 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "FuelFinder Italy",
+    "identifier": "did:web:fuelfinder-italia.onrender.com"
+  },
+  "entries": [
+    {
+      "identifier": "urn:air:fuelfinder-italia.onrender.com:api:fuel-stations",
+      "displayName": "FuelFinder Fuel Pricing API",
+      "type": "application/openapi+json",
+      "url": "https://fuelfinder-backend.onrender.com/api/stations",
+      "description": "Real-time Italian gas stations and fuel prices (petrol, diesel, LPG, methane, HVO, LNG) from official MIMIT open data.",
+      "representativeQueries": [
+        "trova distributori benzina economici vicino a me",
+        "prezzo diesel più basso a Milano",
+        "find cheapest petrol in Italy",
+        "gas stations near me with LPG"
+      ]
+    },
+    {
+      "identifier": "urn:air:fuelfinder-italia.onrender.com:mcp:fuel-finder",
+      "displayName": "FuelFinder Model Context Protocol (MCP) Server",
+      "type": "application/mcp-server-card+json",
+      "url": "https://fuelfinder-italia.onrender.com/llms.txt",
+      "description": "Model Context Protocol interface and LLM discovery for fuel stations pricing across Italian cities.",
+      "representativeQueries": [
+        "confronta prezzi carburante Italia",
+        "cerca distributori metano e HVO in autostrada",
+        "fuel price comparison Italy"
+      ]
+    }
+  ]
+}

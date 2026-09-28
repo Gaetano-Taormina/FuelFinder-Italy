@@ -1,10 +1,14 @@
 User-agent: Googlebot
 Allow: /
 Allow: /llms.txt
+Allow: /.well-known/
+Allow: /ai-catalog.json
 
 User-agent: *
 Allow: /
 Allow: /llms.txt
+Allow: /.well-known/
+Allow: /ai-catalog.json
 Disallow: /api/
 Disallow: /admin-stats
 
@@ -75,4 +79,6 @@ Sitemap: https://fuelfinder-italia.onrender.com/sitemaps/fuels-it-hvo.xml
 Sitemap: https://fuelfinder-italia.onrender.com/sitemaps/fuels-en-hvo.xml
 Sitemap: https://fuelfinder-italia.onrender.com/sitemaps/fuels-it-gnl.xml
 Sitemap: https://fuelfinder-italia.onrender.com/sitemaps/fuels-en-lng.xml
+
+Agentmap: https://fuelfinder-italia.onrender.com/.well-known/ai-catalog.json
 
