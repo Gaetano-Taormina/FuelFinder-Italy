@@ -80,7 +80,18 @@ app.use((req, res, next) => {
     if (req.path === '/healthz' || req.path === '/api/health/recover' || req.path === '/robots.txt') {
         return next();
     }
-    return res.redirect(301, `https://fuelfinder-italia.onrender.com${req.originalUrl}`);
+    // CodeQL-safe URL sanitization to prevent Open Redirect
+    const rawPath = typeof req.path === 'string' ? req.path : '/';
+    const cleanPath = rawPath.replace(/^\/+/, '/');
+    const safeTarget = new URL(cleanPath, 'https://fuelfinder-italia.onrender.com');
+    if (req.query && typeof req.query === 'object') {
+        for (const [paramKey, paramVal] of Object.entries(req.query)) {
+            if (typeof paramKey === 'string' && typeof paramVal === 'string') {
+                safeTarget.searchParams.set(paramKey, paramVal);
+            }
+        }
+    }
+    return res.redirect(301, safeTarget.href);
 });
 
 // 2. Maintenance Mode (503 SEO-friendly)
