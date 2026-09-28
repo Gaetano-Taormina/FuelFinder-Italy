@@ -24,7 +24,7 @@ services:
 
   # --- 2. FRONTEND CLIENT (Static Site - Free Tier 0ms Always On) ---
   - type: web
-    name: fuelfinder-frontend
+    name: fuelfinder-italia
     runtime: static
     branch: publication
     rootDir: client
