@@ -59,6 +59,36 @@ let db = null;
 const app = express();
 app.set('trust proxy', 1);
 
+// 0. Domain Migration: Immediate 301 Redirect for legacy domain (fuelfinder-msn8)
+app.use((req, res, next) => {
+    /* v8 ignore next 3 */
+    if (process.env.NODE_ENV === 'test' || process.env.VITEST) {
+        return next();
+    }
+    const host = req.get('host') || '';
+    /* v8 ignore next 3 */
+    if (host.startsWith('localhost') || host.startsWith('127.0.0.1')) {
+        return next();
+    }
+    if (req.path === '/healthz' || req.path === '/robots.txt') {
+        return next();
+    }
+    if (process.env.MIGRATION_REDIRECTOR === 'true' || host.includes('fuelfinder-msn8')) {
+        const rawPath = typeof req.path === 'string' ? req.path : '/';
+        const cleanPath = rawPath.replace(/^\/+/, '/');
+        const safeTarget = new URL(cleanPath, 'https://fuelfinder-italia.onrender.com');
+        if (req.query && typeof req.query === 'object') {
+            for (const [paramKey, paramVal] of Object.entries(req.query)) {
+                if (typeof paramKey === 'string' && typeof paramVal === 'string') {
+                    safeTarget.searchParams.set(paramKey, paramVal);
+                }
+            }
+        }
+        return res.redirect(301, safeTarget.href);
+    }
+    next();
+});
+
 // 1. Healthcheck & Recovery (Render, LB probing)
 app.use(createHealthcheckMiddleware({
     isReadyGetter: () => isReady,
@@ -125,6 +155,10 @@ app.listen(PORT, HOST, () => {
 });
 
 async function setupDatabase(forceDownload = false) {
+    if (process.env.MIGRATION_REDIRECTOR === 'true') {
+        console.info('⏩ [Migration Redirector] Skipping SQLite database download and initialization.');
+        return;
+    }
     if (process.env.DB_DOWNLOAD_URL) {
         console.group('📥 Remote Database Download');
         console.info(`Source: ${process.env.DB_DOWNLOAD_URL}`);
@@ -157,6 +191,11 @@ let ssrController = null;
 // 6. Asynchronous Server Init & Route Binding
 async function initServer() {
     try {
+        if (process.env.MIGRATION_REDIRECTOR === 'true') {
+            isReady = true;
+            console.info("✨ [Migration Redirector] Ready. Redirecting all incoming traffic to https://fuelfinder-italia.onrender.com");
+            return;
+        }
         await setupDatabase();
         await setAnalyticsDb(db);
 

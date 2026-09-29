@@ -6,6 +6,22 @@ import {
 } from '../utils/seoHelpers.js';
 
 export function seoRedirectMiddleware(req, res, next) {
+    // 0. Domain Migration: Instant 301 Redirect for legacy hosts (fuelfinder-msn8)
+    const host = req.get('host') || '';
+    if (host.includes('fuelfinder-msn8')) {
+        const rawPath = typeof req.path === 'string' ? req.path : '/';
+        const cleanPath = rawPath.replace(/^\/+/, '/');
+        const safeTarget = new URL(cleanPath, 'https://fuelfinder-italia.onrender.com');
+        if (req.query && typeof req.query === 'object') {
+            for (const [paramKey, paramVal] of Object.entries(req.query)) {
+                if (typeof paramKey === 'string' && typeof paramVal === 'string') {
+                    safeTarget.searchParams.set(paramKey, paramVal);
+                }
+            }
+        }
+        return res.redirect(301, safeTarget.href);
+    }
+
     // Redirect queries with carburante/fuel to path segment
     if (req.query.carburante || req.query.fuel) {
         const isEn = req.path.startsWith('/en');
