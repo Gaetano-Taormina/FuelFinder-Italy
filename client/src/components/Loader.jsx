@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStations } from '../context/StationsContext';
 
@@ -13,7 +13,9 @@ export default function Loader() {
     // Gestione avanzamento fluido e proporzionato della barra
     useEffect(() => {
         if (loading || error) {
+            // oxlint-disable-next-line react/set-state-in-effect
             setProgress(prev => (prev < 20 ? 25 : prev));
+            // oxlint-disable-next-line react/set-state-in-effect
             setStatusStage('connecting');
 
             const startTime = Date.now();
@@ -35,7 +37,9 @@ export default function Loader() {
             return () => clearInterval(interval);
         } else {
             // Quando il caricamento termina con successo
+            // oxlint-disable-next-line react/set-state-in-effect
             setProgress(100);
+            // oxlint-disable-next-line react/set-state-in-effect
             setStatusStage('ready');
             const timer = setTimeout(() => {
                 // oxlint-disable-next-line react/set-state-in-effect
@@ -62,6 +66,14 @@ export default function Loader() {
         }
     }, [refreshStations]);
 
+    const handleImgError = useCallback((e) => {
+        e.target.style.display = 'none';
+    }, []);
+
+    const progressStyle = useMemo(() => ({
+        width: `${progress}%`
+    }), [progress]);
+
     // Mostra il loader a tutto schermo SOLO durante cold-start (>2.5s) o errore non scartato
     if ((!isColdStarting && !error) || isDismissed) return null;
 
@@ -80,7 +92,7 @@ export default function Loader() {
                             width="46" 
                             height="46" 
                             className="object-contain drop-shadow-sm opacity-95"
-                            onError={(e) => { e.target.style.display = 'none'; }}
+                            onError={handleImgError}
                         />
                     </div>
                 </div>
@@ -111,7 +123,7 @@ export default function Loader() {
                     <div className="w-full bg-slate-700/50 rounded-full h-2.5 overflow-hidden p-0.5 border border-slate-600/40">
                         <div 
                             className="bg-linear-to-r from-blue-500 via-sky-400 to-emerald-400 h-full rounded-full transition-all duration-300 ease-out shadow-sm"
-                            style={{ width: `${progress}%` }}
+                            style={progressStyle}
                         />
                     </div>
                 </div>

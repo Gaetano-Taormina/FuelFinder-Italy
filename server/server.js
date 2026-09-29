@@ -65,7 +65,7 @@ app.use((req, res, next) => {
     if (process.env.NODE_ENV === 'test' || process.env.VITEST) {
         return next();
     }
-    const host = req.get('host') || '';
+    const host = (typeof req.get === 'function' ? req.get('host') : (req.headers && req.headers.host)) || '';
     /* v8 ignore next 3 */
     if (host.startsWith('localhost') || host.startsWith('127.0.0.1')) {
         return next();
