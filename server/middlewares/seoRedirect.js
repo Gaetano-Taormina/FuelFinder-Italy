@@ -14,8 +14,8 @@ export function seoRedirectMiddleware(req, res, next) {
         const safeTarget = new URL(cleanPath, 'https://fuelfinder-italia.onrender.com');
         if (req.query && typeof req.query === 'object') {
             for (const [paramKey, paramVal] of Object.entries(req.query)) {
-                if (typeof paramKey === 'string' && typeof paramVal === 'string') {
-                    safeTarget.searchParams.set(paramKey, paramVal);
+                if (paramVal !== undefined && paramVal !== null) {
+                    safeTarget.searchParams.set(String(paramKey), String(paramVal));
                 }
             }
         }

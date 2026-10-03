@@ -515,7 +515,7 @@ describe('SEO Service & SSR Controller', () => {
         const reqLegacyWithQuery = {
             headers: { host: 'fuelfinder-msn8.onrender.com' },
             path: '/it/citta/roma',
-            query: { fuel: 'benzina' }
+            query: { fuel: 'benzina', extra: null, missing: undefined }
         };
         const res1 = {
             setHeader: vi.fn(),

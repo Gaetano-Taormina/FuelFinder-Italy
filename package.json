@@ -54,6 +54,9 @@
     "node": ">=22.0.0"
   },
   "packageManager": "pnpm@11.25.0",
+  "overrides": {
+    "undici": ">=8.10.2"
+  },
   "lint-staged": {
     "*.{js,jsx}": "oxlint -c .oxlintrc.json"
   },

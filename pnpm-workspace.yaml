@@ -1,3 +1,6 @@
 packages:
   - 'client'
   - 'server'
+
+overrides:
+  undici: '>=8.10.2'
