@@ -511,6 +511,39 @@ describe('SEO Service & SSR Controller', () => {
         expect(next3).toHaveBeenCalled();
     });
 
+    it('handles instant 301 migration redirect for legacy hosts (fuelfinder-msn8)', () => {
+        const reqLegacyWithQuery = {
+            headers: { host: 'fuelfinder-msn8.onrender.com' },
+            path: '/it/citta/roma',
+            query: { fuel: 'benzina' }
+        };
+        const res1 = {
+            setHeader: vi.fn(),
+            redirect: vi.fn()
+        };
+        const next1 = vi.fn();
+
+        seoRedirectMiddleware(reqLegacyWithQuery, res1, next1);
+        expect(res1.setHeader).toHaveBeenCalledWith('Cache-Control', 'public, max-age=31536000, immutable');
+        expect(res1.redirect).toHaveBeenCalledWith(301, 'https://fuelfinder-italia.onrender.com/it/citta/roma?fuel=benzina');
+        expect(next1).not.toHaveBeenCalled();
+
+        const reqLegacyGetFn = {
+            get: vi.fn().mockReturnValue('fuelfinder-msn8.onrender.com'),
+            path: null,
+            query: null
+        };
+        const res2 = {
+            setHeader: vi.fn(),
+            redirect: vi.fn()
+        };
+        const next2 = vi.fn();
+
+        seoRedirectMiddleware(reqLegacyGetFn, res2, next2);
+        expect(res2.redirect).toHaveBeenCalledWith(301, 'https://fuelfinder-italia.onrender.com/');
+        expect(next2).not.toHaveBeenCalled();
+    });
+
     it('injects noindex follow robots meta when noIndex is true', () => {
         const seo = new SeoService();
         const meta = seo.generateMetadata({
