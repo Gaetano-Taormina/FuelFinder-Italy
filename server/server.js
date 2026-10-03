@@ -9,9 +9,9 @@ app.get('/healthz', (req, res) => {
     res.status(200).send('OK');
 });
 
-// Robots.txt for Googlebot validation during migration
+// Robots.txt pointing Googlebot directly to the new domain sitemap index
 app.get('/robots.txt', (req, res) => {
-    res.type('text/plain').send('User-agent: *\nAllow: /\n');
+    res.type('text/plain').send('User-agent: *\nAllow: /\nSitemap: https://fuelfinder-italia.onrender.com/sitemap.xml\n');
 });
 
 // CodeQL-safe instant 301 Permanent Redirect to new production domain
@@ -30,7 +30,16 @@ app.use((req, res, next) => {
     }
 
     const rawPath = typeof req.path === 'string' ? req.path : '/';
-    const cleanPath = rawPath.replace(/^\/+/, '/');
+    let cleanPath = rawPath.replace(/^\/+/, '/');
+
+    // Strategic Single-Hop normalization for legacy un-prefixed routes
+    const legacyCityMatch = cleanPath.match(/^\/citta\/([a-zA-Z0-9_-]+)\/?$/);
+    if (legacyCityMatch) {
+        cleanPath = `/it/citta/${encodeURIComponent(legacyCityMatch[1])}`;
+    } else if (cleanPath === '/esplora' || cleanPath === '/esplora/') {
+        cleanPath = '/it/esplora';
+    }
+
     const safeTarget = new URL(cleanPath, 'https://fuelfinder-italia.onrender.com');
 
     if (req.query && typeof req.query === 'object') {
