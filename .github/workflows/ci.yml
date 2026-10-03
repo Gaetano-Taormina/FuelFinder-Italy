@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   validate-and-build:
-    name: Lint, Test & Attest Build
+    name: Lint, Security, Test & Attest Build
     runs-on: ubuntu-latest
     timeout-minutes: 10
     
@@ -55,6 +55,9 @@ jobs:
     - name: Run Linter (Oxlint)
       run: pnpm run lint
 
+    - name: Run Security Audit (CodeQL & Supply Chain)
+      run: pnpm run security
+
     - name: Run Tests & Coverage
       run: pnpm run test:coverage
 
@@ -80,3 +83,13 @@ jobs:
         name: build-dist
         path: client/dist/
         retention-days: 7
+
+    - name: Trigger Render Deploy on CI Success
+      if: github.ref == 'refs/heads/publication' && success() && github.event_name == 'push'
+      run: |
+        if [ -n "${{ secrets.RENDER_DEPLOY_HOOK }}" ]; then
+          echo "🚀 CI passed with 100% success. Triggering Render production deployment..."
+          curl -s -S -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+        else
+          echo "ℹ️ RENDER_DEPLOY_HOOK secret is not configured in GitHub Secrets. Skipping automatic webhook call."
+        fi

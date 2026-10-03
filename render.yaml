@@ -10,6 +10,19 @@ services:
     dockerfilePath: Dockerfile
     dockerContext: .
     healthCheckPath: /healthz
+    autoDeploy: false
+    buildFilter:
+      paths:
+        - server/**
+        - package.json
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
+      ignoredPaths:
+        - client/**
+        - tests/frontend/**
+        - .agents/**
+        - "*.md"
+        - .vscode/**
     envVars:
       - key: NODE_ENV
         value: production
@@ -30,6 +43,19 @@ services:
     rootDir: client
     buildCommand: pnpm install && pnpm build
     staticPublishPath: dist
+    autoDeploy: false
+    buildFilter:
+      paths:
+        - client/**
+        - package.json
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
+      ignoredPaths:
+        - server/**
+        - tests/backend/**
+        - .agents/**
+        - "*.md"
+        - .vscode/**
     envVars:
       - key: VITE_API_BASE_URL
         fromService:
@@ -40,5 +66,16 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
-
-
+    headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
