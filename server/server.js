@@ -84,6 +84,7 @@ app.use((req, res, next) => {
                 }
             }
         }
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
         return res.redirect(301, safeTarget.href);
     }
     next();

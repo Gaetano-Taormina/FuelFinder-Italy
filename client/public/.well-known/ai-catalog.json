@@ -9,7 +9,7 @@
       "identifier": "urn:air:fuelfinder-italia.onrender.com:api:fuel-stations",
       "displayName": "FuelFinder Fuel Pricing API",
       "type": "application/openapi+json",
-      "url": "https://fuelfinder-backend.onrender.com/api/stations",
+      "url": "https://fuelfinder-italia.onrender.com/api/stations",
       "description": "Real-time Italian gas stations and fuel prices (petrol, diesel, LPG, methane, HVO, LNG) from official MIMIT open data.",
       "representativeQueries": [
         "trova distributori benzina economici vicino a me",
