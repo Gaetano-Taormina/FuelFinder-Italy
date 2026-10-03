@@ -4,6 +4,22 @@ Tutte le modifiche rilevanti a questo progetto sono documentate in questo file.
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e aderisce a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-10-03
+
+### Added
+
+- **Multi-Entity Schema.org Graph (`client/index.html`):** Arricchimento dei dati strutturati con grafo multi-entità (`WebApplication`, `WebSite`, `Organization`) con loghi e metadati di attribuzione per motori di ricerca e LLM.
+- **AI Search Bots & Agent Resource Discovery (`robots.txt`, `ai-catalog.json`):** Accesso consentito ai crawler AI (`GPTBot`, `ChatGPT-User`, `PerplexityBot`, `Claude-Web`), discovery tag ARD e sfoltimento robots.txt a singolo master index `sitemap.xml`.
+- **Immutable 301 Migration Cache Headers:** Intestazione `Cache-Control: public, max-age=31536000, immutable` su tutte le risposte 301 per accelerare il trasferimento di dominio su Google Search Console.
+
+### Changed
+
+- **Centralized Test Database Factory:** Semplificazione dei test backend e integration con il factory condiviso `tests/helpers/testDbFactory.js`.
+
+### Security
+
+- **Supply Chain Protection (`undici`):** Override forzato `undici: '>=8.10.2'` in `pnpm-workspace.yaml` per sanificare le vulnerabilità GHSA su tutta la dipendenza transitiva.
+
 ## [1.6.0] - 2026-09-28
 
 ### Added
