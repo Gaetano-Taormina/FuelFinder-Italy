@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["client/src/*", "src/*"]
+      "@/*": ["client/src/*"]
     },
     "jsx": "react-jsx",
     "target": "ESNext",
@@ -13,7 +13,15 @@
     "client/src/**/*",
     "server/**/*",
     "tests/**/*",
+    "scripts/**/*",
     "client/vite.config.js",
-    "vitest.config.js"
+    "vitest.config.js",
+    "playwright.config.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "client/dist",
+    "coverage"
   ]
 }
