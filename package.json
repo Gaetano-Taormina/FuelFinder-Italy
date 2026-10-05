@@ -67,11 +67,11 @@
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@vitejs/plugin-react": "^6.1.1",
-    "@vitest/coverage-v8": "^5.0.2",
+    "@vitest/coverage-v8": "^5.0.3",
     "concurrently": "^10.0.5",
     "cors": "^2.8.6",
     "cross-env": "^10.1.0",
-    "dotenv": "^18.0.4",
+    "dotenv": "^18.0.5",
     "escape-html": "^1.0.3",
     "express": "^5.2.1",
     "express-rate-limit": "^8.7.0",
@@ -81,7 +81,7 @@
     "i18next-browser-languagedetector": "^8.2.1",
     "leaflet": "^1.9.4",
     "lint-staged": "^17.6.0",
-    "oxlint": "^1.85.0",
+    "oxlint": "^1.86.0",
     "qrcode": "^1.5.4",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
@@ -92,8 +92,8 @@
     "supertest": "^7.3.0",
     "swr": "^2.5.1",
     "tailwindcss": "^4.3.3",
-    "vite": "^8.3.1",
+    "vite": "^8.3.2",
     "vite-plugin-compression2": "^2.5.3",
-    "vitest": "^5.0.2"
+    "vitest": "^5.0.3"
   }
 }
