@@ -58,10 +58,7 @@ services:
         - .vscode/**
     envVars:
       - key: VITE_API_BASE_URL
-        fromService:
-          type: web
-          name: fuelfinder-backend
-          property: host
+        value: https://fuelfinder-backend-sma6.onrender.com
     routes:
       - type: rewrite
         source: /*

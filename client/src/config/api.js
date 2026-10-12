@@ -5,8 +5,13 @@
  */
 
 export const getApiBaseUrl = () => {
-    const rawEnv = (import.meta.env?.VITE_API_BASE_URL || '').trim();
+    let rawEnv = (import.meta.env?.VITE_API_BASE_URL || '').trim();
     if (rawEnv) {
+        // Se Render o l'ambiente inietta solo lo slug del servizio interno (es. 'fuelfinder-backend-sma6' senza TLD)
+        const hostPart = rawEnv.replace(/^https?:\/\//, '').split('/')[0];
+        if (hostPart && !hostPart.includes('.')) {
+            rawEnv = `${rawEnv}.onrender.com`;
+        }
         if (rawEnv.startsWith('http://') || rawEnv.startsWith('https://')) {
             return rawEnv.replace(/\/+$/, '');
         }

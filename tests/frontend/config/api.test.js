@@ -37,6 +37,14 @@ describe('API Config Helper (getApiBaseUrl & getApiUrl)', () => {
         expect(getApiUrl('/api/stats')).toBe('https://fuelfinder-backend.example.com/api/stats');
     });
 
+    it('resolves bare internal service slug by appending onrender.com', () => {
+        import.meta.env.VITE_API_BASE_URL = 'fuelfinder-backend-sma6';
+        expect(getApiBaseUrl()).toBe('https://fuelfinder-backend-sma6.onrender.com');
+
+        import.meta.env.VITE_API_BASE_URL = 'https://fuelfinder-backend-sma6';
+        expect(getApiBaseUrl()).toBe('https://fuelfinder-backend-sma6.onrender.com');
+    });
+
     it('falls back to production Render backend if hostname includes onrender.com and env is empty', () => {
         import.meta.env.VITE_API_BASE_URL = '';
         Object.defineProperty(window, 'location', {
