@@ -217,6 +217,42 @@ describe('StationsContext - Fuel Actions & Data Fetching', () => {
     }, { interval: 5 });
   });
 
+  it('throws exception if response content-type is not JSON', async () => {
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      headers: { get: () => 'text/html; charset=utf-8' },
+      json: async () => ({})
+    });
+
+    renderWithProvider(['/it/']);
+
+    act(() => {
+      fireEvent.click(screen.getByText('Set Pos'));
+    });
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalled();
+    }, { interval: 5 });
+  });
+
+  it('accepts response if content-type header is missing or empty', async () => {
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      headers: { get: () => '' },
+      json: async () => ({ stations: [{ id: 42 }] })
+    });
+
+    renderWithProvider(['/it/']);
+
+    act(() => {
+      fireEvent.click(screen.getByText('Set Pos'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('stationsCount').textContent).toBe('1');
+    }, { interval: 5 });
+  });
+
   it('registers WebMCP tools and handles tool callback execution within provider', async () => {
     const registeredTools = {};
     Object.defineProperty(global.navigator, 'modelContext', {

@@ -4,6 +4,18 @@ Tutte le modifiche rilevanti a questo progetto sono documentate in questo file.
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e aderisce a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.1] - 2026-10-12
+
+### Fixed
+
+- **Cross-Service Render API Routing (`client/src/config/api.js`):** Centralizzazione della risoluzione endpoint API con fallback automatico su `https://fuelfinder-backend-sma6.onrender.com` in ambiente Render, eliminando il rewrite HTML SPA 404/200 su percorsi relativi.
+- **Loader Retry Reactivity (`client/src/components/Loader.jsx`):** Aggiunto trigger reattivo `retryTrigger` per forzare la ripartenza dell'animazione al 20% e il polling attivo durante il risveglio dal cold-start.
+- **Strict Content-Type Validation in SWR Fetcher:** Verifica dell'header `application/json` prima del parsing per gestire tempestivamente risposte inattese o pagine fallback.
+
+### Security
+
+- **Supply Chain Hardening (`shell-quote`, `source-map-js`):** Inseriti override forzati `shell-quote: '>=1.11.0'` e `source-map-js: '>=1.2.2'` in `package.json` e `pnpm-workspace.yaml`, sanando le relative vulnerabilità con audit 100% pulito.
+
 ## [1.7.0] - 2026-10-03
 
 ### Added

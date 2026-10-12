@@ -2,6 +2,7 @@ import { createContext, useState, useEffect, useContext, useMemo, useCallback } 
 import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
 import { registerWebMcpTools } from '../services/webMcpService';
+import { getApiUrl } from '../config/api';
 
 const StationsContext = createContext();
 
@@ -15,6 +16,12 @@ export const useStations = () => useContext(StationsContext);
 const fetcher = async (url) => {
   const res = await fetch(url);
   if (!res.ok) throw new Error('Network response was not ok');
+  if (res.headers && typeof res.headers.get === 'function') {
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType && !contentType.includes('application/json')) {
+      throw new Error('Expected JSON response but received: ' + contentType);
+    }
+  }
   return res.json();
 };
 
@@ -80,7 +87,7 @@ export const StationsProvider = ({ children }) => {
 
   // SWR Fetch for Stations (Caching & Optimistic UI)
   const stationsUrl = userPos 
-    ? `/api/stations?lat=${userPos.lat}&lng=${userPos.lng}&radius=${radius}&fuelType=${encodeURIComponent(fuelType)}&serviceType=${serviceType}` 
+    ? getApiUrl(`/api/stations?lat=${userPos.lat}&lng=${userPos.lng}&radius=${radius}&fuelType=${encodeURIComponent(fuelType)}&serviceType=${serviceType}`)
     : null;
 
   const { data: stationsData, error, isLoading, isValidating, mutate: refreshStations } = useSWR(stationsUrl, fetcher, {

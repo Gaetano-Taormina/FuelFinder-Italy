@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Header from '../components/Header';
+import { getApiUrl } from '../config/api';
 
 const slugify = (text) => {
     return text.toString().toLowerCase()
@@ -29,7 +30,7 @@ export default function ExplorePage() {
     const setSortDesc = useCallback(() => setSortOrder('desc'), []);
 
     useEffect(() => {
-        fetch('/api/cities')
+        fetch(getApiUrl('/api/cities'))
             .then(res => res.json())
             .then(data => {
                 setCities(data);

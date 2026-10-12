@@ -12,6 +12,7 @@ import { Suspense, lazy } from 'react';
 import RoutePanel from './components/RoutePanel';
 import StationTable from './components/StationTable';
 import { ROUTES } from './config/routes.js';
+import { getApiUrl } from './config/api';
 const MapArea = lazy(() => import('./components/MapArea'));
 
 const slugify = (text) => {
@@ -36,7 +37,7 @@ const getRealCityName = async (slug, lang) => {
         searchSlug = enToItCities[searchSlug];
     }
     try {
-        const res = await fetch(`/api/cities/validate?slug=${encodeURIComponent(searchSlug)}`);
+        const res = await fetch(getApiUrl(`/api/cities/validate?slug=${encodeURIComponent(searchSlug)}`));
         const data = await res.json();
         if (data.valid) {
             return data.city.name;
@@ -127,7 +128,7 @@ function LayoutContent() {
 
     // Traccia la visita al caricamento dell'app
     useEffect(() => {
-        fetch('/api/visit').catch(() => {});
+        fetch(getApiUrl('/api/visit')).catch(() => {});
     }, []);
 
     // Load single station directly if stationId param is present
@@ -139,7 +140,7 @@ function LayoutContent() {
                 setSelectedStation(found);
                 setUserPos({ lat: found.lat, lng: found.lng, type: 'station' });
             } else {
-                fetch(`/api/stations/${parsedId}`)
+                fetch(getApiUrl(`/api/stations/${parsedId}`))
                     .then(res => res.json())
                     .then(data => {
                         if (data && data.success && data.station) {
@@ -204,7 +205,7 @@ function LayoutContent() {
                         if (cityMatch) {
                             const searchSlug = slugify(cityMatch);
                             
-                            fetch(`/api/cities/validate?slug=${encodeURIComponent(searchSlug)}`)
+                            fetch(getApiUrl(`/api/cities/validate?slug=${encodeURIComponent(searchSlug)}`))
                                 .then(res => (res && res.ok !== false ? res.json() : { valid: false }))
                                 .then(validateData => {
                                     if (validateData && validateData.valid) {

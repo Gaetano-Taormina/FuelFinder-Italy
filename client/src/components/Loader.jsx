@@ -9,6 +9,7 @@ export default function Loader() {
     const [isColdStarting, setIsColdStarting] = useState(false);
     const [progress, setProgress] = useState(15);
     const [statusStage, setStatusStage] = useState('init');
+    const [retryTrigger, setRetryTrigger] = useState(0);
 
     // Gestione avanzamento fluido e proporzionato della barra
     useEffect(() => {
@@ -52,7 +53,7 @@ export default function Loader() {
 
             return () => clearTimeout(timer);
         }
-    }, [loading, error]);
+    }, [loading, error, retryTrigger]);
 
     const handleDismiss = useCallback(() => {
         setIsDismissed(true);
@@ -61,6 +62,8 @@ export default function Loader() {
     const handleRetry = useCallback(() => {
         setIsDismissed(false);
         setProgress(20);
+        setStatusStage('connecting');
+        setRetryTrigger(prev => prev + 1);
         if (refreshStations) {
             refreshStations();
         }

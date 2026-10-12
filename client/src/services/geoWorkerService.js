@@ -1,3 +1,5 @@
+import { getApiUrl } from '../config/api';
+
 /**
  * Service to fetch and process nearby stations from Backend SQL API (Shift-Left Compute)
  */
@@ -17,7 +19,7 @@ export async function fetchStationsNearby(originCoords, radiusKm = 5, fuelType =
     return [];
   }
 
-  const url = `/api/stations?lat=${originCoords.lat}&lng=${originCoords.lng}&radius=${radiusKm}&fuelType=${encodeURIComponent(fuelType)}&serviceType=${serviceType}`;
+  const url = getApiUrl(`/api/stations?lat=${originCoords.lat}&lng=${originCoords.lng}&radius=${radiusKm}&fuelType=${encodeURIComponent(fuelType)}&serviceType=${serviceType}`);
   const res = await fetch(url);
   if (!res.ok) {
     throw new Error('Network error fetching stations');

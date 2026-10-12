@@ -1,7 +1,7 @@
 {
   "name": "fuelfinder-italy",
   "private": true,
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "Trova i distributori di carburante più economici in Italia (Workspace Decoupled Architecture)",
   "keywords": [
     "carburante",
@@ -55,7 +55,9 @@
   },
   "packageManager": "pnpm@11.25.0",
   "overrides": {
-    "undici": ">=8.10.2"
+    "undici": ">=8.10.2",
+    "shell-quote": ">=1.11.0",
+    "source-map-js": ">=1.2.2"
   },
   "lint-staged": {
     "*.{js,jsx}": "oxlint -c .oxlintrc.json"
