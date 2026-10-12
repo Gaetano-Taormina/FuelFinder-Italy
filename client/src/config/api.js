@@ -24,7 +24,7 @@ export const getApiBaseUrl = () => {
         typeof window !== 'undefined' &&
         window.location &&
         typeof window.location.hostname === 'string' &&
-        window.location.hostname.includes('onrender.com')
+        (window.location.hostname === 'onrender.com' || window.location.hostname.endsWith('.onrender.com'))
     ) {
         return 'https://fuelfinder-backend-sma6.onrender.com';
     }
