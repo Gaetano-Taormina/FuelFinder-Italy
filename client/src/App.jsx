@@ -11,8 +11,10 @@ import { Suspense, lazy } from 'react';
 
 import RoutePanel from './components/RoutePanel';
 import StationTable from './components/StationTable';
+import Maintenance from './components/Maintenance';
 import { ROUTES } from './config/routes.js';
 import { getApiUrl } from './config/api';
+import { isMaintenanceActive } from './config/maintenance';
 const MapArea = lazy(() => import('./components/MapArea'));
 
 const slugify = (text) => {
@@ -387,7 +389,7 @@ function LayoutContent() {
     );
 }
 
-function MainApp() {
+function MainContent() {
     const { i18n } = useTranslation();
     const { lang, city, stationId, fuel } = useParams();
     const navigate = useNavigate();
@@ -437,6 +439,13 @@ function MainApp() {
             <LayoutContent />
         </StationsProvider>
     );
+}
+
+function MainApp() {
+    if (isMaintenanceActive()) {
+        return <Maintenance />;
+    }
+    return <MainContent />;
 }
 
 export default MainApp;

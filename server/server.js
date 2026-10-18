@@ -272,7 +272,7 @@ async function initServer() {
 initServer();
 
 function scheduleKeepAliveHeartbeat(port) {
-    if (process.env.NODE_ENV !== 'production' && process.env.ENABLE_HEARTBEAT !== 'true') {
+    if (process.env.MAINTENANCE_MODE === 'true' || process.env.ENABLE_HEARTBEAT !== 'true') {
         return;
     }
     const intervalMs = 10 * 60 * 1000; // 10 minuti

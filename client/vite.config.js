@@ -6,6 +6,10 @@ import { fileURLToPath, URL } from "node:url";
 
 // https://vite.dev/config/
 export default defineConfig(() => ({
+  envPrefix: ["VITE_", "MAINTENANCE_"],
+  define: {
+    "import.meta.env.MAINTENANCE_MODE": JSON.stringify(process.env.MAINTENANCE_MODE || "")
+  },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),

@@ -3,6 +3,7 @@ import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
 import { registerWebMcpTools } from '../services/webMcpService';
 import { getApiUrl } from '../config/api';
+import { isMaintenanceActive } from '../config/maintenance';
 
 const StationsContext = createContext();
 
@@ -85,8 +86,8 @@ export const StationsProvider = ({ children }) => {
     if (!station) setRouteData(null);
   }, []);
 
-  // SWR Fetch for Stations (Caching & Optimistic UI)
-  const stationsUrl = userPos 
+  // SWR Fetch for Stations (Caching & Optimistic UI, disabilitato in manutenzione)
+  const stationsUrl = (userPos && !isMaintenanceActive()) 
     ? getApiUrl(`/api/stations?lat=${userPos.lat}&lng=${userPos.lng}&radius=${radius}&fuelType=${encodeURIComponent(fuelType)}&serviceType=${serviceType}`)
     : null;
 
