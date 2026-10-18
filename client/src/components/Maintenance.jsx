@@ -2,23 +2,16 @@ import { useState, useEffect, useCallback } from 'react';
 
 export default function Maintenance() {
     const [theme, setTheme] = useState(() => {
-        if (typeof window !== 'undefined' && window.localStorage) {
-            return localStorage.getItem('theme') || 'dark';
-        }
-        return 'dark';
+        return localStorage.getItem('theme') || 'dark';
     });
 
     useEffect(() => {
-        if (typeof document !== 'undefined') {
-            if (theme === 'dark') {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-            if (typeof window !== 'undefined' && window.localStorage) {
-                localStorage.setItem('theme', theme);
-            }
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
         }
+        localStorage.setItem('theme', theme);
     }, [theme]);
 
     const toggleTheme = useCallback(() => {
