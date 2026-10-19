@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "i18next": "^26.4.2",
+    "i18next": "^26.4.7",
     "i18next-browser-languagedetector": "^8.2.1",
     "leaflet": "^1.9.4",
     "qrcode": "^1.5.4",
