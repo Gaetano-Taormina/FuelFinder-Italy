@@ -75,13 +75,13 @@ export default function Maintenance() {
                 </h1>
 
                 <p className="text-slate-300 text-base sm:text-lg leading-relaxed mb-6 max-w-lg">
-                    FuelFinder Italia è temporaneamente offline per aggiornamenti infrastrutturali e ottimizzazione delle risorse.
+                    FuelFinder Italia è temporaneamente offline per aggiornamento database causato da ristrutturazione architetturale ex-monolite. I prezzi visualizzati si basano sull'ultimo sincronizzazione giornaliera riuscita.
                 </p>
 
                 <div className="p-4 rounded-2xl bg-slate-800/60 border border-slate-700/60 text-sm text-slate-400 max-w-md w-full mb-8">
                     <p className="font-medium text-slate-300 mb-1">Cosa stiamo facendo?</p>
                     <p>
-                        Stiamo allineando le quote server e i sistemi di aggiornamento prezzi. Il servizio riprenderà regolarmente a breve. Grazie per la collaborazione!
+                        Migrazione della sincronizzazione dati da struttura server monolitico a pipeline GitHub Actions + Render Free Tier. Risoluzione debito tecnico accumulato sui 750 ore/mese piano free. Sync riattivo secondo orario adattivo.
                     </p>
                 </div>
 

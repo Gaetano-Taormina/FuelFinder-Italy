@@ -93,8 +93,11 @@ export async function applyChanges(db, syncOps) {
 
     for (let i = 0; i < syncOps.upsertStations.length; i += stationsChunkSize) {
         const chunk = syncOps.upsertStations.slice(i, i + stationsChunkSize);
-        const placeholders = chunk.map(() => `(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).join(", ");
-        const args = chunk.flat();
+        // Filtra rows con valori undefined
+        const validChunk = chunk.filter(row => row && row.length === 10 && row.every(v => v !== undefined && v !== null));
+        if (validChunk.length === 0) continue;
+        const placeholders = validChunk.map(() => `(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).join(", ");
+        const args = validChunk.flat();
         batchedQueries.push({ sql: stationsSqlBase + placeholders + stationsOnConflict, args });
     }
 
@@ -105,19 +108,26 @@ export async function applyChanges(db, syncOps) {
 
     for (let i = 0; i < syncOps.upsertPrices.length; i += pricesChunkSize) {
         const chunk = syncOps.upsertPrices.slice(i, i + pricesChunkSize);
-        const placeholders = chunk.map(() => `(?, ?, ?, ?, ?)`).join(", ");
-        const args = chunk.flat();
+        // Filtra rows con valori undefined
+        const validChunk = chunk.filter(row => row && row.length === 5 && row.every(v => v !== undefined && v !== null));
+        if (validChunk.length === 0) continue;
+        const placeholders = validChunk.map(() => `(?, ?, ?, ?, ?)`).join(", ");
+        const args = validChunk.flat();
         batchedQueries.push({ sql: pricesSqlBase + placeholders + pricesOnConflict, args });
     }
 
     // Stations DELETE
     for (const idArr of syncOps.deleteStations) {
-        batchedQueries.push({ sql: `DELETE FROM stations WHERE id=?`, args: idArr });
+        if (idArr && idArr.length === 1 && idArr[0] !== undefined && idArr[0] !== null) {
+            batchedQueries.push({ sql: `DELETE FROM stations WHERE id=?`, args: idArr });
+        }
     }
 
     // Prices DELETE
     for (const args of syncOps.deletePrices) {
-        batchedQueries.push({ sql: `DELETE FROM prices WHERE id_impianto=? AND desc_carburante=? AND is_self=?`, args });
+        if (args && args.length === 3 && args.every(a => a !== undefined && a !== null)) {
+            batchedQueries.push({ sql: `DELETE FROM prices WHERE id_impianto=? AND desc_carburante=? AND is_self=?`, args });
+        }
     }
 
     console.log(`Applying ${batchedQueries.length} optimized bulk batch queries to database...`);

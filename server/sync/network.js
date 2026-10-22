@@ -20,7 +20,7 @@ export const BROWSER_HEADERS = {
  * If the server rejects or hangs on HEAD (common on government WAFs), gracefully falls back
  * to direct download rather than aborting the scheduled sync workflow.
  */
-export async function checkUpdates(lastModifiedHeader, timeoutMs = 20000) {
+export async function checkUpdates(lastModifiedHeader, timeoutMs = 45000) {
   console.log("Checking MIMIT updates...");
   const headers = { ...BROWSER_HEADERS };
   if (lastModifiedHeader) {
@@ -55,7 +55,7 @@ export async function checkUpdates(lastModifiedHeader, timeoutMs = 20000) {
 /**
  * Streams and downloads a CSV export from MIMIT using browser headers and configurable timeout.
  */
-export async function downloadFile(url, timeoutMs = 120000) {
+export async function downloadFile(url, timeoutMs = 300000) {
   const response = await fetch(url, {
     headers: BROWSER_HEADERS,
     signal: AbortSignal.timeout(timeoutMs)

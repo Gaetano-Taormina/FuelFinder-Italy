@@ -15,10 +15,10 @@ import { URL_ANAGRAFICA, URL_PREZZI, checkUpdates, downloadFile } from "./networ
 import { initSchema, getLastModified, loadExistingData, applyChanges, setLastModified } from "./database.js";
 import { processStationsDiff, processPricesDiff, processDeletions } from "./processor.js";
 
-export async function sync(dbClient, retries = 3, options = {}) {
+export async function sync(dbClient, retries = 5, options = {}) {
   if (typeof retries === 'object' && retries !== null) {
     options = retries;
-    retries = options.retries ?? 3;
+    retries = options.retries ?? 5;
   }
   const retryDelayMs = options.retryDelayMs ?? (process.env.CI ? 15000 : 30000);
 

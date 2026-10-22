@@ -97,6 +97,8 @@ graph TD
    - Durante il passaggio a `fuelfinder-italia.onrender.com`, Googlebot tentava di verificare i redirect 301 sul vecchio host `fuelfinder-msn8.onrender.com`. Il download del database SQLite all'avvio causava un tempo di risposta > 5s, generando l'errore *"Impossibile recuperare la pagina"* su Google Search Console.
 3. **Collisione tra Routing SPA e Crawler AI (Specifiche ARD):**
    - I bot di audit per l'individuabilità degli agenti AI cercavano manifest come `/.well-known/ai-catalog.json`. In assenza di file fisici, la regola catch-all della SPA restituiva la pagina `index.html` con status 200, provocando errori di parse JSON (`Unexpected token '<'`).
+4. **Criticità Sync Giornaliero e Timeout MIMIT:**
+   - Il cron giornaliero su GitHub Actions falliva ripetutamente (3x/giorno) a causa di timeout insufficienti (120s) e retry limitati (3 tentativi) durante il download dei CSV MIMIT da server governativi protetti da WAF. Il fallback diretto scaricava file parziali o temporizzati out, causando errori "undefined" in `applyChanges` e consumo incontrollato delle 750 ore/mese free tier Render.
 
 ### 3.2. Soluzioni Architetturali Adottate
 
@@ -114,6 +116,11 @@ graph TD
 5. **Quality Gates & Zero-Alert Enforcement:**
    - 100.0% di copertura test su 4 metriche (Lines, Functions, Statements, Branches) con Vitest e Playwright E2E.
    - Script di pre-flight security locale (`scripts/security-audit.js`) e scansione statica con Oxlint e CodeQL (zero alert di sicurezza).
+6. **Risoluzione Criticità Sync e Stabilità Database:**
+   - Aumento timeout `downloadFile` da 120s a 300s per gestire CSV nazionali completi.
+   - Aumento retry sync da 3 a 5 tentativi con backoff esponenziale.
+   - Validazione valori `undefined`/`null` in `applyChanges()` per prevenire errori batch database.
+   - Filtraggio rows con valori mancanti prima dell'esecuzione query SQLite.
 
 ---
 
