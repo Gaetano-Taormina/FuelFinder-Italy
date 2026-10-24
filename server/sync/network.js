@@ -31,6 +31,7 @@ export async function checkUpdates(lastModifiedHeader, timeoutMs = 45000) {
     const headResponse = await fetch(URL_PREZZI, {
       method: "HEAD",
       headers,
+      redirect: 'follow',
       signal: AbortSignal.timeout(timeoutMs)
     });
 
@@ -58,6 +59,7 @@ export async function checkUpdates(lastModifiedHeader, timeoutMs = 45000) {
 export async function downloadFile(url, timeoutMs = 300000) {
   const response = await fetch(url, {
     headers: BROWSER_HEADERS,
+    redirect: 'follow',
     signal: AbortSignal.timeout(timeoutMs)
   });
   if (!response.ok) throw new Error(`Errore Server MIMIT - HTTP ${response.status}`);
