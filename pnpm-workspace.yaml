@@ -3,6 +3,8 @@ packages:
   - 'server'
 
 overrides:
-  undici: '>=8.10.2'
+  undici: '>=8.12.2'
+  ip-address: '>=10.7.4'
+  body-parser: '>=2.4.0'
   shell-quote: '>=1.11.0'
   source-map-js: '>=1.2.2'

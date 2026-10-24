@@ -86,7 +86,7 @@ describe('Sync Network Module', () => {
             body: stream
         });
 
-        const tmpFilePath = await downloadFile('https://example.com/test.csv');
+        const tmpFilePath = await downloadFile('https://example.com/test.csv', 300000, 0, true);
         expect(fs.existsSync(tmpFilePath)).toBe(true);
         expect(fs.readFileSync(tmpFilePath, 'utf8')).toBe(mockContent);
 
@@ -100,6 +100,6 @@ describe('Sync Network Module', () => {
             ok: false
         });
 
-        await expect(downloadFile('https://example.com/test.csv')).rejects.toThrow('Errore Server MIMIT - HTTP 502');
+        await expect(downloadFile('https://example.com/test.csv', 300000, 0, true)).rejects.toThrow('Errore Server MIMIT - HTTP 502');
     });
 });
