@@ -56,14 +56,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Download CSV files with curl (retry enabled)
+      - name: Download CSV files with optimized curl (parallel)
         run: |
-          curl -L -f -s --retry 3 --retry-delay 5 --max-time 120 \
+          curl -L -f -s --connect-timeout 10 --max-time 45 --retry 2 --retry-delay 3 --fail \
             -o server/anagrafica_impianti_attivi.csv \
-            https://www.mimit.gov.it/images/exportCSV/anagrafica_impianti_attivi.csv
-          curl -L -f -s --retry 3 --retry-delay 5 --max-time 120 \
+            "https://www.mimit.gov.it/images/exportCSV/anagrafica_impianti_attivi.csv" &
+          curl -L -f -s --connect-timeout 10 --max-time 45 --retry 2 --retry-delay 3 --fail \
             -o server/prezzo_alle_8.csv \
-            https://www.mimit.gov.it/images/exportCSV/prezzo_alle_8.csv
+            "https://www.mimit.gov.it/images/exportCSV/prezzo_alle_8.csv" &
+          wait
 
       - name: Import CSV files into SQLite DB
         run: node server/import-csv.js server/anagrafica_impianti_attivi.csv server/prezzo_alle_8.csv
