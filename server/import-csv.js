@@ -48,6 +48,19 @@ async function main() {
     console.info('📥 Processing prices CSV...');
     await processPricesDiff(prezziPath, new Map(), syncOps, seenPriceIds, {});
 
+    const hasValidStations = [...seenStationIds].some((id) => Number.isSafeInteger(id) && id > 0);
+    const hasValidPrices = [...seenPriceIds].some((key) => {
+      const [id, fuel] = key.split('_');
+      return Number.isSafeInteger(Number(id)) && Number(id) > 0 && Boolean(fuel);
+    });
+
+    if (!hasValidStations) {
+      throw new Error('Refusing to publish an empty database: no valid station rows were parsed.');
+    }
+    if (!hasValidPrices) {
+      throw new Error('Refusing to publish an incomplete database: no valid price rows were parsed.');
+    }
+
     // Process deletions (none for fresh import)
     processDeletions(new Map(), new Map(), seenStationIds, seenPriceIds, syncOps);
 

@@ -45,13 +45,18 @@ jobs:
 
       - name: Download CSV files with optimized curl (parallel)
         run: |
-          curl -L -f -s --connect-timeout 10 --max-time 45 --retry 2 --retry-delay 3 --fail \
+          curl -L -f -sS --connect-timeout 10 --max-time 45 --retry 2 --retry-delay 3 \
             -o server/anagrafica_impianti_attivi.csv \
             "https://www.mimit.gov.it/images/exportCSV/anagrafica_impianti_attivi.csv" &
-          curl -L -f -s --connect-timeout 10 --max-time 45 --retry 2 --retry-delay 3 --fail \
+          stations_download_pid=$!
+          curl -L -f -sS --connect-timeout 10 --max-time 45 --retry 2 --retry-delay 3 \
             -o server/prezzo_alle_8.csv \
             "https://www.mimit.gov.it/images/exportCSV/prezzo_alle_8.csv" &
-          wait
+          prices_download_pid=$!
+          wait "$stations_download_pid"
+          wait "$prices_download_pid"
+          test -s server/anagrafica_impianti_attivi.csv
+          test -s server/prezzo_alle_8.csv
 
       - name: Import CSV files into SQLite DB
         run: node server/import-csv.js server/anagrafica_impianti_attivi.csv server/prezzo_alle_8.csv
