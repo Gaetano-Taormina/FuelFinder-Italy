@@ -10,8 +10,12 @@ export function seoRedirectMiddleware(req, res, next) {
     const host = (typeof req.get === 'function' ? req.get('host') : (req.headers && req.headers.host)) || '';
     if (host.includes('fuelfinder-msn8')) {
         const rawPath = typeof req.path === 'string' ? req.path : '/';
-        const cleanPath = rawPath.replace(/^\/+/, '/');
-        const safeTarget = new URL(cleanPath, 'https://fuelfinder-italia.onrender.com');
+        const redirectOrigin = 'https://fuelfinder-italia.onrender.com';
+        const cleanPath = rawPath.replace(/\\/g, '/').replace(/^\/+/, '/');
+        const safeTarget = new URL(cleanPath, redirectOrigin);
+        if (safeTarget.origin !== redirectOrigin) {
+            return res.redirect(301, `${redirectOrigin}/`);
+        }
         if (req.query && typeof req.query === 'object') {
             for (const [paramKey, paramVal] of Object.entries(req.query)) {
                 if (paramVal !== undefined && paramVal !== null) {

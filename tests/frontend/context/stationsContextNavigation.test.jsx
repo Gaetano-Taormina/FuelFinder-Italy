@@ -50,6 +50,7 @@ describe('StationsContext - Navigation & OSRM Routing', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     window.location = originalLocation;
     window.open = originalOpen;
     vi.unstubAllGlobals();
@@ -134,8 +135,37 @@ describe('StationsContext - Navigation & OSRM Routing', () => {
     });
 
     expect(consoleSpy).toHaveBeenCalledWith('OSRM Fetch Error:', expect.any(Error));
+    expect(screen.getByTestId('routeData').textContent).not.toBe('null');
     consoleSpy.mockRestore();
-    vi.useRealTimers();
+  });
+
+  it('falls back when the OSRM response body stalls past the timeout', async () => {
+    vi.useFakeTimers();
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    global.fetch = vi.fn((url) => {
+      if (typeof url === 'string' && url.startsWith('https://router.project-osrm.org/')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => new Promise(() => {})
+        });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    });
+
+    renderWithProvider();
+
+    act(() => {
+      fireEvent.click(screen.getByText('Set Pos'));
+      fireEvent.click(screen.getByText('Set Selected Station'));
+    });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4000);
+    });
+
+    expect(consoleSpy).toHaveBeenCalledWith('OSRM Fetch Error:', expect.any(Error));
+    expect(screen.getByTestId('routeData').textContent).not.toBe('null');
+    consoleSpy.mockRestore();
   });
 
   it('handleNavigation early returns when station is invalid or missing coordinates', () => {

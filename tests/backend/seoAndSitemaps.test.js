@@ -544,6 +544,24 @@ describe('SEO Service & SSR Controller', () => {
         expect(next2).not.toHaveBeenCalled();
     });
 
+    it('keeps backslash-prefixed legacy redirect paths on the canonical host', () => {
+        const req = {
+            headers: { host: 'fuelfinder-msn8.onrender.com' },
+            path: '/\\evil.example',
+            query: {}
+        };
+        const res = {
+            setHeader: vi.fn(),
+            redirect: vi.fn()
+        };
+        const next = vi.fn();
+
+        seoRedirectMiddleware(req, res, next);
+
+        expect(res.redirect).toHaveBeenCalledWith(301, 'https://fuelfinder-italia.onrender.com/evil.example');
+        expect(next).not.toHaveBeenCalled();
+    });
+
     it('injects noindex follow robots meta when noIndex is true', () => {
         const seo = new SeoService();
         const meta = seo.generateMetadata({

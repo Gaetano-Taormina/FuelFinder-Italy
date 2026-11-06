@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 export default function Maintenance() {
     const [theme, setTheme] = useState(() => {
         return localStorage.getItem('theme') || 'dark';
@@ -93,7 +95,7 @@ export default function Maintenance() {
 
             {/* Footer */}
             <footer className="w-full max-w-4xl text-center py-4 border-t border-slate-800/60 text-xs text-slate-500">
-                <p>&copy; {new Date().getFullYear()} FuelFinder Italia - Tutti i diritti riservati.</p>
+                <p>&copy; {CURRENT_YEAR} FuelFinder Italia - Tutti i diritti riservati.</p>
             </footer>
         </div>
     );

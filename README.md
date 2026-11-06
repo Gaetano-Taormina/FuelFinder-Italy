@@ -48,10 +48,10 @@ The data shown is real and based on official Open Data from the Italian Ministry
 - **WebMCP Integration:** Built-in Web Model Context Protocol (WebMCP) bridge enabling AI assistants and client tools to discover real-time fuel prices.
 - **Localized Station Routes & Sharing:** Direct localized URLs for each station (`/:lang/:cityPrefix/:city/:stationPrefix/:stationId/:fuel?`) with 1-click clipboard sharing and GasStation JSON-LD structured schema.
 - **Station Detail API:** Dedicated endpoint (`GET /api/stations/:id`) providing full station metadata, pricing history, and breakdown by Self-Service / Served.
-- **Route Calculation:** Integrated OSRM (Open Source Routing Machine) to automatically trace the optimal route on the map, calculating distance and travel time from the user to the selected station with race condition prevention.
+- **Route Calculation:** Integrated OSRM (Open Source Routing Machine) to trace routes and calculate distance and travel time. The 3.5-second deadline covers the request and response-body parsing, with a straight-line fallback if route lookup fails.
 - **Advanced Filters:** Filter by radius (3, 5, 10, 20 km), fuel type (Petrol, Diesel, LPG, Methane, HVO, LNG), and service type (Self-Service or Served).
 - **Interactive Map & Offline Tile Caching:** Clear map visualization (powered by Leaflet) with dynamic point-of-interest clustering and throttled LRU Service Worker map tile caching (500 items).
-- **Off-thread Geo Web Worker:** Offloads heavy Haversine distance computations and convenience score sorting to a background Web Worker (`geoWorkerService.js`), maintaining 60+ FPS UI fluidity.
+- **Server-side Geospatial Search:** Nearby stations and convenience ranking are computed by the backend SQL API; `geoWorkerService.js` requests results and does not create a Web Worker.
 - **PWA & Native Storage:** Pure Vanilla IndexedDB for search history and favorite stations with full offline service worker caching for map routes and assets.
 - **Multi-language:** Native internationalization (i18next) for both English and Italian.
 - **Modern UX:** Features Optimistic UI rendering, Skeleton Loaders, CSS-only Tooltips, and SWR caching for a fluid, app-like feel.
@@ -76,6 +76,8 @@ Scan the QR Code below with your smartphone camera to open FuelFinder Italy and 
 ### Scripts and Commands
 
 All commands are powered by `pnpm`:
+
+**Prerequisites:** Node.js `>=24.0.0` and pnpm `11.25.0` (see the root `package.json`).
 
 ```bash
 # Start development environment (Vite frontend + Express backend with auto-reload)
@@ -135,10 +137,10 @@ I dati mostrati sono reali e basati sugli Open Data ufficiali del Ministero dell
 - **Integrazione WebMCP:** Bridge nativo Web Model Context Protocol (WebMCP) per consentire agli assistenti AI di consultare stazioni e prezzi in tempo reale.
 - **Schede Dettaglio Stazione & Condivisione:** URL dedicati e localizzati per ogni distributore (`/:lang/:cityPrefix/:city/:stationPrefix/:stationId/:fuel?`) con condivisione immediata del link e dati strutturati Schema.org GasStation.
 - **API Dettaglio Stazione:** Endpoint dedicato (`GET /api/stations/:id`) con anagrafica completa, storico prezzi e suddivisione Self-Service e Servito.
-- **Calcolo del Percorso:** Integrazione con OSRM (Open Source Routing Machine) per tracciare automaticamente il tragitto ottimale sulla mappa, calcolando distanza e tempi di percorrenza dall'utente al distributore con protezione anti-race condition.
+- **Calcolo del Percorso:** Integrazione con OSRM (Open Source Routing Machine) per tracciare il percorso e calcolare distanza e tempi di percorrenza. Il limite di 3,5 secondi copre la richiesta e la lettura del body della risposta, con stima in linea retta se il recupero del percorso fallisce.
 - **Filtri Avanzati:** Filtra per raggio di distanza (3, 5, 10, 20 km), tipo di carburante (Benzina, Gasolio, GPL, Metano, HVO, GNL) e tipologia di servizio (Self-Service o Servito).
 - **Mappa Interattiva & Cache Tile Offline:** Visualizzazione chiara sulla mappa (Leaflet) con raggruppamento dinamico (clustering) dei punti di interesse e caching LRU throttled delle tile cartografiche tramite Service Worker (500 elementi).
-- **Web Worker Geospaziale:** Calcoli matematici pesanti (formula di Haversine e ranking di convenienza) delegati in background a un Web Worker dedicato (`geoWorkerService.js`), garantendo un'interfaccia a 60+ FPS fissi.
+- **Ricerca Geospaziale lato Server:** La ricerca delle stazioni vicine e il ranking di convenienza sono calcolati dall'API SQL backend; `geoWorkerService.js` richiede i risultati e non crea un Web Worker.
 - **PWA & Storage Nativo:** Supporto PWA per installazione rapida su Home Screen, persistenza IndexedDB pura per cronologia e preferiti, e cache offline per rotte OSRM.
 - **Multilingua:** Supporto nativo (i18next) per Italiano e Inglese.
 - **UX Moderna:** Rendering Optimistic UI, Skeleton Loaders, Tooltip in puro CSS e Caching SWR per navigazione istantanea senza scatti.
@@ -163,6 +165,8 @@ Inquadra il codice QR con la fotocamera del tuo smartphone per aprire FuelFinder
 ### Script e Comandi
 
 Tutti i comandi sono gestiti tramite `pnpm`:
+
+**Prerequisiti:** Node.js `>=24.0.0` e pnpm `11.25.0` (vedi il `package.json` root).
 
 ```bash
 # Avvia l'ambiente di sviluppo completo (Vite frontend + Express backend con hot-reload)
