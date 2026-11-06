@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["client/src/*"]
+      "@/*": ["./client/src/*"]
     },
     "jsx": "react-jsx",
     "target": "ESNext",
