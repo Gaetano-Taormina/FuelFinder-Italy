@@ -31,7 +31,10 @@ const suites = {
 
 function runCommand(command, args) {
     return new Promise((resolve, reject) => {
-        const proc = spawn(command, args, { stdio: 'inherit', shell: isWin });
+        const commandLine = [command, ...args].join(' ');
+        const proc = isWin
+            ? spawn(process.env.ComSpec || 'cmd.exe', ['/d', '/s', '/c', commandLine], { stdio: 'inherit' })
+            : spawn(command, args, { stdio: 'inherit' });
         proc.on('close', (code) => {
             if (code === 0) resolve();
             else reject(new Error(`Command exited with error code ${code}`));
