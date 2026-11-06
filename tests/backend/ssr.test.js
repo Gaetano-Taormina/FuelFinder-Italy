@@ -101,6 +101,12 @@ describe('SSR Routes & Controller & SEO Redirects', () => {
         expect(res.status).toBe(404);
     });
 
+    it('does not redirect fuel queries for unknown cities', async () => {
+        const res = await request(app).get('/it/citta/citta-inesistente?fuel=gasolio');
+        expect(res.status).toBe(404);
+        expect(res.headers.location).toBeUndefined();
+    });
+
     it('redirects misformatted city slugs to canonical slug', async () => {
         const res = await request(app).get('/en/city/roma');
         expect(res.status).toBe(301);

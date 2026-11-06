@@ -1,9 +1,23 @@
 import { 
     REGEX_EXPLORE, 
     REGEX_CITY, 
-    ALLOWED_FUELS, 
+    citySlugMap,
+    enToItCities,
+    itToEnCities,
     slugify 
 } from '../utils/seoHelpers.js';
+
+const EN_FUEL_SLUGS = new Map([
+    ['benzina', 'petrol'], ['gasolio', 'diesel'], ['gpl', 'lpg'], ['metano', 'cng'], ['gnl', 'lng'],
+    ['petrol', 'petrol'], ['diesel', 'diesel'], ['lpg', 'lpg'], ['cng', 'cng'], ['methane', 'methane'],
+    ['lng', 'lng'], ['hvo', 'hvo']
+]);
+
+const IT_FUEL_SLUGS = new Map([
+    ['petrol', 'benzina'], ['diesel', 'gasolio'], ['lpg', 'gpl'], ['cng', 'metano'], ['methane', 'metano'],
+    ['lng', 'gnl'], ['benzina', 'benzina'], ['gasolio', 'gasolio'], ['gpl', 'gpl'], ['metano', 'metano'],
+    ['gnl', 'gnl'], ['hvo', 'hvo']
+]);
 
 export function seoRedirectMiddleware(req, res, next) {
     // 0. Domain Migration: Instant 301 Redirect for legacy hosts (fuelfinder-msn8)
@@ -34,21 +48,19 @@ export function seoRedirectMiddleware(req, res, next) {
         
         const rawParam = req.query.fuel || req.query.carburante;
         const fuelRaw = String(rawParam).trim().toLowerCase();
-        const enToFuelLocal = { 'petrol': 'benzina', 'diesel': 'gasolio', 'lpg': 'gpl', 'cng': 'metano', 'methane': 'metano', 'lng': 'gnl' };
-        const itToEnLocal = { 'benzina': 'petrol', 'gasolio': 'diesel', 'gpl': 'lpg', 'metano': 'cng', 'gnl': 'lng' };
-        
-        let urlFuel = isEn ? (itToEnLocal[fuelRaw] || fuelRaw) : (enToFuelLocal[fuelRaw] || fuelRaw);
-        
-        if (!ALLOWED_FUELS.has(urlFuel)) {
-            urlFuel = isEn ? 'petrol' : 'benzina';
-        }
+        const urlFuel = (isEn ? EN_FUEL_SLUGS : IT_FUEL_SLUGS).get(fuelRaw) || (isEn ? 'petrol' : 'benzina');
         
         const cityMatch = req.path.match(REGEX_CITY);
         const exploreMatch = req.path.match(REGEX_EXPLORE);
         
         let targetPath = `/${lang}`;
         if (cityMatch) {
-            const citySlug = encodeURIComponent(slugify(cityMatch[3]));
+            const requestedCitySlug = slugify(cityMatch[3]);
+            const italianCitySlug = isEn ? enToItCities[requestedCitySlug] || requestedCitySlug : requestedCitySlug;
+            const cityName = citySlugMap.get(italianCitySlug);
+            if (!cityName) return next();
+            const canonicalItalianSlug = slugify(cityName);
+            const citySlug = isEn ? itToEnCities[canonicalItalianSlug] || canonicalItalianSlug : canonicalItalianSlug;
             targetPath = `/${lang}/${lang === 'it' ? 'citta' : 'city'}/${citySlug}`;
         } else if (exploreMatch) {
             targetPath = `/${lang}/${lang === 'it' ? 'esplora' : 'explore'}`;

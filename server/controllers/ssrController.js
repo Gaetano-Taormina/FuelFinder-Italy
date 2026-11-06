@@ -121,11 +121,14 @@ export class SsrController {
 
                 
                 // Redirect slug mal formattati
-                const expectedOriginalSlug = lang === 'en' ? slugify(itToEnCities[normalizedSlug] || normalizedSlug) : normalizedSlug;
+                const canonicalItalianSlug = slugify(realCityObj);
+                const expectedOriginalSlug = lang === 'en'
+                    ? slugify(itToEnCities[canonicalItalianSlug] || canonicalItalianSlug)
+                    : canonicalItalianSlug;
                 if (decodeURIComponent(rawOriginalSlug) !== expectedOriginalSlug) {
                     const safeLang = lang === 'en' ? 'en' : 'it';
                     const safePrefix = safeLang === 'it' ? 'citta' : 'city';
-                    return res.redirect(301, `/${safeLang}/${safePrefix}/${encodeURIComponent(expectedOriginalSlug)}`);
+                    return res.redirect(301, `/${safeLang}/${safePrefix}/${expectedOriginalSlug}`);
                 }
                 
                 cityCap = realCityObj;
