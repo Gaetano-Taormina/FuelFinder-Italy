@@ -22,11 +22,11 @@
     "swr": "^2.5.1"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.3.4",
-    "@vitejs/plugin-react": "^6.2.1",
+    "@tailwindcss/vite": "^4.3.5",
+    "@vitejs/plugin-react": "^6.3.0",
     "cross-env": "^10.1.0",
-    "tailwindcss": "^4.3.4",
-    "vite": "^8.3.6",
+    "tailwindcss": "^4.3.5",
+    "vite": "^8.3.8",
     "vite-plugin-compression2": "^2.5.4"
   }
 }
