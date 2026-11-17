@@ -13,6 +13,9 @@ Allow: /ai-catalog.json
 Allow: /ard.json
 Disallow: /api/
 Disallow: /admin-stats
+Disallow: /*?*lat=
+Disallow: /*?*lng=
+Crawl-delay: 5
 
 # AI Search Assistants & Citation Engines
 User-agent: GPTBot
