@@ -3,16 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Header from '../components/Header';
 import { getApiUrl } from '../config/api';
-
-const slugify = (text) => {
-    return text.toString().toLowerCase()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-        .replace(/['\s_]+/g, '-')
-        .replace(/[^\w-]+/g, '')
-        .replace(/--+/g, '-')
-        .replace(/^-+/, '')
-        .replace(/-+$/, '');
-};
+import { slugify } from '../utils/formatters';
 
 export default function ExplorePage() {
     const { t, i18n } = useTranslation();
@@ -46,22 +37,15 @@ export default function ExplorePage() {
     const { groupedCities, sortedKeys } = useMemo(() => {
         let groups = {};
 
-        if (viewMode === 'alphabetical') {
-            for (const cityObj of cities) {
-                const baseCityName = cityObj.name.includes(',') ? cityObj.name.split(',')[0] : cityObj.name;
-                const translatedName = currentLang === 'en' ? t(`cities.${baseCityName.toLowerCase()}`, { defaultValue: baseCityName }) : baseCityName;
-                const firstLetter = translatedName.charAt(0).toUpperCase();
-                if (!groups[firstLetter]) groups[firstLetter] = [];
-                groups[firstLetter].push({ ...cityObj, displayName: translatedName, urlCityName: translatedName });
-            }
-        } else if (viewMode === 'region') {
-            for (const cityObj of cities) {
-                const baseCityName = cityObj.name.includes(',') ? cityObj.name.split(',')[0] : cityObj.name;
-                const translatedName = currentLang === 'en' ? t(`cities.${baseCityName.toLowerCase()}`, { defaultValue: baseCityName }) : baseCityName;
-                const region = cityObj.region;
-                if (!groups[region]) groups[region] = [];
-                groups[region].push({ ...cityObj, displayName: translatedName, urlCityName: translatedName });
-            }
+        for (const cityObj of cities) {
+            const baseCityName = cityObj.name.includes(',') ? cityObj.name.split(',')[0] : cityObj.name;
+            const translatedName = currentLang === 'en' ? t(`cities.${baseCityName.toLowerCase()}`, { defaultValue: baseCityName }) : baseCityName;
+            const groupKey = viewMode === 'alphabetical'
+                ? translatedName.charAt(0).toUpperCase()
+                : cityObj.region;
+
+            if (!groups[groupKey]) groups[groupKey] = [];
+            groups[groupKey].push({ ...cityObj, displayName: translatedName, urlCityName: translatedName });
         }
 
         // Ordina le chiavi (A-Z o Z-A)

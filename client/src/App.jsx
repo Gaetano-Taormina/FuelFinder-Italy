@@ -15,17 +15,8 @@ import Maintenance from './components/Maintenance';
 import { ROUTES } from './config/routes.js';
 import { getApiUrl } from './config/api';
 import { isMaintenanceActive } from './config/maintenance';
+import { slugify, translateFuel } from './utils/formatters';
 const MapArea = lazy(() => import('./components/MapArea'));
-
-const slugify = (text) => {
-    return text.toString().toLowerCase()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-        .replace(/['\s_]+/g, '-')
-        .replace(/[^\w-]+/g, '')
-        .replace(/--+/g, '-')
-        .replace(/^-+/, '')
-        .replace(/-+$/, '');
-};
 
 const enToItCities = {
     'rome': 'roma', 'milan': 'milano', 'naples': 'napoli', 'venice': 'venezia',
@@ -100,14 +91,10 @@ function LayoutContent() {
     }, [theme]);
 
     useEffect(() => {
-        const fuelToEn = { 'Benzina': 'Petrol', 'Gasolio': 'Diesel', 'GPL': 'LPG', 'Metano': 'CNG' };
-        const enToFuel = { 'Petrol': 'Benzina', 'Diesel': 'Gasolio', 'LPG': 'GPL', 'CNG': 'Metano' };
-        
-        let itFuel = fuelType || 'Benzina';
-        if (enToFuel[itFuel]) itFuel = enToFuel[itFuel]; // normalize to IT just in case
+        const itFuel = translateFuel(fuelType || 'Benzina', 'it');
         
         const displayItFuel = itFuel;
-        const displayEnFuel = fuelToEn[itFuel] || itFuel;
+        const displayEnFuel = translateFuel(itFuel, 'en');
 
         if (stationId) {
             getRealCityName(city || '', currLang).then(cityName => {
@@ -219,8 +206,7 @@ function LayoutContent() {
                                         
                                         const pathSegment = ROUTES[currLang]?.cityPrefix || ROUTES.it.cityPrefix;
                                         
-                                        const fuelToEnLocal = { 'Benzina': 'Petrol', 'Gasolio': 'Diesel', 'GPL': 'LPG', 'Metano': 'CNG' };
-                                        let urlFuel = currLang === 'en' ? (fuelToEnLocal[fuelType] || fuelType) : fuelType;
+                                        let urlFuel = currLang === 'en' ? translateFuel(fuelType, 'en') : fuelType;
                                         if (!urlFuel) urlFuel = currLang === 'en' ? 'petrol' : 'benzina';
                                         
                                         const newPath = `/${currLang}/${pathSegment}/${targetCitySlug}/${urlFuel.toLowerCase()}`;
@@ -286,8 +272,7 @@ function LayoutContent() {
         const searchParams = new URLSearchParams(location.search);
         let newFuelUrl = null;
         if (fuelType) {
-            const fuelToEnLocal = { 'Benzina': 'Petrol', 'Gasolio': 'Diesel', 'GPL': 'LPG', 'Metano': 'CNG' };
-            newFuelUrl = nextLang === 'en' ? (fuelToEnLocal[fuelType] || fuelType) : fuelType;
+            newFuelUrl = nextLang === 'en' ? translateFuel(fuelType, 'en') : fuelType;
             
             searchParams.delete('fuel');
             searchParams.delete('carburante');
@@ -418,15 +403,7 @@ function MainContent() {
                 redirectPath += `/${pathSegment}/${city}`;
             }
             if (fuel) {
-                const enToFuelLocal = { 'petrol': 'benzina', 'diesel': 'gasolio', 'lpg': 'gpl', 'cng': 'metano' };
-                const itToEnLocal = { 'benzina': 'petrol', 'gasolio': 'diesel', 'gpl': 'lpg', 'metano': 'cng' };
-                
-                let translatedFuel = fuel.toLowerCase();
-                if (validLang === 'en' && itToEnLocal[translatedFuel]) {
-                    translatedFuel = itToEnLocal[translatedFuel];
-                } else if (validLang === 'it' && enToFuelLocal[translatedFuel]) {
-                    translatedFuel = enToFuelLocal[translatedFuel];
-                }
+                const translatedFuel = translateFuel(fuel.toLowerCase(), validLang).toLowerCase();
                 redirectPath += `/${translatedFuel}`;
             }
             

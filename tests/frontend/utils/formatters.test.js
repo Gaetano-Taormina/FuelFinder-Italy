@@ -1,6 +1,6 @@
 /* oxlint-disable no-console */
 import { describe, it, expect } from 'vitest';
-import { formatStationName } from '../../../client/src/utils/formatters';
+import { formatStationName, slugify, translateFuel } from '../../../client/src/utils/formatters';
 
 describe('formatStationName', () => {
     it('returns "Distributore" when station name is null or empty', () => {
@@ -25,5 +25,18 @@ describe('formatStationName', () => {
     it('returns "Distributore" fallback if cleaned name is empty', () => {
         expect(formatStationName('S.P.A.')).toBe('Distributore');
         expect(formatStationName(' ')).toBe('Distributore');
+    });
+});
+
+describe('shared route formatters', () => {
+    it('slugifies accented city names with apostrophes and spaces', () => {
+        expect(slugify("Città d'Italia")).toBe('citta-d-italia');
+    });
+
+    it('translates supported fuels and preserves unknown names', () => {
+        expect(translateFuel('Petrol', 'it')).toBe('Benzina');
+        expect(translateFuel('petrol', 'it')).toBe('Benzina');
+        expect(translateFuel('Gasolio', 'en')).toBe('Diesel');
+        expect(translateFuel('Idrogeno', 'en')).toBe('Idrogeno');
     });
 });

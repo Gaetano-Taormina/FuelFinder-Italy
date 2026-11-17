@@ -1,3 +1,28 @@
+const fuelTranslations = Object.freeze({
+    benzina: { it: 'Benzina', en: 'Petrol' },
+    petrol: { it: 'Benzina', en: 'Petrol' },
+    gasolio: { it: 'Gasolio', en: 'Diesel' },
+    diesel: { it: 'Gasolio', en: 'Diesel' },
+    gpl: { it: 'GPL', en: 'LPG' },
+    lpg: { it: 'GPL', en: 'LPG' },
+    metano: { it: 'Metano', en: 'CNG' },
+    cng: { it: 'Metano', en: 'CNG' }
+});
+
+export const translateFuel = (fuel, language) => {
+    return fuelTranslations[fuel.toLowerCase()]?.[language] || fuel;
+};
+
+export const slugify = (text) => {
+    return text.toString().toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/['\s_]+/g, '-')
+        .replace(/[^\w-]+/g, '')
+        .replace(/--+/g, '-')
+        .replace(/^-+/, '')
+        .replace(/-+$/, '');
+};
+
 export const formatStationName = (name) => {
     if (!name) return 'Distributore';
     

@@ -4,12 +4,9 @@ import useSWR from 'swr';
 import { registerWebMcpTools } from '../services/webMcpService';
 import { getApiUrl } from '../config/api';
 import { isMaintenanceActive } from '../config/maintenance';
+import { translateFuel } from '../utils/formatters';
 
 const StationsContext = createContext();
-
-// Mapping for URL translation
-const fuelToEn = { 'Benzina': 'Petrol', 'Gasolio': 'Diesel', 'GPL': 'LPG', 'Metano': 'CNG' };
-const enToFuel = { 'petrol': 'Benzina', 'diesel': 'Gasolio', 'lpg': 'GPL', 'cng': 'Metano', 'benzina': 'Benzina', 'gasolio': 'Gasolio', 'gpl': 'GPL', 'metano': 'Metano' };
 
 // oxlint-disable-next-line react/only-export-components
 export const useStations = () => useContext(StationsContext);
@@ -35,10 +32,9 @@ export const StationsProvider = ({ children }) => {
 
   // Fallback to query params just in case old links are used
   const rawFuel = fuel || searchParams.get('fuel') || searchParams.get('carburante');
-  let initialFuel = 'Benzina';
-  if (rawFuel) {
-      initialFuel = enToFuel[rawFuel.toLowerCase()] || (rawFuel.charAt(0).toUpperCase() + rawFuel.slice(1));
-  }
+  const initialFuel = rawFuel
+    ? translateFuel(rawFuel, 'it').replace(/^./, (firstLetter) => firstLetter.toUpperCase())
+    : 'Benzina';
 
   // Filters State
   const [locationStr, setLocationStr] = useState('');
@@ -56,7 +52,7 @@ export const StationsProvider = ({ children }) => {
     
     // Check current language from pathname
     const isEn = window.location.pathname.startsWith('/en');
-    const urlFuel = isEn ? (fuelToEn[type] || type) : type;
+    const urlFuel = isEn ? translateFuel(type, 'en') : type;
     const currentLang = isEn ? 'en' : 'it';
     
     // Reconstruct the path with the new fuel
